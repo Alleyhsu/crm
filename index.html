@@ -1,0 +1,2495 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-KnXnLn56bF+5TkthWTRl503iHRdOTzBQEqiOfrO4Vyk='; style-src 'unsafe-inline'; img-src blob: data:; connect-src 'none'; font-src 'none'; media-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; form-action 'none'; base-uri 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#0f2747">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Systex CRM">
+<title>Alley's Systex CRM</title>
+<style>
+:root{
+  --blue:#1d4f9c;--blue-d:#163d7a;--blue-l:#e8f0fb;--navy:#0f2747;--navy-2:#16345e;
+  --orange:#f08a24;--orange-d:#cf6f0f;--orange-l:#fff2e4;
+  --bg:#f3f5f9;--card:#fff;--text:#1c2433;--muted:#64708a;--line:#dde3ec;--line-2:#eef1f6;
+  --danger:#cf3e3e;--danger-l:#fdecec;--ok:#1d8a4e;--ok-l:#e6f5ec;--warn-l:#fff7e0;
+  --radius:10px;--shadow:0 1px 2px rgba(16,24,40,.06),0 2px 8px rgba(16,24,40,.05);
+  --side:236px;
+  font-family:"PingFang TC","Microsoft JhengHei","Noto Sans TC","Heiti TC",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-size:15px;line-height:1.55;-webkit-text-size-adjust:100%}
+body{overflow-x:hidden}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--blue)}
+h1,h2,h3{margin:0;line-height:1.3}
+.hidden{display:none!important}
+
+/* layout */
+.sidebar{position:fixed;inset:0 auto 0 0;width:var(--side);background:var(--navy);color:#cfd9ea;display:flex;flex-direction:column;z-index:40;transition:transform .2s}
+.brand{padding:18px 18px 14px;border-bottom:1px solid rgba(255,255,255,.08)}
+.brand b{display:block;color:#fff;font-size:16px;letter-spacing:.3px}
+.brand span{font-size:12px;color:#9fb1cf}
+.brand i{display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--orange);margin-right:7px}
+.nav{list-style:none;margin:0;padding:10px 8px;overflow-y:auto;flex:1}
+.nav a{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;color:#cfd9ea;text-decoration:none;font-size:14.5px;min-height:42px}
+.nav a:hover{background:var(--navy-2);color:#fff}
+.nav a.active{background:var(--blue);color:#fff;box-shadow:inset 3px 0 0 var(--orange)}
+.nav .k{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:6px;background:rgba(255,255,255,.08);font-size:11.5px;font-weight:700}
+.nav a.active .k{background:var(--orange);color:#fff}
+.nav .soon{margin-left:auto;font-size:11px;color:#8296b8;border:1px solid #3a5583;padding:0 6px;border-radius:10px}
+.side-foot{padding:12px 16px;font-size:12px;color:#8ea2c4;border-top:1px solid rgba(255,255,255,.08)}
+.main{margin-left:var(--side);min-height:100vh;display:flex;flex-direction:column;min-width:0}
+.topbar{position:sticky;top:0;z-index:30;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;padding:10px 22px;min-height:58px}
+.topbar h1{font-size:18px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar .menu-btn{display:none}
+.local-pill{font-size:12px;color:var(--muted);background:var(--line-2);padding:4px 10px;border-radius:20px;white-space:nowrap}
+.content{padding:22px;max-width:1280px;width:100%;margin:0 auto;min-width:0}
+.overlay{display:none}
+
+/* components */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;margin-bottom:18px;min-width:0}
+.card h2{font-size:16px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.card h2 .count{font-size:12px;background:var(--blue-l);color:var(--blue);padding:1px 8px;border-radius:10px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 14px;min-height:40px;cursor:pointer;font-size:14px;white-space:nowrap;text-decoration:none;color:var(--text)}
+.btn:hover{border-color:#b9c4d6;background:#fafbfd}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn.primary:hover{background:var(--blue-d)}
+.btn.accent{background:var(--orange);border-color:var(--orange);color:#fff}
+.btn.accent:hover{background:var(--orange-d)}
+.btn.danger{color:var(--danger);border-color:#f0c2c2}
+.btn.danger:hover{background:var(--danger-l)}
+.btn.danger.solid{background:var(--danger);color:#fff;border-color:var(--danger)}
+.btn.sm{min-height:32px;padding:4px 10px;font-size:13px}
+.btn.link{border:none;background:none;color:var(--blue);padding:4px 6px;min-height:32px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.spacer{flex:1}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.badge{display:inline-block;font-size:12px;padding:1px 9px;border-radius:12px;white-space:nowrap;border:1px solid transparent}
+.badge.active{background:var(--ok-l);color:var(--ok)}
+.badge.prospect{background:var(--orange-l);color:var(--orange-d)}
+.badge.archived{background:#eceff3;color:#5a6476}
+.badge.overdue{background:var(--danger-l);color:var(--danger)}
+.badge.today{background:var(--orange);color:#fff}
+.badge.type{background:var(--blue-l);color:var(--blue)}
+.notice{border-radius:var(--radius);padding:12px 14px;margin-bottom:16px;font-size:14px;border:1px solid}
+.notice.info{background:var(--blue-l);border-color:#c9daf3}
+.notice.warn{background:var(--warn-l);border-color:#f1dca2}
+.notice.danger{background:var(--danger-l);border-color:#f0c2c2}
+.notice.ok{background:var(--ok-l);border-color:#b9e2c9}
+.empty{padding:28px 10px;text-align:center;color:var(--muted)}
+
+/* kpi */
+.kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;margin-bottom:18px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);border-top:3px solid var(--blue);cursor:pointer;text-align:left}
+.kpi.o{border-top-color:var(--orange)}
+.kpi.r{border-top-color:var(--danger)}
+.kpi .l{font-size:13px;color:var(--muted)}
+.kpi .v{font-size:28px;font-weight:700;margin-top:2px}
+.pending-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.pending-grid div{border:1px dashed var(--line);border-radius:8px;padding:10px 12px;color:var(--muted);font-size:13px;background:#fafbfd}
+.pending-grid b{display:block;color:var(--text);font-size:14px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+
+/* toolbar & table */
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px;align-items:center}
+.toolbar .search{flex:1 1 240px;min-width:0}
+.input,select.input,textarea.input{width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 11px;min-height:40px;background:#fff;font-size:15px}
+.input:focus{outline:2px solid #9cbcec;outline-offset:0;border-color:var(--blue)}
+.toolbar select.input{width:auto;min-width:120px;flex:0 1 auto}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:#fff}
+table.list{width:100%;border-collapse:collapse;font-size:14px}
+table.list th{background:#f7f9fc;text-align:left;font-weight:600;color:#475268;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.list th.sortable{cursor:pointer;user-select:none}
+table.list th.sortable:hover{color:var(--blue)}
+table.list td{padding:10px 12px;border-bottom:1px solid var(--line-2);vertical-align:middle}
+table.list tr.clickable{cursor:pointer}
+table.list tr.clickable:hover td{background:#f7faff}
+table.list .name{font-weight:600;color:var(--blue)}
+.sort-ind{color:var(--orange);font-size:11px}
+
+/* detail */
+.detail-head{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start;margin-bottom:14px}
+.detail-head h2{font-size:21px;word-break:break-word}
+.tabs{display:flex;gap:4px;border-bottom:2px solid var(--line);margin-bottom:16px;overflow-x:auto}
+.tab{border:none;background:none;padding:10px 16px;cursor:pointer;color:var(--muted);font-size:15px;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap;min-height:44px}
+.tab.active{color:var(--blue);border-bottom-color:var(--orange);font-weight:600}
+dl.info{display:grid;grid-template-columns:150px 1fr;gap:0;margin:0}
+dl.info dt,dl.info dd{padding:9px 4px;border-bottom:1px solid var(--line-2);margin:0;min-width:0}
+dl.info dt{color:var(--muted);font-size:14px}
+dl.info dd{word-break:break-word;white-space:pre-wrap}
+.follow-box{display:flex;flex-wrap:wrap;gap:10px;align-items:center;background:var(--orange-l);border:1px solid #f5d2ab;border-radius:var(--radius);padding:12px 14px;margin-bottom:16px}
+.follow-box .input{width:auto}
+.item{border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;margin-bottom:10px;background:#fff;min-width:0}
+.item .t{font-weight:600}
+.item .meta{font-size:13px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 14px}
+.item .body{white-space:pre-wrap;word-break:break-word;margin-top:6px}
+.item .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.timeline{position:relative;padding-left:20px}
+.timeline:before{content:"";position:absolute;left:6px;top:4px;bottom:4px;width:2px;background:var(--line)}
+.timeline .item{position:relative}
+.timeline .item:before{content:"";position:absolute;left:-19px;top:16px;width:10px;height:10px;border-radius:50%;background:var(--blue);border:2px solid #fff;box-shadow:0 0 0 1px var(--blue)}
+.fu-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 0;border-bottom:1px solid var(--line-2)}
+.fu-row:last-child{border-bottom:none}
+.fu-row .nm{font-weight:600;color:var(--blue);cursor:pointer;min-width:0;word-break:break-word}
+
+/* modal */
+.modal-bg{position:fixed;inset:0;background:rgba(15,26,45,.5);z-index:100;display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow-y:auto}
+.modal{background:#fff;border-radius:12px;width:100%;max-width:720px;box-shadow:0 20px 50px rgba(0,0,0,.25);display:flex;flex-direction:column;max-height:none}
+.modal.wide{max-width:980px}
+.modal.narrow{max-width:460px}
+.modal-h{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+.modal-h h3{font-size:17px;flex:1}
+.modal-b{padding:18px 20px}
+.modal-f{padding:14px 20px;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;background:#fafbfd;border-radius:0 0 12px 12px}
+.x{border:none;background:none;font-size:24px;line-height:1;cursor:pointer;color:var(--muted);width:40px;height:40px;border-radius:8px}
+.x:hover{background:var(--line-2)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 16px}
+.form-grid .full{grid-column:1/-1}
+.field label{display:block;font-size:13.5px;color:#475268;margin-bottom:5px;font-weight:600}
+.field .req{color:var(--danger)}
+.field .hint{font-size:12.5px;color:var(--muted);margin-top:4px}
+.field .err{font-size:12.5px;color:var(--danger);margin-top:4px}
+.field .warn{font-size:12.5px;color:var(--orange-d);margin-top:4px}
+textarea.input{min-height:90px;resize:vertical}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;flex-wrap:wrap}
+.seg label{margin:0;font-weight:400;cursor:pointer}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg span{display:inline-flex;align-items:center;padding:8px 14px;min-height:40px;border-right:1px solid var(--line);font-size:14px}
+.seg label:last-child span{border-right:none}
+.seg input:checked+span{background:var(--blue);color:#fff}
+.seg input:focus-visible+span{outline:2px solid var(--orange)}
+.section-t{font-size:14px;font-weight:700;color:var(--blue);margin:4px 0 0;padding-bottom:6px;border-bottom:1px solid var(--line-2)}
+.card-preview{max-width:100%;max-height:260px;border-radius:8px;border:1px solid var(--line);display:block;margin:8px 0}
+.steps{margin:6px 0 0;padding-left:20px;font-size:13.5px;color:#475268}
+
+/* toast */
+#toasts{position:fixed;right:18px;bottom:18px;z-index:200;display:flex;flex-direction:column;gap:8px;max-width:min(380px,calc(100vw - 36px))}
+.toast{background:#1f2a3c;color:#fff;padding:11px 15px;border-radius:9px;box-shadow:0 8px 24px rgba(0,0,0,.2);font-size:14px;border-left:4px solid var(--ok);word-break:break-word}
+.toast.err{border-left-color:#ff6b6b}
+.toast.warn{border-left-color:var(--orange)}
+
+/* import preview */
+.stat-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.stat{background:#f7f9fc;border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:13px}
+.stat b{font-size:18px;display:block}
+.stat.ok b{color:var(--ok)}.stat.bad b{color:var(--danger)}.stat.dup b{color:var(--orange-d)}
+.scroll-box{max-height:300px;overflow:auto;border:1px solid var(--line);border-radius:8px}
+.scroll-box table.list td,.scroll-box table.list th{padding:6px 9px;font-size:13px}
+.map-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+.map-grid .field label{font-weight:400}
+.err-list{margin:0;padding-left:18px;font-size:13px;color:var(--danger);max-height:180px;overflow:auto}
+
+.fatal{max-width:640px;margin:10vh auto;padding:0 18px}
+
+/* responsive */
+@media (max-width:1100px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:900px){
+  .sidebar{transform:translateX(-100%);box-shadow:none}
+  body.nav-open .sidebar{transform:none;box-shadow:0 0 40px rgba(0,0,0,.35)}
+  body.nav-open .overlay{display:block;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:35}
+  .main{margin-left:0}
+  .topbar .menu-btn{display:inline-flex;width:44px;height:44px;padding:0;font-size:22px}
+  .two{grid-template-columns:1fr}
+}
+@media (max-width:640px){
+  html,body{font-size:15px}
+  .content{padding:14px 12px}
+  .topbar{padding:8px 12px}
+  .topbar h1{font-size:16.5px}
+  .local-pill{display:none}
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .kpi .v{font-size:24px}
+  .card{padding:14px}
+  .form-grid{grid-template-columns:1fr}
+  .btn{min-height:44px}
+  .btn.sm{min-height:38px}
+  .input,select.input{min-height:44px;font-size:16px}
+  .toolbar select.input{flex:1 1 calc(50% - 5px);width:auto;min-width:0}
+  .toolbar .btn{flex:1 1 auto}
+  dl.info{grid-template-columns:1fr}
+  dl.info dt{border-bottom:none;padding-bottom:0;font-size:12.5px}
+  .modal-bg{padding:0}
+  .modal{border-radius:0;min-height:100vh;max-width:none}
+  .modal-f{border-radius:0;position:sticky;bottom:0}
+  .modal-h{position:sticky;top:0;background:#fff;z-index:2}
+  .modal-f .btn{flex:1 1 auto}
+  .follow-box .input{flex:1 1 140px}
+  /* table to cards */
+  .tablewrap.cards{border:none;background:none;overflow:visible}
+  .tablewrap.cards table,.tablewrap.cards tbody,.tablewrap.cards tr,.tablewrap.cards td{display:block;width:100%}
+  .tablewrap.cards thead{display:none}
+  .tablewrap.cards tr{background:#fff;border:1px solid var(--line);border-radius:var(--radius);margin-bottom:10px;padding:8px 12px;box-shadow:var(--shadow)}
+  .tablewrap.cards td{border:none;padding:3px 0;display:flex;gap:10px;font-size:14px}
+  .tablewrap.cards td:before{content:attr(data-label);color:var(--muted);flex:0 0 84px;font-size:13px}
+  .tablewrap.cards td.name{font-size:16px;padding-bottom:6px}
+  .tablewrap.cards td.name:before{display:none}
+  .tablewrap.cards td.empty-cell{display:none}
+}
+@media print{.sidebar,.topbar,.toolbar,.btn{display:none!important}.main{margin:0}}
+
+/* 客戶表單內聯絡人列 */
+.ct-row{border:1px solid var(--line);border-radius:var(--radius);padding:10px 12px 12px;margin-bottom:10px;background:#fafbfd}
+.ct-row-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.ct-row-g{display:grid;grid-template-columns:1.1fr 1fr 1.2fr 1.6fr;gap:10px}
+.form-grid .section-t{margin-top:10px}
+.ct-table td a{word-break:break-all}
+@media (max-width:900px){.ct-row-g{grid-template-columns:1fr 1fr}}
+@media (max-width:640px){.ct-row-g{grid-template-columns:1fr 1fr}.ct-row-g .field:nth-child(n+3){grid-column:1/-1}}
+
+</style>
+</head>
+<body>
+<!--
+  Alley's Systex CRM 客戶管理系統 V1
+  單一 HTML 檔案，HTML + CSS + 原生 JavaScript。
+  資料儲存於本機瀏覽器 IndexedDB；不載入任何外部資源，並以 Content-Security-Policy 禁止所有網路連線。
+-->
+<aside class="sidebar" id="sidebar" aria-label="主選單">
+  <div class="brand"><b><i></i>Alley's Systex CRM</b><span>客戶管理系統 V1</span></div>
+  <ul class="nav" id="nav"></ul>
+  <div class="side-foot">🔒 資料僅存於本機瀏覽器<br>請定期匯出備份</div>
+</aside>
+<div class="overlay" id="overlay"></div>
+<div class="main">
+  <header class="topbar">
+    <button class="btn menu-btn" id="menuBtn" aria-label="開啟選單">☰</button>
+    <h1 id="pageTitle">載入中…</h1>
+    <span class="local-pill">本機儲存・不連網</span>
+  </header>
+  <main class="content" id="content"><div class="empty">載入中…</div></main>
+</div>
+<div id="toasts" aria-live="polite"></div>
+<noscript><div class="fatal"><div class="notice danger">本系統需要啟用 JavaScript 才能使用。</div></div></noscript>
+<script>
+'use strict';
+/* ============================================================
+ * Alley's Systex CRM V1 — 核心：常數、工具、資料庫、服務
+ * 所有資料僅存於本機瀏覽器 IndexedDB，程式不發出任何網路請求。
+ * ============================================================ */
+const APP = { name: "Alley's Systex CRM", version: '1.1.0', schemaVersion: 2, dbName: 'alley_systex_crm', dbVersion: 2 };
+
+const INDUSTRIES = ['公部門', '工具機', '半導體', '設備機械', '手工具', '自行車', '塑膠射出', '五金加工', '建築', '醫療單位', '化妝品', '家居行業', '零售業'];
+const REGIONS = ['基隆市', '臺北市', '新北市', '桃園市', '新竹市', '新竹縣', '苗栗縣', '臺中市', '彰化縣', '南投縣', '雲林縣', '嘉義市', '嘉義縣', '臺南市', '高雄市', '屏東縣', '宜蘭縣', '花蓮縣', '臺東縣', '澎湖縣', '金門縣', '連江縣'];
+const ACT_TYPES = ['電話', '拜訪', 'Email', '視訊會議'];
+let customIndustries = []; // 使用者自行新增的產業選項（存於 meta.customIndustries）
+/** 產業下拉清單：預設 + 自行新增 +（選擇性）資料中已使用的其他產業 */
+function industryList(includeUsed) {
+  const list = INDUSTRIES.concat(customIndustries.filter(i => !INDUSTRIES.includes(i)));
+  if (includeUsed && typeof Store !== 'undefined') for (const c of Store.customers) if (c.industry && !list.includes(c.industry)) list.push(c.industry);
+  return list;
+}
+async function addIndustry(name) {
+  const v = String(name || '').trim();
+  if (!v) throw new Error('請輸入產業名稱');
+  if (v.length > 20) throw new Error('產業名稱請在 20 字以內');
+  if (industryList().includes(v)) return false;
+  const next = customIndustries.concat([v]);
+  await DB.setMeta('customIndustries', next);
+  customIndustries = next;
+  return true;
+}
+async function removeIndustry(name) {
+  const next = customIndustries.filter(i => i !== name);
+  await DB.setMeta('customIndustries', next);
+  customIndustries = next;
+}
+
+/* ---------- 一般工具 ---------- */
+const $ = (sel, root = document) => root.querySelector(sel);
+const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+function esc(v) {
+  return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function uid() {
+  if (window.crypto && typeof crypto.randomUUID === 'function') {
+    try { return crypto.randomUUID(); } catch (e) { /* 非安全環境時改用下方方式 */ }
+  }
+  const b = new Uint8Array(16);
+  crypto.getRandomValues(b);
+  b[6] = (b[6] & 0x0f) | 0x40; b[8] = (b[8] & 0x3f) | 0x80;
+  const h = Array.from(b, x => x.toString(16).padStart(2, '0')).join('');
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+}
+const pad2 = n => String(n).padStart(2, '0');
+function todayStr(d = new Date()) { return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`; }
+function nowLocalDT(d = new Date()) { return `${todayStr(d)}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`; }
+function addDays(dateStr, n) { const [y, m, d] = dateStr.split('-').map(Number); return todayStr(new Date(y, m - 1, d + n)); }
+function nowISO() { return new Date().toISOString(); }
+function fmtDT(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (isNaN(d)) return String(iso);
+  return `${todayStr(d)} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+}
+function fmtActDT(v) { return v ? String(v).replace('T', ' ') : ''; }
+function fmtMoney(v) {
+  if (v === '' || v == null) return '';
+  const n = Number(String(v).replace(/,/g, ''));
+  return isNaN(n) ? String(v) : n.toLocaleString('zh-TW') + ' 元';
+}
+function daysBetween(a, b) { // b - a, 以日計
+  const [y1, m1, d1] = a.split('-').map(Number), [y2, m2, d2] = b.split('-').map(Number);
+  return Math.round((new Date(y2, m2 - 1, d2) - new Date(y1, m1 - 1, d1)) / 86400000);
+}
+function normTW(s) { return String(s || '').replace(/台/g, '臺'); }
+function normName(s) {
+  return String(s || '').normalize('NFKC').toLowerCase().replace(/\s+/g, '')
+    .replace(/台/g, '臺').replace(/(股份有限公司|有限公司|股份公司|公司)$/, '');
+}
+/** 將各種日期寫法轉為 YYYY-MM-DD；無法解析回傳 null；空白回傳 '' */
+function parseDate(v) {
+  if (v == null) return '';
+  if (typeof v === 'number') return excelSerialToDate(v);
+  let s = String(v).trim().normalize('NFKC');
+  if (!s) return '';
+  if (/^\d{5}(\.\d+)?$/.test(s)) return excelSerialToDate(Number(s));
+  let m = s.match(/^(\d{4})[-/.年](\d{1,2})[-/.月](\d{1,2})日?/);
+  if (!m) {
+    m = s.match(/^(\d{2,3})[-/.年](\d{1,2})[-/.月](\d{1,2})日?$/); // 民國年
+    if (m) m = [m[0], String(Number(m[1]) + 1911), m[2], m[3]];
+  }
+  if (!m) return null;
+  const y = Number(m[1]), mo = Number(m[2]), d = Number(m[3]);
+  const dt = new Date(y, mo - 1, d);
+  if (dt.getFullYear() !== y || dt.getMonth() !== mo - 1 || dt.getDate() !== d) return null;
+  return `${y}-${pad2(mo)}-${pad2(d)}`;
+}
+/** 日期時間 → YYYY-MM-DDTHH:mm；只有日期時補 09:00 */
+function parseDateTime(v) {
+  if (v == null || v === '') return '';
+  if (typeof v === 'number' || /^\d{5}(\.\d+)?$/.test(String(v).trim())) {
+    const n = Number(v); const d = parseDate(Math.floor(n)); if (!d) return null;
+    const mins = Math.round((n - Math.floor(n)) * 1440);
+    return `${d}T${pad2(Math.floor(mins / 60) % 24)}:${pad2(mins % 60)}`;
+  }
+  const s = String(v).trim().normalize('NFKC');
+  const m = s.match(/^(.+?)[T\s]+(\d{1,2}):(\d{2})/);
+  if (m) {
+    const d = parseDate(m[1]); if (!d) return null;
+    const h = Number(m[2]), mi = Number(m[3]); if (h > 23 || mi > 59) return null;
+    return `${d}T${pad2(h)}:${pad2(mi)}`;
+  }
+  const d = parseDate(s); if (!d) return null;
+  return `${d}T09:00`;
+}
+function excelSerialToDate(n) {
+  if (!(n > 0 && n < 2958466)) return null;
+  const ms = Math.round((n - 25569) * 86400000);
+  const d = new Date(ms);
+  return `${d.getUTCFullYear()}-${pad2(d.getUTCMonth() + 1)}-${pad2(d.getUTCDate())}`;
+}
+function parseBool(v) {
+  const s = String(v == null ? '' : v).trim().toLowerCase();
+  if (['是', 'y', 'yes', 'true', '1', '服務中', 'v', '✓'].includes(s)) return true;
+  if (['否', 'n', 'no', 'false', '0', '潛在', '潛在客戶', ''].includes(s)) return false;
+  return null;
+}
+/** 統一編號檢查（含 2023 年起「可被 5 整除」新制） */
+function checkTaxId(id) {
+  if (!id) return { ok: true, empty: true };
+  if (!/^\d{8}$/.test(id)) return { ok: false, format: false, msg: '統一編號須為 8 位數字' };
+  const w = [1, 2, 1, 2, 1, 2, 4, 1];
+  let sum = 0;
+  for (let i = 0; i < 8; i++) { const p = Number(id[i]) * w[i]; sum += Math.floor(p / 10) + (p % 10); }
+  const valid = sum % 5 === 0 || (id[6] === '7' && (sum + 1) % 5 === 0);
+  return valid ? { ok: true, format: true } : { ok: false, format: true, msg: '統一編號檢查碼不符，請再確認（仍可儲存）' };
+}
+function isEmail(s) { return !s || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s); }
+function isUrlLike(s) { return !s || /^(https?:\/\/)?[\w.-]+\.[a-z]{2,}([\/?#].*)?$/i.test(s); }
+function regionFromAddress(addr) {
+  const a = normTW(addr);
+  return REGIONS.find(r => a.includes(r)) || '';
+}
+
+/* ---------- 提示訊息 ---------- */
+function toast(msg, kind = 'ok', ms = 3500) {
+  const box = $('#toasts');
+  const el = document.createElement('div');
+  el.className = 'toast' + (kind === 'err' ? ' err' : kind === 'warn' ? ' warn' : '');
+  el.setAttribute('role', kind === 'err' ? 'alert' : 'status');
+  el.textContent = msg;
+  box.appendChild(el);
+  setTimeout(() => el.remove(), kind === 'err' ? Math.max(ms, 6000) : ms);
+}
+function errMsg(e) {
+  if (!e) return '未知錯誤';
+  const n = e.name || '';
+  if (n === 'QuotaExceededError') return '瀏覽器儲存空間不足，資料未儲存。請先匯出備份並清理瀏覽器空間。';
+  if (n === 'ConstraintError') return '資料識別碼重複，未儲存。';
+  if (n === 'InvalidStateError') return '資料庫連線已中斷，請重新整理頁面。';
+  if (n === 'VersionError') return '此瀏覽器中的資料庫版本比本系統新，請使用最新版 crm.html。';
+  return (e.message || String(e));
+}
+
+/* ============================================================
+ * IndexedDB
+ * ============================================================ */
+const DB = {
+  db: null,
+  open() {
+    return new Promise((resolve, reject) => {
+      if (!('indexedDB' in window) || !window.indexedDB) {
+        reject(new Error('此瀏覽器不支援 IndexedDB，或已被停用（例如部分瀏覽器的私密模式，或 Safari 以 file:// 開啟）。'));
+        return;
+      }
+      let req;
+      try { req = indexedDB.open(APP.dbName, APP.dbVersion); }
+      catch (e) { reject(e); return; }
+      req.onupgradeneeded = ev => {
+        const db = req.result;
+        if (ev.oldVersion < 1) {
+          const c = db.createObjectStore('customers', { keyPath: 'id' });
+          c.createIndex('name', 'name'); c.createIndex('taxId', 'taxId');
+          const ct = db.createObjectStore('contacts', { keyPath: 'id' });
+          ct.createIndex('customerId', 'customerId');
+          const a = db.createObjectStore('activities', { keyPath: 'id' });
+          a.createIndex('customerId', 'customerId'); a.createIndex('datetime', 'datetime');
+          db.createObjectStore('meta', { keyPath: 'key' });
+        }
+        if (ev.oldVersion >= 1 && ev.oldVersion < 2) {
+          // V1.1：「公司地址」改為「公司註冊地址」，並新增聯絡地址、公司電話、傳真
+          const store = req.transaction.objectStore('customers');
+          store.openCursor().onsuccess = e => {
+            const cur = e.target.result; if (!cur) return;
+            const c = cur.value;
+            if (c.regAddress === undefined) c.regAddress = c.address || '';
+            if (c.contactAddress === undefined) c.contactAddress = '';
+            if (c.phone === undefined) c.phone = '';
+            if (c.fax === undefined) c.fax = '';
+            delete c.address;
+            cur.update(c); cur.continue();
+          };
+        }
+      };
+      req.onblocked = () => toast('資料庫正被其他分頁使用中，請關閉其他 CRM 分頁後重新整理。', 'warn', 8000);
+      req.onerror = () => reject(req.error || new Error('無法開啟資料庫'));
+      req.onsuccess = () => {
+        this.db = req.result;
+        this.db.onversionchange = () => { this.db.close(); toast('資料庫已在其他分頁更新，請重新整理此頁面。', 'warn', 10000); };
+        resolve(this.db);
+      };
+    });
+  },
+  /** 在單一 transaction 中執行 fn(stores)；任何錯誤都會整筆回復 */
+  tx(storeNames, mode, fn) {
+    return new Promise((resolve, reject) => {
+      let t, result;
+      try { t = this.db.transaction(storeNames, mode); }
+      catch (e) { reject(e); return; }
+      const stores = {};
+      [].concat(storeNames).forEach(n => { stores[n] = t.objectStore(n); });
+      t.oncomplete = () => resolve(result);
+      t.onerror = () => reject(t.error);
+      t.onabort = () => reject(t.error || new Error('資料庫交易已中止，資料未變更'));
+      Promise.resolve().then(() => fn(stores, t)).then(r => { result = r; }).catch(e => {
+        try { t.abort(); } catch (x) { /* 已結束 */ }
+        reject(e);
+      });
+    });
+  },
+  getAll(store) { return this.tx(store, 'readonly', s => req(s[store].getAll())); },
+  get(store, key) { return this.tx(store, 'readonly', s => req(s[store].get(key))); },
+  byIndex(store, index, key) { return this.tx(store, 'readonly', s => req(s[store].index(index).getAll(key))); },
+  async getMeta(key) { const r = await this.get('meta', key); return r ? r.value : undefined; },
+  setMeta(key, value) { return this.tx('meta', 'readwrite', s => req(s.meta.put({ key, value }))); }
+};
+function req(r) {
+  return new Promise((resolve, reject) => { r.onsuccess = () => resolve(r.result); r.onerror = () => reject(r.error); });
+}
+
+/* ============================================================
+ * 資料服務
+ * ============================================================ */
+const CUSTOMER_FIELDS = ['isActive', 'name', 'industry', 'taxId', 'owner', 'capital', 'region', 'regAddress', 'contactAddress', 'phone', 'fax', 'website', 'msDomain', 'createdDate', 'lastContactDate', 'nextFollowUpDate', 'note', 'archived'];
+const CONTACT_FIELDS = ['name', 'department', 'title', 'phone', 'mobile', 'email', 'note'];
+
+function blankCustomer() {
+  return { id: '', isActive: false, name: '', industry: '', taxId: '', owner: '', capital: '', region: '', regAddress: '', contactAddress: '', phone: '', fax: '', website: '', msDomain: '', createdDate: todayStr(), lastContactDate: '', nextFollowUpDate: '', note: '', createdAt: '', updatedAt: '', archived: false, archivedAt: '' };
+}
+function cleanCustomer(c) {
+  const o = blankCustomer();
+  for (const k of Object.keys(o)) if (c[k] !== undefined && c[k] !== null) o[k] = c[k];
+  for (const k of ['name', 'industry', 'taxId', 'owner', 'region', 'regAddress', 'contactAddress', 'phone', 'fax', 'website', 'msDomain', 'note']) o[k] = String(o[k]).trim();
+  o.capital = String(o.capital).replace(/[,\s元]/g, '').trim();
+  o.region = normTW(o.region);
+  o.isActive = !!o.isActive; o.archived = !!o.archived;
+  return o;
+}
+
+const Store = {
+  customers: [], // 快取：每次寫入後由 IndexedDB 重新讀取
+  contactsByCustomer: new Map(), // 快取：客戶ID → 聯絡人陣列（清單顯示與搜尋用）
+  async loadCustomers() {
+    const [cs, cts] = await DB.tx(['customers', 'contacts'], 'readonly', s => Promise.all([req(s.customers.getAll()), req(s.contacts.getAll())]));
+    this.customers = cs;
+    const m = new Map();
+    for (const ct of cts.sort((a, b) => (a.createdAt || '').localeCompare(b.createdAt || ''))) { if (!m.has(ct.customerId)) m.set(ct.customerId, []); m.get(ct.customerId).push(ct); }
+    this.contactsByCustomer = m;
+    return this.customers;
+  },
+  customer(id) { return this.customers.find(c => c.id === id); },
+
+  async saveCustomer(data) {
+    const c = cleanCustomer(data);
+    if (!c.name) throw new Error('客戶名稱為必填');
+    const now = nowISO();
+    if (!data.id) { c.id = uid(); c.createdAt = now; }
+    else {
+      const old = await DB.get('customers', data.id);
+      if (!old) throw new Error('找不到此客戶，可能已被刪除');
+      c.id = old.id; c.createdAt = old.createdAt; c.lastContactDate = old.lastContactDate;
+      c.archived = old.archived; c.archivedAt = old.archivedAt || '';
+    }
+    c.updatedAt = now;
+    await DB.tx('customers', 'readwrite', s => req(s.customers.put(c)));
+    await this.loadCustomers();
+    maybePersist();
+    return c;
+  },
+  /** 儲存客戶並同步儲存表單中的聯絡人（新增／修改／刪除），單一交易完成 */
+  async saveCustomerWithContacts(data, contacts = [], deleteIds = []) {
+    const c = cleanCustomer(data);
+    if (!c.name) throw new Error('客戶名稱為必填');
+    const now = nowISO();
+    // 只更新表單上有的欄位；未出現在表單的欄位（例如部門、備註）保留原值
+    const rows = contacts.map(x => { const o = { id: x.id || '' }; for (const k of CONTACT_FIELDS) if (k in x) o[k] = String(x[k] == null ? '' : x[k]).trim(); return o; })
+      .filter(o => o.id || CONTACT_FIELDS.some(k => o[k]));
+    for (const o of rows) {
+      if (!o.name) throw new Error('聯絡人姓名為必填（有填電話或信箱的聯絡人列，請填寫姓名）');
+      if (!isEmail(o.email || '')) throw new Error(`聯絡人「${o.name}」的電子郵件格式不正確`);
+    }
+    await DB.tx(['customers', 'contacts'], 'readwrite', async s => {
+      if (!data.id) { c.id = uid(); c.createdAt = now; }
+      else {
+        const old = await req(s.customers.get(data.id));
+        if (!old) throw new Error('找不到此客戶，可能已被刪除');
+        c.id = old.id; c.createdAt = old.createdAt; c.lastContactDate = old.lastContactDate;
+        c.archived = old.archived; c.archivedAt = old.archivedAt || '';
+      }
+      c.updatedAt = now;
+      await req(s.customers.put(c));
+      for (const id of deleteIds) {
+        const old = await req(s.contacts.get(id));
+        if (old && old.customerId !== c.id) throw new Error('聯絡人不屬於此客戶，已取消儲存');
+        if (old) s.contacts.delete(id);
+      }
+      let seq = 0; const base = Date.now();
+      for (const o of rows) {
+        if (o.id) {
+          const old = await req(s.contacts.get(o.id));
+          if (!old) throw new Error(`找不到聯絡人「${o.name}」，可能已被刪除`);
+          if (old.customerId !== c.id) throw new Error('聯絡人不屬於此客戶，已取消儲存');
+          await req(s.contacts.put(Object.assign(old, o, { updatedAt: now })));
+        } else {
+          const blank = {}; for (const k of CONTACT_FIELDS) blank[k] = '';
+          await req(s.contacts.put(Object.assign(blank, o, { id: uid(), customerId: c.id, createdAt: new Date(base + seq++).toISOString(), updatedAt: now }))); // 依表單順序排列
+        }
+      }
+    });
+    await this.loadCustomers();
+    maybePersist();
+    return c;
+  },
+  async patchCustomer(id, patch) {
+    await DB.tx('customers', 'readwrite', async s => {
+      const c = await req(s.customers.get(id));
+      if (!c) throw new Error('找不到此客戶');
+      Object.assign(c, patch, { updatedAt: nowISO() });
+      await req(s.customers.put(c));
+    });
+    await this.loadCustomers();
+  },
+  setArchived(id, archived) { return this.patchCustomer(id, { archived, archivedAt: archived ? nowISO() : '' }); },
+  setFollowUp(id, date) { return this.patchCustomer(id, { nextFollowUpDate: date || '' }); },
+
+  /** 永久刪除客戶（含其聯絡人與活動），單一交易 */
+  async deleteCustomer(id) {
+    const r = await DB.tx(['customers', 'contacts', 'activities'], 'readwrite', async s => {
+      const c = await req(s.customers.get(id));
+      if (!c) throw new Error('找不到此客戶');
+      if (!c.archived) throw new Error('只能刪除已封存的客戶');
+      const cts = await req(s.contacts.index('customerId').getAllKeys(id));
+      const acts = await req(s.activities.index('customerId').getAllKeys(id));
+      for (const k of cts) s.contacts.delete(k);
+      for (const k of acts) s.activities.delete(k);
+      s.customers.delete(id);
+      return { contacts: cts.length, activities: acts.length };
+    });
+    await this.loadCustomers();
+    return r;
+  },
+
+  contactsOf(customerId) { return DB.byIndex('contacts', 'customerId', customerId); },
+  async saveContact(data) {
+    const now = nowISO();
+    const o = { id: data.id || uid(), customerId: data.customerId };
+    for (const k of CONTACT_FIELDS) o[k] = String(data[k] || '').trim();
+    if (!o.name) throw new Error('聯絡人姓名為必填');
+    if (!o.customerId) throw new Error('缺少所屬客戶');
+    await DB.tx(['customers', 'contacts'], 'readwrite', async s => {
+      const cust = await req(s.customers.get(o.customerId));
+      if (!cust) throw new Error('所屬客戶不存在');
+      if (data.id) {
+        const old = await req(s.contacts.get(data.id));
+        if (!old) throw new Error('找不到此聯絡人');
+        if (old.customerId !== o.customerId) throw new Error('聯絡人不屬於此客戶，已取消儲存');
+        o.createdAt = old.createdAt;
+      } else o.createdAt = now;
+      o.updatedAt = now;
+      await req(s.contacts.put(o));
+    });
+    await this.loadCustomers();
+    return o;
+  },
+  /** 刪除聯絡人：同時核對所屬客戶，避免誤刪其他客戶資料 */
+  async deleteContact(id, customerId) {
+    await DB.tx('contacts', 'readwrite', async s => {
+      const old = await req(s.contacts.get(id));
+      if (!old) throw new Error('找不到此聯絡人');
+      if (old.customerId !== customerId) throw new Error('聯絡人不屬於此客戶，已取消刪除');
+      await req(s.contacts.delete(id));
+    });
+    await this.loadCustomers();
+  },
+
+  async activitiesOf(customerId) {
+    const list = await DB.byIndex('activities', 'customerId', customerId);
+    return sortActs(list);
+  },
+  async allActivities() { return sortActs(await DB.getAll('activities')); },
+
+  /** 新增/編輯活動：同一交易內重新計算最後聯絡日期，並更新下次跟進日期 */
+  async saveActivity(data) {
+    const now = nowISO();
+    const o = {
+      id: data.id || uid(), customerId: data.customerId, contactId: data.contactId || '',
+      contactName: String(data.contactName || '').trim(), type: data.type, datetime: data.datetime,
+      content: String(data.content || '').trim(), nextFollowUpDate: data.nextFollowUpDate || ''
+    };
+    if (!o.customerId) throw new Error('請選擇客戶');
+    if (!ACT_TYPES.includes(o.type)) throw new Error('請選擇拜訪類型');
+    if (!parseDateTime(o.datetime)) throw new Error('請輸入正確的拜訪日期及時間');
+    let info = {};
+    await DB.tx(['customers', 'contacts', 'activities'], 'readwrite', async s => {
+      const cust = await req(s.customers.get(o.customerId));
+      if (!cust) throw new Error('所屬客戶不存在');
+      if (o.contactId) {
+        const ct = await req(s.contacts.get(o.contactId));
+        if (!ct || ct.customerId !== o.customerId) throw new Error('所選聯絡人不屬於此客戶');
+        o.contactName = ct.name;
+      }
+      if (data.id) {
+        const old = await req(s.activities.get(data.id));
+        if (!old) throw new Error('找不到此活動紀錄');
+        if (old.customerId !== o.customerId) throw new Error('活動不屬於此客戶');
+        o.createdAt = old.createdAt;
+      } else o.createdAt = now;
+      o.updatedAt = now;
+      await req(s.activities.put(o));
+      const all = await req(s.activities.index('customerId').getAll(o.customerId));
+      cust.lastContactDate = latestDate(all);
+      if (o.nextFollowUpDate) { cust.nextFollowUpDate = o.nextFollowUpDate; info.followUpUpdated = true; }
+      cust.updatedAt = now;
+      await req(s.customers.put(cust));
+    });
+    await this.loadCustomers();
+    return Object.assign(o, info);
+  },
+  async deleteActivity(id, customerId) {
+    await DB.tx(['customers', 'activities'], 'readwrite', async s => {
+      const old = await req(s.activities.get(id));
+      if (!old) throw new Error('找不到此活動紀錄');
+      if (old.customerId !== customerId) throw new Error('活動不屬於此客戶，已取消刪除');
+      await req(s.activities.delete(id));
+      const cust = await req(s.customers.get(customerId));
+      if (cust) {
+        const rest = await req(s.activities.index('customerId').getAll(customerId));
+        cust.lastContactDate = latestDate(rest);
+        if (old.nextFollowUpDate && cust.nextFollowUpDate === old.nextFollowUpDate) {
+          const latest = sortActs(rest)[0];
+          cust.nextFollowUpDate = latest ? (latest.nextFollowUpDate || '') : '';
+        }
+        cust.updatedAt = nowISO();
+        await req(s.customers.put(cust));
+      }
+    });
+    await this.loadCustomers();
+  },
+
+  stats() {
+    const t = todayStr();
+    const live = this.customers.filter(c => !c.archived);
+    return {
+      total: live.length,
+      active: live.filter(c => c.isActive).length,
+      prospect: live.filter(c => !c.isActive).length,
+      today: live.filter(c => c.nextFollowUpDate === t).length,
+      overdue: live.filter(c => c.nextFollowUpDate && c.nextFollowUpDate < t).length,
+      archived: this.customers.length - live.length
+    };
+  },
+  findDuplicates(c, excludeId) {
+    const nn = normName(c.name);
+    return this.customers.filter(x => x.id !== excludeId && ((c.taxId && x.taxId === c.taxId) || (nn && normName(x.name) === nn)));
+  }
+};
+function sortActs(list) { return list.slice().sort((a, b) => (b.datetime || '').localeCompare(a.datetime || '') || (b.createdAt || '').localeCompare(a.createdAt || '')); }
+function latestDate(acts) {
+  let m = '';
+  for (const a of acts) if (a.datetime && a.datetime > m) m = a.datetime;
+  return m ? m.slice(0, 10) : '';
+}
+
+/* ============================================================
+ * 介面：對話框、導覽、頁面
+ * ============================================================ */
+const PAGES = {
+  dashboard: { k: 'A', t: '首頁儀表板' },
+  customers: { k: 'B', t: '客戶管理' },
+  activities: { k: 'C', t: '業務活動與跟進' },
+  deals: { k: 'D', t: '商機管理', soon: true },
+  gp: { k: 'E', t: 'GP 營收管理', soon: true },
+  si: { k: 'F', t: 'SI 專案管理', soon: true },
+  reports: { k: 'G', t: '業務統計報表', soon: true },
+  data: { k: 'H', t: '資料匯入、匯出與備份' },
+  settings: { k: 'I', t: '系統設定' }
+};
+const state = {
+  page: 'dashboard', detailId: null, detailTab: 'info',
+  f: { q: '', industry: '', status: '', region: '', view: 'live', sort: 'updatedAt', dir: 'desc' },
+  actQ: '', actType: '', lastBackupAt: null
+};
+
+/* ---------- 對話框 ---------- */
+const modalStack = [];
+function openModal({ title, body, footer = '', size = '', onClose }) {
+  const bg = document.createElement('div');
+  bg.className = 'modal-bg';
+  bg.innerHTML = `<div class="modal ${size}" role="dialog" aria-modal="true" aria-label="${esc(title)}">
+    <div class="modal-h"><h3>${esc(title)}</h3><button type="button" class="x" data-close aria-label="關閉">×</button></div>
+    <div class="modal-b">${body}</div>${footer ? `<div class="modal-f">${footer}</div>` : ''}</div>`;
+  document.body.appendChild(bg);
+  document.body.style.overflow = 'hidden';
+  const m = { el: bg, closed: false, close() {
+    if (m.closed) return; m.closed = true; bg.remove();
+    const i = modalStack.indexOf(m); if (i >= 0) modalStack.splice(i, 1);
+    if (!modalStack.length) document.body.style.overflow = '';
+    onClose && onClose();
+  } };
+  modalStack.push(m);
+  bg.addEventListener('click', e => { if (e.target.closest('[data-close]')) m.close(); });
+  setTimeout(() => { const f = bg.querySelector('[autofocus]') || bg.querySelector('.modal-b input:not([type=hidden]):not([type=radio]):not([type=file]),.modal-b textarea'); if (f && window.innerWidth > 640 && !bg.contains(document.activeElement)) f.focus(); }, 30);
+  return m;
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && modalStack.length) modalStack[modalStack.length - 1].close(); });
+
+function confirmDialog(message, { title = '請確認', okText = '確定', danger = false, cancelText = '取消' } = {}) {
+  return new Promise(resolve => {
+    let done = false;
+    const m = openModal({
+      title, size: 'narrow',
+      body: `<div style="white-space:pre-wrap">${message}</div>`,
+      footer: `<button class="btn" data-close>${esc(cancelText)}</button><button class="btn ${danger ? 'danger solid' : 'primary'}" data-ok autofocus>${esc(okText)}</button>`,
+      onClose: () => { if (!done) resolve(false); }
+    });
+    m.el.querySelector('[data-ok]').addEventListener('click', () => { done = true; m.close(); resolve(true); });
+  });
+}
+async function guard(fn, okMsg) {
+  try { const r = await fn(); if (okMsg) toast(okMsg); return r; }
+  catch (e) { console.error(e); toast('操作失敗：' + errMsg(e), 'err'); return undefined; }
+}
+
+/* ---------- 導覽 ---------- */
+function buildNav() {
+  $('#nav').innerHTML = Object.entries(PAGES).map(([id, p]) =>
+    `<li><a href="#/${id}" data-page="${id}"><span class="k">${p.k}</span>${esc(p.t)}${p.soon ? '<span class="soon">開發中</span>' : ''}</a></li>`).join('');
+  $('#nav').addEventListener('click', e => {
+    const a = e.target.closest('a[data-page]'); if (!a) return;
+    if (location.hash === '#/' + a.dataset.page) { e.preventDefault(); route(); } // 同頁時（例如在客戶詳細頁）也要回到清單
+  });
+  $('#menuBtn').addEventListener('click', () => document.body.classList.toggle('nav-open'));
+  $('#overlay').addEventListener('click', () => document.body.classList.remove('nav-open'));
+}
+function go(page) {
+  if (location.hash !== '#/' + page) location.hash = '#/' + page; else route();
+}
+function route() {
+  const p = (location.hash.match(/^#\/(\w+)/) || [])[1];
+  state.page = PAGES[p] ? p : 'dashboard';
+  state.detailId = null;
+  document.body.classList.remove('nav-open');
+  render();
+}
+async function render() {
+  $$('#nav a').forEach(a => a.classList.toggle('active', a.dataset.page === state.page));
+  const title = state.detailId ? '客戶詳細資料' : PAGES[state.page].t;
+  $('#pageTitle').textContent = title;
+  document.title = `${title}｜${APP.name}`;
+  const el = $('#content');
+  try {
+    if (state.page === 'customers' && state.detailId) await renderDetail(el);
+    else await ({ dashboard: renderDashboard, customers: renderCustomers, activities: renderActivities, data: renderData, settings: renderSettings }[state.page] || renderSoon)(el);
+  } catch (e) {
+    console.error(e);
+    el.innerHTML = `<div class="notice danger">頁面載入失敗：${esc(errMsg(e))}</div>`;
+  }
+  window.scrollTo(0, 0);
+}
+function openCustomer(id, tab = 'info') {
+  state.page = 'customers'; state.detailId = id; state.detailTab = tab;
+  if (location.hash !== '#/customers') { history.replaceState(null, '', '#/customers'); }
+  render();
+}
+
+/* ---------- 共用片段 ---------- */
+function telLink(v) {
+  if (!v) return '';
+  return `<a href="tel:${esc(String(v).replace(/[^\d+#,]/g, '').replace('#', ','))}">${esc(v)}</a>`;
+}
+function statusBadge(c) {
+  if (c.archived) return '<span class="badge archived">已封存</span>';
+  return c.isActive ? '<span class="badge active">服務中</span>' : '<span class="badge prospect">潛在客戶</span>';
+}
+function followBadge(date) {
+  if (!date) return '<span class="muted">—</span>';
+  const t = todayStr();
+  if (date < t) return `<span class="badge overdue">逾期 ${daysBetween(date, t)} 天</span> <span class="small">${esc(date)}</span>`;
+  if (date === t) return `<span class="badge today">今天</span>`;
+  return esc(date);
+}
+function backupNotice() {
+  const s = Store.stats();
+  if (!Store.customers.length) return '';
+  const lb = state.lastBackupAt;
+  if (!lb) return `<div class="notice warn">⚠ 尚未建立任何備份。資料只存在這台裝置的瀏覽器中，建議立即到「<a href="#/data">資料匯入、匯出與備份</a>」匯出 Excel 備份。</div>`;
+  const d = daysBetween(todayStr(new Date(lb)), todayStr());
+  if (d >= 7) return `<div class="notice warn">⚠ 距離上次備份已 ${d} 天（${esc(fmtDT(lb))}），建議到「<a href="#/data">資料匯入、匯出與備份</a>」重新備份。</div>`;
+  return '';
+}
+function optionList(list, selected, placeholder) {
+  return (placeholder !== undefined ? `<option value="">${esc(placeholder)}</option>` : '') +
+    list.map(v => `<option value="${esc(v)}"${v === selected ? ' selected' : ''}>${esc(v)}</option>`).join('');
+}
+
+/* ============================================================
+ * A. 首頁儀表板
+ * ============================================================ */
+async function renderDashboard(el) {
+  await Store.loadCustomers();
+  const s = Store.stats();
+  const t = todayStr();
+  const live = Store.customers.filter(c => !c.archived && c.nextFollowUpDate);
+  const overdue = live.filter(c => c.nextFollowUpDate < t).sort((a, b) => a.nextFollowUpDate.localeCompare(b.nextFollowUpDate));
+  const today = live.filter(c => c.nextFollowUpDate === t);
+  el.innerHTML = `
+    <div class="notice info">🔒 本系統的資料只儲存在<strong>目前這台裝置的這個瀏覽器</strong>中，不會上傳到任何伺服器。換裝置、換瀏覽器或清除瀏覽器資料後將看不到資料，請定期匯出備份。</div>
+    ${backupNotice()}
+    <div class="kpis">
+      <button class="kpi" data-go="all"><div class="l">客戶總數</div><div class="v">${s.total}</div></button>
+      <button class="kpi" data-go="active"><div class="l">服務中客戶</div><div class="v">${s.active}</div></button>
+      <button class="kpi o" data-go="prospect"><div class="l">潛在客戶</div><div class="v">${s.prospect}</div></button>
+      <button class="kpi o" data-go="fu"><div class="l">今日待跟進</div><div class="v">${s.today}</div></button>
+      <button class="kpi r" data-go="fu"><div class="l">已逾期跟進</div><div class="v">${s.overdue}</div></button>
+    </div>
+    <div class="two">
+      <div class="card"><h2>已逾期跟進 <span class="count">${overdue.length}</span></h2>${fuList(overdue, '目前沒有逾期的跟進項目 👍')}</div>
+      <div class="card"><h2>今日待跟進 <span class="count">${today.length}</span></h2>${fuList(today, '今天沒有待跟進項目')}</div>
+    </div>
+    <div class="card"><h2>其他模組指標</h2>
+      <p class="muted small" style="margin-top:0">以下模組尚未開發，完成後才會串接真實數據，目前不顯示任何數字。</p>
+      <div class="pending-grid">
+        <div><b>進行中商機</b>待「商機管理」完成</div><div><b>未結案 GP</b>待「GP 營收管理」完成</div>
+        <div><b>已結案 GP</b>待「GP 營收管理」完成</div><div><b>SI 專案</b>待「SI 專案管理」完成</div>
+        <div><b>本週活動統計</b>待「業務統計報表」完成</div>
+      </div></div>
+    <div class="row"><button class="btn primary" data-act="new">＋ 新增客戶</button><button class="btn accent" data-act="card">📇 名片新增</button></div>`;
+  bindFuList(el);
+  $$('[data-go]', el).forEach(b => b.addEventListener('click', () => {
+    const g = b.dataset.go;
+    if (g === 'fu') return go('activities');
+    Object.assign(state.f, { q: '', industry: '', region: '', view: 'live', status: g === 'all' ? '' : g });
+    go('customers');
+  }));
+  $('[data-act=new]', el).addEventListener('click', () => customerForm());
+  $('[data-act=card]', el).addEventListener('click', () => cardScanForm());
+}
+function fuList(list, emptyText) {
+  if (!list.length) return `<div class="empty">${esc(emptyText)}</div>`;
+  return list.map(c => `<div class="fu-row" data-id="${esc(c.id)}">
+    <span class="nm" data-open>${esc(c.name)}</span>${statusBadge(c)}<span class="spacer"></span>${followBadge(c.nextFollowUpDate)}
+    <span class="row" style="gap:6px"><button class="btn sm" data-fu-act>＋ 活動</button><button class="btn sm" data-fu-resched>改期</button><button class="btn sm" data-fu-done>完成跟進</button></span></div>`).join('');
+}
+function bindFuList(root) {
+  $$('.fu-row', root).forEach(r => {
+    const id = r.dataset.id;
+    $('[data-open]', r).addEventListener('click', () => openCustomer(id));
+    $('[data-fu-act]', r).addEventListener('click', () => activityForm({ customerId: id }));
+    $('[data-fu-resched]', r).addEventListener('click', () => rescheduleForm(id));
+    $('[data-fu-done]', r).addEventListener('click', async () => {
+      const c = Store.customer(id);
+      if (!await confirmDialog(`將「${esc(c.name)}」標示為完成跟進？\n下次跟進日期會被清除，歷史活動紀錄不受影響。`, { okText: '完成跟進' })) return;
+      const ok = await guard(() => Store.setFollowUp(id, '').then(() => true), '已完成跟進');
+      if (ok) render();
+    });
+  });
+}
+function rescheduleForm(id) {
+  const c = Store.customer(id);
+  const m = openModal({
+    title: '修改下次跟進日期', size: 'narrow',
+    body: `<p style="margin-top:0"><b>${esc(c.name)}</b></p><div class="field"><label>下次跟進日期</label><input type="date" class="input" id="rsDate" value="${esc(c.nextFollowUpDate || addDays(todayStr(), 7))}"></div>
+      <div class="row" style="margin-top:10px">${[1, 3, 7, 14, 30].map(n => `<button class="btn sm" data-add="${n}">+${n} 天</button>`).join('')}</div>`,
+    footer: `<button class="btn" data-close>取消</button><button class="btn primary" data-save>儲存</button>`
+  });
+  $$('[data-add]', m.el).forEach(b => b.addEventListener('click', () => { $('#rsDate', m.el).value = addDays(todayStr(), Number(b.dataset.add)); }));
+  $('[data-save]', m.el).addEventListener('click', async () => {
+    const v = $('#rsDate', m.el).value;
+    if (!v) return toast('請選擇日期', 'warn');
+    const ok = await guard(() => Store.setFollowUp(id, v).then(() => true), '下次跟進日期已更新');
+    if (ok) { m.close(); render(); }
+  });
+}
+
+/* ============================================================
+ * B. 客戶管理：清單
+ * ============================================================ */
+const SORTS = { name: '客戶名稱', industry: '產業', region: '地區', lastContactDate: '最後聯絡', nextFollowUpDate: '下次跟進', createdDate: '建檔日期', updatedAt: '最後修改' };
+function filteredCustomers() {
+  const f = state.f;
+  const q = f.q.trim().toLowerCase().normalize('NFKC').replace(/台/g, '臺');
+  let list = Store.customers.filter(c => {
+    if (f.view === 'live' && c.archived) return false;
+    if (f.view === 'archived' && !c.archived) return false;
+    if (f.industry && c.industry !== f.industry) return false;
+    if (f.status === 'active' && !c.isActive) return false;
+    if (f.status === 'prospect' && c.isActive) return false;
+    if (f.region && c.region !== f.region) return false;
+    if (q) {
+      const cts = Store.contactsByCustomer.get(c.id) || [];
+      const hay = [c.name, c.taxId, c.phone, ...cts.map(x => [x.name, x.phone, x.mobile, x.email].join(' '))].join(' ').toLowerCase().normalize('NFKC').replace(/台/g, '臺');
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+  const k = f.sort, dir = f.dir === 'asc' ? 1 : -1;
+  list.sort((a, b) => {
+    const x = a[k] || '', y = b[k] || '';
+    if (!x && y) return 1; if (x && !y) return -1; // 空值排最後
+    return (k === 'name' || k === 'industry' || k === 'region' ? String(x).localeCompare(String(y), 'zh-Hant') : String(x).localeCompare(String(y))) * dir;
+  });
+  return list;
+}
+async function renderCustomers(el) {
+  await Store.loadCustomers();
+  const f = state.f;
+  el.innerHTML = `
+    <div class="toolbar">
+      <input class="input search" type="search" id="fq" placeholder="搜尋公司名稱、統編、聯絡人姓名、電話或信箱" value="${esc(f.q)}" aria-label="搜尋">
+      <button class="btn primary" id="btnNew">＋ 新增客戶</button>
+      <button class="btn accent" id="btnCard">📇 名片新增</button>
+    </div>
+    <div class="toolbar">
+      <select class="input" id="fview" aria-label="顯示範圍">
+        <option value="live"${f.view === 'live' ? ' selected' : ''}>使用中客戶</option>
+        <option value="archived"${f.view === 'archived' ? ' selected' : ''}>已封存客戶</option>
+        <option value="all"${f.view === 'all' ? ' selected' : ''}>全部（含封存）</option></select>
+      <select class="input" id="fstatus" aria-label="服務狀態"><option value="">全部服務狀態</option>
+        <option value="active"${f.status === 'active' ? ' selected' : ''}>服務中</option><option value="prospect"${f.status === 'prospect' ? ' selected' : ''}>潛在客戶</option></select>
+      <select class="input" id="find" aria-label="產業">${optionList(industryList(true), f.industry, '全部產業')}</select>
+      <select class="input" id="freg" aria-label="地區">${optionList(REGIONS, f.region, '全部地區')}</select>
+      <select class="input" id="fsort" aria-label="排序">${Object.entries(SORTS).map(([k, v]) => `<option value="${k}"${f.sort === k ? ' selected' : ''}>排序：${v}</option>`).join('')}</select>
+      <button class="btn" id="fdir" title="切換遞增／遞減">${f.dir === 'asc' ? '↑ 遞增' : '↓ 遞減'}</button>
+      <button class="btn link" id="freset">清除篩選</button>
+    </div>
+    <div id="clist"></div>`;
+  const upd = () => drawCustomerList();
+  $('#fq', el).addEventListener('input', e => { f.q = e.target.value; upd(); });
+  [['#fview', 'view'], ['#fstatus', 'status'], ['#find', 'industry'], ['#freg', 'region'], ['#fsort', 'sort']].forEach(([s, k]) =>
+    $(s, el).addEventListener('change', e => { f[k] = e.target.value; upd(); }));
+  $('#fdir', el).addEventListener('click', e => { f.dir = f.dir === 'asc' ? 'desc' : 'asc'; e.target.textContent = f.dir === 'asc' ? '↑ 遞增' : '↓ 遞減'; upd(); });
+  $('#freset', el).addEventListener('click', () => { Object.assign(f, { q: '', industry: '', status: '', region: '', view: 'live' }); renderCustomers(el); });
+  $('#btnNew', el).addEventListener('click', () => customerForm());
+  $('#btnCard', el).addEventListener('click', () => cardScanForm());
+  upd();
+}
+function listContactCell(c) {
+  const cts = Store.contactsByCustomer.get(c.id) || [];
+  if (!cts.length) return '';
+  const first = cts[0];
+  return `<span>${esc(first.name)}${first.phone || first.mobile ? ` <span class="muted small">${esc(first.phone || first.mobile)}</span>` : ''}</span>${cts.length > 1 ? ` <span class="badge type">+${cts.length - 1}</span>` : ''}`;
+}
+function drawCustomerList() {
+  const box = $('#clist'); if (!box) return;
+  const list = filteredCustomers();
+  const f = state.f;
+  const th = (k, label) => `<th class="sortable" data-sort="${k}">${label}${f.sort === k ? ` <span class="sort-ind">${f.dir === 'asc' ? '▲' : '▼'}</span>` : ''}</th>`;
+  if (!list.length) {
+    box.innerHTML = `<div class="card empty">${Store.customers.length ? '沒有符合條件的客戶。' : '尚無客戶資料，請按「＋ 新增客戶」或「📇 名片新增」開始建立。'}</div>`;
+    return;
+  }
+  box.innerHTML = `<p class="muted small" style="margin:0 0 8px">共 ${list.length} 筆</p>
+  <div class="tablewrap cards"><table class="list"><thead><tr>${th('name', '客戶名稱')}<th>狀態</th>${th('industry', '產業')}${th('region', '地區')}<th>聯絡人</th>${th('lastContactDate', '最後聯絡')}${th('nextFollowUpDate', '下次跟進')}</tr></thead>
+  <tbody>${list.map(c => `<tr class="clickable" data-id="${esc(c.id)}">
+    <td class="name" data-label="客戶名稱">${esc(c.name)}</td>
+    <td data-label="狀態">${statusBadge(c)}</td>
+    <td data-label="產業" class="${c.industry ? '' : 'empty-cell'}">${esc(c.industry)}</td>
+    <td data-label="地區" class="${c.region ? '' : 'empty-cell'}">${esc(c.region)}</td>
+    <td data-label="聯絡人" class="${(Store.contactsByCustomer.get(c.id) || []).length ? '' : 'empty-cell'}">${listContactCell(c)}</td>
+    <td data-label="最後聯絡">${esc(c.lastContactDate) || '<span class="muted">—</span>'}</td>
+    <td data-label="下次跟進">${followBadge(c.nextFollowUpDate)}</td></tr>`).join('')}</tbody></table></div>`;
+  $$('tr.clickable', box).forEach(tr => tr.addEventListener('click', () => openCustomer(tr.dataset.id)));
+  $$('th.sortable', box).forEach(h => h.addEventListener('click', () => {
+    const k = h.dataset.sort;
+    if (f.sort === k) f.dir = f.dir === 'asc' ? 'desc' : 'asc'; else { f.sort = k; f.dir = k === 'name' ? 'asc' : 'desc'; }
+    const s = $('#fsort'); if (s) s.value = f.sort;
+    const d = $('#fdir'); if (d) d.textContent = f.dir === 'asc' ? '↑ 遞增' : '↓ 遞減';
+    drawCustomerList();
+  }));
+}
+
+/* ---------- 客戶表單 ---------- */
+function industrySelectHtml(prefix, value) {
+  const list = industryList();
+  const isOther = value && !list.includes(value);
+  return `<select class="input" id="${prefix}_industry">${optionList(list, isOther ? '' : value, '請選擇')}<option value="__other"${isOther ? ' selected' : ''}>其他（自行輸入）</option></select>
+    <div class="row${isOther ? '' : ' hidden'}" id="${prefix}_industryOtherBox" style="margin-top:6px;gap:6px;flex-wrap:nowrap">
+      <input class="input" id="${prefix}_industryOther" placeholder="請輸入產業" value="${isOther ? esc(value) : ''}" style="flex:1;min-width:0">
+      <button type="button" class="btn sm" id="${prefix}_industryAdd" title="把這個產業加入下拉選單，之後可直接選擇">＋ 新增產業</button></div>`;
+}
+function bindIndustry(root, prefix) {
+  const sel = $(`#${prefix}_industry`, root), box = $(`#${prefix}_industryOtherBox`, root), other = $(`#${prefix}_industryOther`, root);
+  sel.addEventListener('change', () => { box.classList.toggle('hidden', sel.value !== '__other'); if (sel.value === '__other') other.focus(); });
+  $(`#${prefix}_industryAdd`, root).addEventListener('click', async () => {
+    const v = other.value.trim();
+    if (!v) { toast('請先輸入產業名稱', 'warn'); other.focus(); return; }
+    const added = await guard(() => addIndustry(v));
+    if (added === undefined) return;
+    const list = industryList();
+    sel.innerHTML = optionList(list, v, '請選擇') + '<option value="__other">其他（自行輸入）</option>';
+    sel.value = v; other.value = ''; box.classList.add('hidden');
+    toast(added ? `已新增產業「${v}」，之後可直接從清單選擇` : `「${v}」已在產業清單中，已為您選取`);
+  });
+}
+function customerFields(c, prefix = 'c') {
+  return `
+  <div class="section-t full">基本資料</div>
+  <div class="field full"><label>是否為服務中客戶</label>
+    <div class="seg"><label><input type="radio" name="${prefix}_isActive" value="1"${c.isActive ? ' checked' : ''}><span>是（服務中）</span></label><label><input type="radio" name="${prefix}_isActive" value="0"${!c.isActive ? ' checked' : ''}><span>否（潛在客戶）</span></label></div></div>
+  <div class="field full"><label>客戶名稱 <span class="req">*</span></label><input class="input" id="${prefix}_name" value="${esc(c.name)}" required autocomplete="organization"><div class="err hidden" id="${prefix}_name_err"></div><div class="warn hidden" id="${prefix}_dup"></div></div>
+  <div class="field"><label>產業</label>${industrySelectHtml(prefix, c.industry)}</div>
+  <div class="field"><label>統一編號</label><input class="input" id="${prefix}_taxId" value="${esc(c.taxId)}" inputmode="numeric" maxlength="8" pattern="\\d{8}" placeholder="8 位數字"><div class="warn hidden" id="${prefix}_taxId_msg"></div></div>
+  <div class="field"><label>負責人</label><input class="input" id="${prefix}_owner" value="${esc(c.owner)}"></div>
+  <div class="field"><label>登記資本（新臺幣元）</label><input class="input" id="${prefix}_capital" value="${esc(c.capital)}" inputmode="numeric" placeholder="例如 5000000"></div>
+  <div class="field"><label>地區</label><select class="input" id="${prefix}_region">${optionList(REGIONS, c.region, '請選擇縣市')}</select></div>
+  <div class="field"><label>建檔日期</label><input type="date" class="input" id="${prefix}_createdDate" value="${esc(c.createdDate)}"></div>
+  <div class="section-t full">公司聯絡資訊</div>
+  <div class="field"><label>公司電話</label><input class="input" type="tel" id="${prefix}_phone" value="${esc(c.phone)}" inputmode="tel" placeholder="例如 04-2345-6789"></div>
+  <div class="field"><label>公司傳真</label><input class="input" type="tel" id="${prefix}_fax" value="${esc(c.fax)}" inputmode="tel" placeholder="例如 04-2345-6790"></div>
+  <div class="field full"><label>公司註冊地址</label><input class="input" id="${prefix}_regAddress" value="${esc(c.regAddress)}" placeholder="依經濟部登記資料"></div>
+  <div class="field full"><label>公司聯絡地址
+      <span class="small" style="font-weight:400;margin-left:10px;white-space:nowrap"><input type="checkbox" id="${prefix}_sameAddr" style="width:18px;height:18px;vertical-align:-4px"> 同註冊地址</span></label>
+    <input class="input" id="${prefix}_contactAddress" value="${esc(c.contactAddress)}" autocomplete="street-address" placeholder="實際聯繫、寄送資料的地址"></div>
+  <div class="field"><label>公司網址</label><input class="input" id="${prefix}_website" value="${esc(c.website)}" inputmode="url" placeholder="www.example.com.tw"></div>
+  <div class="field"><label>Microsoft 網域</label><input class="input" id="${prefix}_msDomain" value="${esc(c.msDomain)}" inputmode="url" placeholder="例如 contoso.onmicrosoft.com"></div>
+  <div class="section-t full">跟進與備註</div>
+  <div class="field"><label>下次跟進日期</label><input type="date" class="input" id="${prefix}_nextFollowUpDate" value="${esc(c.nextFollowUpDate)}"></div>
+  <div class="field"><label>最後聯絡日期</label><input class="input" value="${esc(c.lastContactDate) || '（依業務活動自動計算）'}" disabled></div>
+  <div class="field full"><label>客戶備註</label><textarea class="input" id="${prefix}_note">${esc(c.note)}</textarea></div>`;
+}
+function bindCustomerFields(root, prefix, excludeId) {
+  bindIndustry(root, prefix);
+  const tax = $(`#${prefix}_taxId`, root), taxMsg = $(`#${prefix}_taxId_msg`, root);
+  const checkTax = () => {
+    tax.value = tax.value.normalize('NFKC').replace(/\D/g, '').slice(0, 8);
+    const r = checkTaxId(tax.value);
+    taxMsg.classList.toggle('hidden', r.ok); taxMsg.textContent = r.ok ? '' : r.msg;
+    checkDup();
+  };
+  const name = $(`#${prefix}_name`, root), dup = $(`#${prefix}_dup`, root);
+  const checkDup = () => {
+    const d = Store.findDuplicates({ name: name.value, taxId: tax.value }, excludeId);
+    dup.classList.toggle('hidden', !d.length);
+    dup.textContent = d.length ? `⚠ 可能重複：已有「${d.map(x => x.name + (x.archived ? '（已封存）' : '')).join('、')}」` : '';
+  };
+  tax.addEventListener('input', checkTax); name.addEventListener('input', checkDup);
+  const regA = $(`#${prefix}_regAddress`, root), conA = $(`#${prefix}_contactAddress`, root), same = $(`#${prefix}_sameAddr`, root), reg = $(`#${prefix}_region`, root);
+  const autoRegion = v => { if (!reg.value) { const r = regionFromAddress(v); if (r) reg.value = r; } };
+  const syncSame = () => { if (same.checked) conA.value = regA.value; conA.readOnly = same.checked; };
+  same.checked = !!regA.value && regA.value === conA.value;
+  syncSame();
+  same.addEventListener('change', syncSame);
+  regA.addEventListener('input', () => { if (same.checked) conA.value = regA.value; });
+  regA.addEventListener('change', () => autoRegion(regA.value));
+  conA.addEventListener('change', () => autoRegion(conA.value));
+  checkTax();
+}
+function readCustomerFields(root, prefix) {
+  const v = id => ($(`#${prefix}_${id}`, root) || {}).value || '';
+  const ind = v('industry');
+  return {
+    isActive: ($(`input[name=${prefix}_isActive]:checked`, root) || {}).value === '1',
+    name: v('name').trim(), industry: ind === '__other' ? v('industryOther').trim() : ind,
+    taxId: v('taxId').trim(), owner: v('owner'), capital: v('capital'), region: v('region'),
+    phone: v('phone').trim(), fax: v('fax').trim(), regAddress: v('regAddress'), contactAddress: v('contactAddress'),
+    website: v('website').trim(), msDomain: v('msDomain').trim(), createdDate: v('createdDate') || todayStr(),
+    nextFollowUpDate: v('nextFollowUpDate'), note: v('note')
+  };
+}
+function validateCustomer(root, prefix, d) {
+  const err = $(`#${prefix}_name_err`, root);
+  if (!d.name) { err.textContent = '請輸入客戶名稱'; err.classList.remove('hidden'); $(`#${prefix}_name`, root).focus(); return false; }
+  err.classList.add('hidden');
+  if (d.taxId && !/^\d{8}$/.test(d.taxId)) { toast('統一編號須為 8 位數字', 'warn'); return false; }
+  if (d.capital && isNaN(Number(String(d.capital).replace(/[,\s元]/g, '')))) { toast('登記資本請輸入數字', 'warn'); return false; }
+  if (!isUrlLike(d.website)) { toast('公司網址格式不正確', 'warn'); return false; }
+  return true;
+}
+
+/* ---------- 客戶表單內的聯絡人（可新增多位） ---------- */
+const QUICK_CT = [['name', '姓名', 'text', 'name'], ['title', '職稱', 'text', 'organization-title'], ['phone', '電話', 'tel', 'tel'], ['email', '電子郵件', 'email', 'email']];
+function contactRowHtml(ct, n) {
+  return `<div class="ct-row" data-ct-id="${esc(ct.id || '')}">
+    <div class="ct-row-h"><b class="ct-no">聯絡人 ${n}</b><button type="button" class="btn sm danger" data-ct-remove>移除</button></div>
+    <div class="ct-row-g">${QUICK_CT.map(([k, label, type, ac]) => `<div class="field"><label>${label}${k === 'name' ? ' <span class="req">*</span>' : ''}</label>
+      <input class="input" data-k="${k}" type="${type}"${type === 'tel' ? ' inputmode="tel"' : type === 'email' ? ' inputmode="email"' : ''} autocomplete="${ac}" value="${esc(ct[k] || '')}"></div>`).join('')}</div>
+    <div class="err hidden" data-ct-err></div></div>`;
+}
+function contactsSectionHtml(list) {
+  return `<div class="section-t full" style="display:flex;align-items:center;gap:8px">聯絡人 <span class="count small" id="ctCount" style="background:var(--blue-l);color:var(--blue);padding:0 8px;border-radius:10px">${list.length}</span></div>
+  <div class="full" id="ctRows">${list.map((ct, i) => contactRowHtml(ct, i + 1)).join('')}</div>
+  <div class="full"><button type="button" class="btn" id="ctAdd">＋ 新增聯絡人</button>
+    <span class="small muted" style="margin-left:8px">部門、手機與備註可儲存後在「聯絡人」分頁補充。</span></div>`;
+}
+function bindContactsSection(root, removed) {
+  const rows = $('#ctRows', root);
+  const renumber = () => { $$('.ct-row', rows).forEach((r, i) => { $('.ct-no', r).textContent = '聯絡人 ' + (i + 1); }); $('#ctCount', root).textContent = $$('.ct-row', rows).length; };
+  rows.addEventListener('click', e => {
+    const b = e.target.closest('[data-ct-remove]'); if (!b) return;
+    const row = b.closest('.ct-row');
+    if (row.dataset.ctId) removed.push({ id: row.dataset.ctId, name: $('[data-k=name]', row).value });
+    row.remove(); renumber();
+  });
+  $('#ctAdd', root).addEventListener('click', () => {
+    rows.insertAdjacentHTML('beforeend', contactRowHtml({}, $$('.ct-row', rows).length + 1));
+    renumber();
+    const last = rows.lastElementChild; $('[data-k=name]', last).focus();
+  });
+}
+function readContactRows(root) {
+  let ok = true; const out = [];
+  $$('#ctRows .ct-row', root).forEach(row => {
+    const o = { id: row.dataset.ctId || '' };
+    $$('[data-k]', row).forEach(i => { o[i.dataset.k] = i.value.trim(); });
+    const err = $('[data-ct-err]', row); let msg = '';
+    const any = QUICK_CT.some(([k]) => o[k]);
+    if (!any && !o.id) return; // 空白列忽略
+    if (!o.name) msg = '請填寫聯絡人姓名';
+    else if (!isEmail(o.email)) msg = '電子郵件格式不正確';
+    err.textContent = msg; err.classList.toggle('hidden', !msg);
+    if (msg) ok = false;
+    out.push(o);
+  });
+  return ok ? out : null;
+}
+
+async function customerForm(existing) {
+  const c = existing ? Object.assign({}, existing) : blankCustomer();
+  const contacts = existing ? (await Store.contactsOf(c.id)).sort((a, b) => (a.createdAt || '').localeCompare(b.createdAt || '')) : [{}];
+  const removed = [];
+  const m = openModal({
+    title: existing ? '編輯客戶' : '新增客戶', size: 'wide',
+    body: `<form id="cf" class="form-grid" novalidate>${customerFields(c, 'c')}${contactsSectionHtml(contacts)}</form>`,
+    footer: `<button class="btn" data-close>取消</button><button class="btn primary" data-save>儲存</button>`
+  });
+  if (!existing) $('#ctCount', m.el).textContent = '1';
+  bindCustomerFields(m.el, 'c', c.id);
+  bindContactsSection(m.el, removed);
+  const save = async () => {
+    const d = readCustomerFields(m.el, 'c');
+    if (!validateCustomer(m.el, 'c', d)) return;
+    const cts = readContactRows(m.el);
+    if (!cts) { toast('聯絡人資料有誤，請依紅字修正', 'warn'); const e = $('[data-ct-err]:not(.hidden)', m.el); if (e) e.scrollIntoView({ block: 'center' }); return; }
+    const dups = Store.findDuplicates(d, c.id);
+    if (dups.length && !await confirmDialog(`系統中已有相似的客戶：\n${dups.map(x => '・' + esc(x.name) + (x.taxId ? `（統編 ${esc(x.taxId)}）` : '')).join('\n')}\n\n仍要儲存為${existing ? '' : '一筆新的'}客戶嗎？`, { okText: '仍要儲存' })) return;
+    if (removed.length && !await confirmDialog(`將刪除以下聯絡人：\n${removed.map(r => '・' + esc(r.name || '（未命名）')).join('\n')}\n\n已記錄的業務活動會保留姓名。確定要儲存嗎？`, { okText: '確定儲存', danger: true })) return;
+    if (existing) d.id = c.id;
+    const saved = await guard(() => Store.saveCustomerWithContacts(d, cts, removed.map(r => r.id)), existing ? '客戶資料已更新' : (cts.length ? `客戶已新增（含 ${cts.length} 位聯絡人）` : '客戶已新增'));
+    if (saved) { m.close(); openCustomer(saved.id); }
+  };
+  $('[data-save]', m.el).addEventListener('click', save);
+  $('#cf', m.el).addEventListener('submit', e => { e.preventDefault(); save(); });
+}
+
+/* ============================================================
+ * 客戶詳細資料
+ * ============================================================ */
+async function renderDetail(el) {
+  await Store.loadCustomers();
+  const c = Store.customer(state.detailId);
+  if (!c) { el.innerHTML = `<div class="notice danger">找不到此客戶，可能已被刪除。</div><button class="btn" id="back2">← 返回客戶列表</button>`; $('#back2', el).addEventListener('click', () => go('customers')); return; }
+  const [contacts, acts] = await Promise.all([Store.contactsOf(c.id), Store.activitiesOf(c.id)]);
+  contacts.sort((a, b) => (a.createdAt || '').localeCompare(b.createdAt || ''));
+  const tab = state.detailTab;
+  el.innerHTML = `
+    <button class="btn link" id="back" style="margin-bottom:8px;padding-left:0">← 返回客戶列表</button>
+    ${c.archived ? `<div class="notice warn">此客戶已於 ${esc(fmtDT(c.archivedAt))} 封存。聯絡人與活動紀錄均完整保留，可隨時取消封存。</div>` : ''}
+    <div class="detail-head"><div style="flex:1;min-width:0"><h2>${esc(c.name)}</h2>
+      <div class="row small muted" style="margin-top:6px;gap:8px">${statusBadge(c)}${c.industry ? `<span>${esc(c.industry)}</span>` : ''}${c.region ? `<span>・${esc(c.region)}</span>` : ''}${c.taxId ? `<span>・統編 ${esc(c.taxId)}</span>` : ''}</div></div>
+      <div class="row">
+        <button class="btn" id="dEdit">編輯</button>
+        ${c.archived ? `<button class="btn" id="dUnarch">取消封存</button><button class="btn danger" id="dDel">永久刪除</button>` : `<button class="btn" id="dArch">封存</button>`}
+      </div></div>
+    <div class="follow-box"><b>下次跟進日期</b>${followBadge(c.nextFollowUpDate)}
+      <span class="spacer"></span><input type="date" class="input" id="fuDate" value="${esc(c.nextFollowUpDate)}" aria-label="下次跟進日期">
+      <button class="btn sm primary" id="fuSave">設定</button>${c.nextFollowUpDate ? '<button class="btn sm" id="fuDone">完成跟進</button>' : ''}</div>
+    <div class="tabs" role="tablist">
+      <button class="tab${tab === 'info' ? ' active' : ''}" data-tab="info">基本資料</button>
+      <button class="tab${tab === 'contacts' ? ' active' : ''}" data-tab="contacts">聯絡人（${contacts.length}）</button>
+      <button class="tab${tab === 'acts' ? ' active' : ''}" data-tab="acts">業務活動歷程（${acts.length}）</button></div>
+    <div id="tabBody"></div>`;
+  const body = $('#tabBody', el);
+  if (tab === 'info') {
+    const rows = [['客戶唯一識別碼', `<span class="small muted">${esc(c.id)}</span>`], ['服務中客戶', c.isActive ? '是' : '否'], ['客戶名稱', esc(c.name)], ['產業', esc(c.industry)], ['統一編號', esc(c.taxId)], ['負責人', esc(c.owner)], ['登記資本', esc(fmtMoney(c.capital))], ['地區', esc(c.region)], ['公司電話', telLink(c.phone)], ['公司傳真', esc(c.fax)], ['公司註冊地址', esc(c.regAddress)], ['公司聯絡地址', esc(c.contactAddress)],
+      ['公司網址', c.website ? esc(c.website) : ''], ['Microsoft 網域', esc(c.msDomain)], ['建檔日期', esc(c.createdDate)], ['最後聯絡日期', esc(c.lastContactDate)], ['下次跟進日期', esc(c.nextFollowUpDate)], ['客戶備註', esc(c.note)], ['建立時間', esc(fmtDT(c.createdAt))], ['最後修改時間', esc(fmtDT(c.updatedAt))], ['封存狀態', c.archived ? '已封存' : '未封存']];
+    body.innerHTML = `<div class="card"><h2>聯絡人 <span class="count">${contacts.length}</span><span class="spacer"></span><button class="btn sm primary" id="infoAddCt">＋ 新增聯絡人</button></h2>
+      ${contacts.length ? `<div class="tablewrap cards ct-table"><table class="list"><thead><tr><th>姓名</th><th>部門／職稱</th><th>電話</th><th>手機</th><th>電子郵件</th></tr></thead><tbody>
+        ${contacts.map(ct => `<tr><td class="name" data-label="姓名">${esc(ct.name)}</td>
+          <td data-label="部門／職稱" class="${ct.department || ct.title ? '' : 'empty-cell'}">${esc([ct.department, ct.title].filter(Boolean).join('／'))}</td>
+          <td data-label="電話" class="${ct.phone ? '' : 'empty-cell'}">${telLink(ct.phone)}</td>
+          <td data-label="手機" class="${ct.mobile ? '' : 'empty-cell'}">${telLink(ct.mobile)}</td>
+          <td data-label="電子郵件" class="${ct.email ? '' : 'empty-cell'}">${ct.email ? `<a href="mailto:${esc(ct.email)}">${esc(ct.email)}</a>` : ''}</td></tr>`).join('')}</tbody></table></div>`
+        : '<div class="empty" style="padding:14px">尚無聯絡人，按「＋ 新增聯絡人」或「編輯」即可新增。</div>'}</div>
+      <div class="card"><h2>公司資料</h2><dl class="info">${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v || '<span class="muted">—</span>'}</dd>`).join('')}</dl></div>`;
+    $('#infoAddCt', body).addEventListener('click', () => contactForm(c.id));
+  } else if (tab === 'contacts') {
+    body.innerHTML = `<div class="row" style="margin-bottom:12px"><button class="btn primary" id="addCt">＋ 新增聯絡人</button></div>` +
+      (contacts.length ? contacts.map(ct => `<div class="item" data-id="${esc(ct.id)}"><div class="t">${esc(ct.name)} <span class="muted small">${esc([ct.department, ct.title].filter(Boolean).join('／'))}</span></div>
+        <div class="meta">${ct.phone ? `<span>☎ <a href="tel:${esc(ct.phone.replace(/[^\d+#,]/g, ''))}">${esc(ct.phone)}</a></span>` : ''}${ct.mobile ? `<span>📱 <a href="tel:${esc(ct.mobile.replace(/[^\d+]/g, ''))}">${esc(ct.mobile)}</a></span>` : ''}${ct.email ? `<span>✉ <a href="mailto:${esc(ct.email)}">${esc(ct.email)}</a></span>` : ''}</div>
+        ${ct.note ? `<div class="body small">${esc(ct.note)}</div>` : ''}
+        <div class="meta" style="margin-top:4px"><span>建立 ${esc(fmtDT(ct.createdAt))}</span><span>修改 ${esc(fmtDT(ct.updatedAt))}</span></div>
+        <div class="acts"><button class="btn sm" data-edit>編輯</button><button class="btn sm danger" data-del>刪除</button></div></div>`).join('') : '<div class="card empty">尚無聯絡人</div>');
+    $('#addCt', body).addEventListener('click', () => contactForm(c.id));
+    $$('.item', body).forEach(it => {
+      const ct = contacts.find(x => x.id === it.dataset.id);
+      $('[data-edit]', it).addEventListener('click', () => contactForm(c.id, ct));
+      $('[data-del]', it).addEventListener('click', async () => {
+        if (!await confirmDialog(`確定要刪除聯絡人「${esc(ct.name)}」嗎？\n此動作無法復原。已記錄的業務活動會保留姓名。`, { okText: '刪除', danger: true })) return;
+        const ok = await guard(() => Store.deleteContact(ct.id, c.id).then(() => true), '聯絡人已刪除');
+        if (ok) render();
+      });
+    });
+  } else {
+    body.innerHTML = `<div class="row" style="margin-bottom:12px"><button class="btn primary" id="addAct">＋ 新增業務活動</button></div>` +
+      (acts.length ? `<div class="timeline">${acts.map(a => actItem(a, contacts)).join('')}</div>` : '<div class="card empty">尚無業務活動紀錄</div>');
+    $('#addAct', body).addEventListener('click', () => activityForm({ customerId: c.id }));
+    bindActItems(body, acts);
+  }
+  $('#back', el).addEventListener('click', () => { state.detailId = null; render(); });
+  $$('.tab', el).forEach(b => b.addEventListener('click', () => { state.detailTab = b.dataset.tab; render(); }));
+  $('#dEdit', el).addEventListener('click', () => customerForm(c));
+  const arch = $('#dArch', el);
+  if (arch) arch.addEventListener('click', async () => {
+    if (!await confirmDialog(`確定要封存「${esc(c.name)}」嗎？\n封存後不會出現在使用中清單與跟進清單，但聯絡人與活動紀錄會完整保留，可隨時取消封存。`, { okText: '封存' })) return;
+    const ok = await guard(() => Store.setArchived(c.id, true).then(() => true), '已封存客戶');
+    if (ok) render();
+  });
+  const un = $('#dUnarch', el);
+  if (un) un.addEventListener('click', async () => { const ok = await guard(() => Store.setArchived(c.id, false).then(() => true), '已取消封存'); if (ok) render(); });
+  const del = $('#dDel', el);
+  if (del) del.addEventListener('click', async () => {
+    if (!await confirmDialog(`確定要<b>永久刪除</b>「${esc(c.name)}」嗎？\n\n將一併刪除 ${contacts.length} 位聯絡人與 ${acts.length} 筆業務活動，刪除後無法復原。\n建議先匯出 Excel 備份。`, { title: '永久刪除客戶', okText: '確定永久刪除', danger: true })) return;
+    const r = await guard(() => Store.deleteCustomer(c.id));
+    if (r) { toast(`已永久刪除客戶（含 ${r.contacts} 位聯絡人、${r.activities} 筆活動）`); state.detailId = null; render(); }
+  });
+  $('#fuSave', el).addEventListener('click', async () => {
+    const v = $('#fuDate', el).value;
+    if (!v) return toast('請先選擇日期；若要清除請按「完成跟進」', 'warn');
+    const ok = await guard(() => Store.setFollowUp(c.id, v).then(() => true), '下次跟進日期已設定'); if (ok) render();
+  });
+  const done = $('#fuDone', el);
+  if (done) done.addEventListener('click', async () => {
+    if (!await confirmDialog('將下次跟進日期清除（標示為完成跟進）？', { okText: '完成跟進' })) return;
+    const ok = await guard(() => Store.setFollowUp(c.id, '').then(() => true), '已完成跟進'); if (ok) render();
+  });
+}
+function actItem(a, contacts, showCustomer) {
+  const ct = a.contactId && contacts ? contacts.find(x => x.id === a.contactId) : null;
+  const who = a.contactId && contacts ? (ct ? ct.name : (a.contactName ? a.contactName + '（已刪除）' : '')) : a.contactName;
+  const cust = showCustomer ? Store.customer(a.customerId) : null;
+  return `<div class="item" data-id="${esc(a.id)}">
+    <div class="row" style="gap:8px"><span class="badge type">${esc(a.type)}</span><span class="t">${esc(fmtActDT(a.datetime))}</span>
+    ${cust ? `<span class="nm" data-open-c="${esc(cust.id)}" style="color:var(--blue);cursor:pointer;font-weight:600">${esc(cust.name)}</span>` : ''}
+    ${who ? `<span class="muted small">聯繫人：${esc(who)}</span>` : ''}</div>
+    <div class="body">${esc(a.content) || '<span class="muted">（未填寫紀錄內容）</span>'}</div>
+    <div class="meta" style="margin-top:6px">${a.nextFollowUpDate ? `<span>下次跟進：${esc(a.nextFollowUpDate)}</span>` : ''}<span>建立時間：${esc(fmtDT(a.createdAt))}</span>${a.updatedAt && a.updatedAt !== a.createdAt ? `<span>修改：${esc(fmtDT(a.updatedAt))}</span>` : ''}</div>
+    <div class="acts"><button class="btn sm" data-edit>編輯</button><button class="btn sm danger" data-del>刪除</button></div></div>`;
+}
+function bindActItems(root, acts) {
+  $$('.item', root).forEach(it => {
+    const a = acts.find(x => x.id === it.dataset.id); if (!a) return;
+    $('[data-edit]', it).addEventListener('click', () => activityForm(a));
+    $('[data-del]', it).addEventListener('click', async () => {
+      if (!await confirmDialog(`確定要刪除 ${esc(fmtActDT(a.datetime))} 的「${esc(a.type)}」活動紀錄嗎？\n此動作無法復原，客戶的最後聯絡日期會重新計算。`, { okText: '刪除', danger: true })) return;
+      const ok = await guard(() => Store.deleteActivity(a.id, a.customerId).then(() => true), '活動紀錄已刪除');
+      if (ok) render();
+    });
+    const oc = $('[data-open-c]', it); if (oc) oc.addEventListener('click', () => openCustomer(oc.dataset.openC, 'acts'));
+  });
+}
+
+/* ---------- 聯絡人表單 ---------- */
+function contactFields(ct, p = 'ct') {
+  return `
+  <div class="field"><label>姓名 <span class="req">*</span></label><input class="input" id="${p}_name" value="${esc(ct.name)}" autocomplete="name"><div class="err hidden" id="${p}_name_err">請輸入姓名</div></div>
+  <div class="field"><label>部門</label><input class="input" id="${p}_department" value="${esc(ct.department)}"></div>
+  <div class="field"><label>職稱</label><input class="input" id="${p}_title" value="${esc(ct.title)}" autocomplete="organization-title"></div>
+  <div class="field"><label>電話</label><input class="input" type="tel" id="${p}_phone" value="${esc(ct.phone)}" inputmode="tel" placeholder="02-1234-5678#123"></div>
+  <div class="field"><label>手機</label><input class="input" type="tel" id="${p}_mobile" value="${esc(ct.mobile)}" inputmode="tel" placeholder="0912-345-678"></div>
+  <div class="field"><label>電子郵件</label><input class="input" type="email" id="${p}_email" value="${esc(ct.email)}" inputmode="email" autocomplete="email"><div class="err hidden" id="${p}_email_err">電子郵件格式不正確</div></div>
+  <div class="field full"><label>備註</label><textarea class="input" id="${p}_note">${esc(ct.note)}</textarea></div>`;
+}
+function readContactFields(root, p = 'ct') {
+  const o = {}; for (const k of CONTACT_FIELDS) o[k] = ($(`#${p}_${k}`, root) || {}).value || '';
+  return o;
+}
+function validateContact(root, d, p = 'ct', required = true) {
+  let ok = true;
+  const ne = $(`#${p}_name_err`, root); const ee = $(`#${p}_email_err`, root);
+  ne.classList.toggle('hidden', !!d.name.trim() || !required); if (required && !d.name.trim()) ok = false;
+  ee.classList.toggle('hidden', isEmail(d.email.trim())); if (!isEmail(d.email.trim())) ok = false;
+  return ok;
+}
+function contactForm(customerId, existing) {
+  const ct = existing || { name: '', department: '', title: '', phone: '', mobile: '', email: '', note: '' };
+  const c = Store.customer(customerId);
+  const m = openModal({
+    title: (existing ? '編輯聯絡人' : '新增聯絡人') + `－${c ? c.name : ''}`,
+    body: `<div class="form-grid">${contactFields(ct)}</div>`,
+    footer: `<button class="btn" data-close>取消</button><button class="btn primary" data-save>儲存</button>`
+  });
+  $('[data-save]', m.el).addEventListener('click', async () => {
+    const d = readContactFields(m.el);
+    if (!validateContact(m.el, d)) return;
+    d.customerId = customerId; if (existing) d.id = existing.id;
+    const r = await guard(() => Store.saveContact(d), existing ? '聯絡人已更新' : '聯絡人已新增');
+    if (r) { m.close(); if (state.detailTab !== 'info') state.detailTab = 'contacts'; render(); }
+  });
+}
+
+/* ---------- 業務活動表單 ---------- */
+async function activityForm(a) {
+  const editing = !!a.id;
+  const live = Store.customers.filter(c => !c.archived || c.id === a.customerId).sort((x, y) => x.name.localeCompare(y.name, 'zh-Hant'));
+  if (!live.length) return toast('請先新增客戶', 'warn');
+  const d = Object.assign({ customerId: '', contactId: '', type: '拜訪', datetime: nowLocalDT(), content: '', nextFollowUpDate: '' }, a);
+  const m = openModal({
+    title: editing ? '編輯業務活動' : '新增業務活動',
+    body: `<div class="form-grid">
+      <div class="field full"><label>客戶名稱 <span class="req">*</span></label>
+        ${d.customerId ? `<input class="input" value="${esc((Store.customer(d.customerId) || {}).name || '')}" disabled><input type="hidden" id="a_cust" value="${esc(d.customerId)}">`
+          : `<input class="input" id="a_custq" placeholder="輸入關鍵字篩選客戶" style="margin-bottom:6px"><select class="input" id="a_cust">${'<option value="">請選擇客戶</option>' + live.map(c => `<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('')}</select>`}</div>
+      <div class="field"><label>聯繫人</label><select class="input" id="a_contact"></select>
+        <input class="input" id="a_contactName" placeholder="或直接輸入姓名（未建檔聯絡人）" value="${d.contactId ? '' : esc(d.contactName || '')}" style="margin-top:6px"></div>
+      <div class="field"><label>拜訪日期及時間 <span class="req">*</span></label><input type="datetime-local" class="input" id="a_dt" value="${esc(d.datetime)}"></div>
+      <div class="field full"><label>拜訪類型 <span class="req">*</span></label><div class="seg">${ACT_TYPES.map(t => `<label><input type="radio" name="a_type" value="${t}"${d.type === t ? ' checked' : ''}><span>${t}</span></label>`).join('')}</div></div>
+      <div class="field full"><label>拜訪紀錄</label><textarea class="input" id="a_content" rows="5" placeholder="討論內容、客戶需求、後續行動…">${esc(d.content)}</textarea></div>
+      <div class="field"><label>下次跟進日期</label><input type="date" class="input" id="a_next" value="${esc(d.nextFollowUpDate)}">
+        <div class="hint">填寫後會同步更新此客戶的「下次跟進日期」。</div></div>
+      <div class="field"><label>快速設定</label><div class="row">${[3, 7, 14, 30].map(n => `<button type="button" class="btn sm" data-add="${n}">+${n} 天</button>`).join('')}</div></div>
+    </div>`,
+    footer: `<button class="btn" data-close>取消</button><button class="btn primary" data-save>儲存</button>`
+  });
+  const custSel = $('#a_cust', m.el), ctSel = $('#a_contact', m.el);
+  const loadContacts = async () => {
+    const id = custSel.value;
+    const cts = id ? await Store.contactsOf(id) : [];
+    ctSel.innerHTML = '<option value="">（未指定／手動輸入）</option>' + cts.map(x => `<option value="${esc(x.id)}"${x.id === d.contactId ? ' selected' : ''}>${esc(x.name)}${x.title ? '－' + esc(x.title) : ''}</option>`).join('');
+    if (d.contactId && !cts.find(x => x.id === d.contactId)) { $('#a_contactName', m.el).value = d.contactName || ''; }
+  };
+  const q = $('#a_custq', m.el);
+  if (q) {
+    q.addEventListener('input', () => {
+      const k = q.value.trim().toLowerCase();
+      $$('option', custSel).forEach(o => { if (o.value) o.hidden = k && !o.textContent.toLowerCase().includes(k); });
+    });
+    custSel.addEventListener('change', loadContacts);
+  }
+  ctSel.addEventListener('change', () => { if (ctSel.value) $('#a_contactName', m.el).value = ''; });
+  $$('[data-add]', m.el).forEach(b => b.addEventListener('click', () => { $('#a_next', m.el).value = addDays(todayStr(), Number(b.dataset.add)); }));
+  await loadContacts();
+  $('[data-save]', m.el).addEventListener('click', async () => {
+    const data = {
+      id: a.id, customerId: custSel.value, contactId: ctSel.value, contactName: ctSel.value ? '' : $('#a_contactName', m.el).value,
+      type: ($('input[name=a_type]:checked', m.el) || {}).value, datetime: $('#a_dt', m.el).value,
+      content: $('#a_content', m.el).value, nextFollowUpDate: $('#a_next', m.el).value
+    };
+    if (!data.customerId) return toast('請選擇客戶', 'warn');
+    if (!data.datetime) return toast('請輸入拜訪日期及時間', 'warn');
+    const r = await guard(() => Store.saveActivity(data));
+    if (r) {
+      toast((editing ? '活動紀錄已更新' : '活動紀錄已新增') + (r.followUpUpdated ? `，下次跟進日期已設為 ${r.nextFollowUpDate}` : ''));
+      m.close();
+      if (state.page === 'customers' && state.detailId) state.detailTab = 'acts';
+      render();
+    }
+  });
+}
+
+/* ============================================================
+ * C. 業務活動與跟進
+ * ============================================================ */
+async function renderActivities(el) {
+  await Store.loadCustomers();
+  const t = todayStr(), wk = addDays(t, 7);
+  const live = Store.customers.filter(c => !c.archived && c.nextFollowUpDate);
+  const overdue = live.filter(c => c.nextFollowUpDate < t).sort((a, b) => a.nextFollowUpDate.localeCompare(b.nextFollowUpDate));
+  const today = live.filter(c => c.nextFollowUpDate === t);
+  const soon = live.filter(c => c.nextFollowUpDate > t && c.nextFollowUpDate <= wk).sort((a, b) => a.nextFollowUpDate.localeCompare(b.nextFollowUpDate));
+  el.innerHTML = `
+    <div class="row" style="margin-bottom:14px"><button class="btn primary" id="newAct">＋ 新增業務活動</button></div>
+    <div class="two">
+      <div class="card"><h2>已逾期跟進 <span class="count">${overdue.length}</span></h2>${fuList(overdue, '目前沒有逾期項目')}</div>
+      <div class="card"><h2>今日待跟進 <span class="count">${today.length}</span></h2>${fuList(today, '今天沒有待跟進項目')}</div>
+    </div>
+    <div class="card"><h2>未來 7 天待跟進 <span class="count">${soon.length}</span></h2>${fuList(soon, '未來 7 天沒有排定跟進')}</div>
+    <div class="card"><h2>全部業務活動</h2>
+      <div class="toolbar"><input class="input search" type="search" id="aq" placeholder="搜尋客戶名稱、聯繫人或紀錄內容" value="${esc(state.actQ)}">
+      <select class="input" id="atype">${optionList(ACT_TYPES, state.actType, '全部類型')}</select></div>
+      <div id="alist"></div></div>`;
+  bindFuList(el);
+  $('#newAct', el).addEventListener('click', () => activityForm({}));
+  const all = await Store.allActivities();
+  const draw = () => {
+    const k = state.actQ.trim().toLowerCase();
+    const list = all.filter(a => {
+      if (state.actType && a.type !== state.actType) return false;
+      if (!k) return true;
+      const c = Store.customer(a.customerId);
+      return ((c ? c.name : '') + ' ' + (a.contactName || '') + ' ' + (a.content || '')).toLowerCase().includes(k);
+    });
+    const shown = list.slice(0, 200);
+    $('#alist', el).innerHTML = list.length ? `<p class="muted small" style="margin-top:0">共 ${list.length} 筆${list.length > 200 ? '（顯示最新 200 筆，請用搜尋縮小範圍）' : ''}，依日期由新到舊</p><div class="timeline">${shown.map(a => actItem(a, null, true)).join('')}</div>` : '<div class="empty">沒有符合的活動紀錄</div>';
+    bindActItems($('#alist', el), shown);
+  };
+  $('#aq', el).addEventListener('input', e => { state.actQ = e.target.value; draw(); });
+  $('#atype', el).addEventListener('change', e => { state.actType = e.target.value; draw(); });
+  draw();
+}
+
+/* ---------- 尚未開發模組 ---------- */
+function renderSoon(el) {
+  const p = PAGES[state.page];
+  el.innerHTML = `<div class="card" style="text-align:center;padding:40px 20px">
+    <div style="font-size:40px">🚧</div><h2 style="justify-content:center;font-size:19px">${esc(p.t)}：尚未開發</h2>
+    <p class="muted">此模組規劃於後續版本實作。為避免誤導，目前不顯示任何示範或虛構資料。</p>
+    <button class="btn primary" id="goC">前往客戶管理</button></div>`;
+  $('#goC', el).addEventListener('click', () => go('customers'));
+}
+
+/* ============================================================
+ * 檔案處理：ZIP / XLSX / CSV（自行實作，不使用外部套件）
+ * ============================================================ */
+const CRC_TABLE = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(buf) { let c = 0xFFFFFFFF; for (let i = 0; i < buf.length; i++) c = CRC_TABLE[(c ^ buf[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+async function streamBytes(data, transform) {
+  const stream = new Blob([data]).stream().pipeThrough(transform);
+  return new Uint8Array(await new Response(stream).arrayBuffer());
+}
+async function zipFiles(files) { // files: [{name, data: string|Uint8Array}]
+  const enc = new TextEncoder();
+  const canDeflate = typeof CompressionStream === 'function';
+  const parts = [], central = []; let offset = 0;
+  const d = new Date();
+  const dosTime = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1);
+  const dosDate = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+  for (const f of files) {
+    const nameB = enc.encode(f.name);
+    const raw = typeof f.data === 'string' ? enc.encode(f.data) : f.data;
+    const crc = crc32(raw);
+    let comp = raw, method = 0;
+    if (canDeflate) { try { comp = await streamBytes(raw, new CompressionStream('deflate-raw')); method = 8; } catch (e) { comp = raw; method = 0; } }
+    const lh = new DataView(new ArrayBuffer(30));
+    lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint16(8, method, true);
+    lh.setUint16(10, dosTime, true); lh.setUint16(12, dosDate, true); lh.setUint32(14, crc, true);
+    lh.setUint32(18, comp.length, true); lh.setUint32(22, raw.length, true); lh.setUint16(26, nameB.length, true); lh.setUint16(28, 0, true);
+    parts.push(new Uint8Array(lh.buffer), nameB, comp);
+    const ch = new DataView(new ArrayBuffer(46));
+    ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true); ch.setUint16(10, method, true);
+    ch.setUint16(12, dosTime, true); ch.setUint16(14, dosDate, true); ch.setUint32(16, crc, true); ch.setUint32(20, comp.length, true); ch.setUint32(24, raw.length, true);
+    ch.setUint16(28, nameB.length, true); ch.setUint32(42, offset, true);
+    central.push(new Uint8Array(ch.buffer), nameB);
+    offset += 30 + nameB.length + comp.length;
+  }
+  const cdSize = central.reduce((s, p) => s + p.length, 0);
+  const end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true);
+  end.setUint32(12, cdSize, true); end.setUint32(16, offset, true);
+  return new Blob([...parts, ...central, new Uint8Array(end.buffer)], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+}
+async function unzip(buf) {
+  const u8 = new Uint8Array(buf), dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength);
+  let eocd = -1;
+  for (let i = u8.length - 22; i >= Math.max(0, u8.length - 65557); i--) if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+  if (eocd < 0) throw new Error('不是有效的 Excel（.xlsx）檔案');
+  const count = dv.getUint16(eocd + 10, true); let p = dv.getUint32(eocd + 16, true);
+  const out = {}, dec = new TextDecoder();
+  for (let i = 0; i < count; i++) {
+    if (dv.getUint32(p, true) !== 0x02014b50) throw new Error('Excel 檔案結構損毀');
+    const method = dv.getUint16(p + 10, true), csize = dv.getUint32(p + 20, true);
+    const nlen = dv.getUint16(p + 28, true), elen = dv.getUint16(p + 30, true), clen = dv.getUint16(p + 32, true), lho = dv.getUint32(p + 42, true);
+    const name = dec.decode(u8.subarray(p + 46, p + 46 + nlen));
+    p += 46 + nlen + elen + clen;
+    const lnl = dv.getUint16(lho + 26, true), lel = dv.getUint16(lho + 28, true);
+    const start = lho + 30 + lnl + lel;
+    const comp = u8.subarray(start, start + csize);
+    out[name] = { method, comp };
+  }
+  return {
+    names: Object.keys(out),
+    async text(name) {
+      const e = out[name]; if (!e) return null;
+      let raw;
+      if (e.method === 0) raw = e.comp;
+      else if (e.method === 8) {
+        if (typeof DecompressionStream !== 'function') throw new Error('此瀏覽器版本過舊，無法讀取 Excel 檔，請更新瀏覽器');
+        raw = await streamBytes(e.comp, new DecompressionStream('deflate-raw'));
+      } else throw new Error('不支援的 Excel 壓縮格式');
+      return new TextDecoder('utf-8').decode(raw);
+    }
+  };
+}
+function xmlEsc(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, ''); }
+function colName(i) { let s = ''; i++; while (i > 0) { const m = (i - 1) % 26; s = String.fromCharCode(65 + m) + s; i = Math.floor((i - 1) / 26); } return s; }
+function colIndex(ref) { const m = ref.match(/^[A-Z]+/); let n = 0; for (const ch of m[0]) n = n * 26 + ch.charCodeAt(0) - 64; return n - 1; }
+async function buildXlsx(sheets) { // [{name, rows: [[...]]}]
+  const files = [];
+  files.push({ name: '[Content_Types].xml', data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>${sheets.map((s, i) => `<Override PartName="/xl/worksheets/sheet${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('')}</Types>` });
+  files.push({ name: '_rels/.rels', data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>` });
+  files.push({ name: 'xl/workbook.xml', data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>${sheets.map((s, i) => `<sheet name="${xmlEsc(s.name)}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`).join('')}</sheets></workbook>` });
+  files.push({ name: 'xl/_rels/workbook.xml.rels', data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${sheets.map((s, i) => `<Relationship Id="rId${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i + 1}.xml"/>`).join('')}<Relationship Id="rId${sheets.length + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>` });
+  files.push({ name: 'xl/styles.xml', data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF1D4F9C"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="3"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/><xf numFmtId="49" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>` });
+  sheets.forEach((s, i) => {
+    const widths = (s.rows[0] || []).map((_, ci) => Math.min(60, Math.max(8, ...s.rows.slice(0, 200).map(r => String(r[ci] == null ? '' : r[ci]).length * 1.8 + 2))));
+    const rowsXml = s.rows.map((r, ri) => `<row r="${ri + 1}">${r.map((v, ci) => {
+      const ref = colName(ci) + (ri + 1);
+      if (v === '' || v == null) return '';
+      return `<c r="${ref}" t="inlineStr" s="${ri === 0 ? 1 : 2}"><is><t xml:space="preserve">${xmlEsc(v)}</t></is></c>`;
+    }).join('')}</row>`).join('');
+    files.push({ name: `xl/worksheets/sheet${i + 1}.xml`, data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>${widths.map((w, ci) => `<col min="${ci + 1}" max="${ci + 1}" width="${w.toFixed(1)}" customWidth="1"/>`).join('')}</cols><sheetData>${rowsXml}</sheetData></worksheet>` });
+  });
+  return zipFiles(files);
+}
+async function readXlsx(buf) { // 回傳 { 工作表名稱: [[儲存格...]] }
+  const z = await unzip(buf);
+  const parse = s => new DOMParser().parseFromString(s, 'application/xml');
+  const wbText = await z.text('xl/workbook.xml');
+  if (!wbText) throw new Error('找不到活頁簿內容，請確認是 .xlsx 檔');
+  const wb = parse(wbText);
+  const rels = parse(await z.text('xl/_rels/workbook.xml.rels') || '<r/>');
+  const relMap = {};
+  Array.from(rels.getElementsByTagNameNS('*', 'Relationship')).forEach(r => { relMap[r.getAttribute('Id')] = r.getAttribute('Target'); });
+  const ssText = await z.text('xl/sharedStrings.xml');
+  const shared = ssText ? Array.from(parse(ssText).getElementsByTagNameNS('*', 'si')).map(si => Array.from(si.getElementsByTagNameNS('*', 't')).map(t => t.textContent).join('')) : [];
+  const result = {};
+  for (const sh of Array.from(wb.getElementsByTagNameNS('*', 'sheet'))) {
+    const rid = sh.getAttribute('r:id') || sh.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'id');
+    let target = relMap[rid]; if (!target) continue;
+    target = target.replace(/^\/?xl\//, '').replace(/^\//, '');
+    const txt = await z.text('xl/' + target); if (!txt) continue;
+    const doc = parse(txt); const rows = [];
+    for (const row of Array.from(doc.getElementsByTagNameNS('*', 'row'))) {
+      const ri = Number(row.getAttribute('r')) - 1; const arr = [];
+      let ci = 0;
+      for (const c of Array.from(row.getElementsByTagNameNS('*', 'c'))) {
+        const ref = c.getAttribute('r'); if (ref) ci = colIndex(ref);
+        const t = c.getAttribute('t'); const vEl = c.getElementsByTagNameNS('*', 'v')[0];
+        let v = '';
+        if (t === 's') v = shared[Number(vEl && vEl.textContent)] || '';
+        else if (t === 'inlineStr') v = Array.from(c.getElementsByTagNameNS('*', 't')).map(x => x.textContent).join('');
+        else if (t === 'b') v = vEl && vEl.textContent === '1' ? 'TRUE' : 'FALSE';
+        else if (t === 'str' || t === 'e') v = vEl ? vEl.textContent : '';
+        else v = vEl ? Number(vEl.textContent) : '';
+        arr[ci] = v; ci++;
+      }
+      rows[ri >= 0 ? ri : rows.length] = arr;
+    }
+    result[sh.getAttribute('name')] = Array.from(rows, r => Array.from(r || [], x => x == null ? '' : x));
+  }
+  return result;
+}
+/* ---------- CSV ---------- */
+function csvCell(v) {
+  let s = v == null ? '' : String(v);
+  if (/^[=+\-@\t\r]/.test(s)) s = "'" + s; // 避免在 Excel 中被當成公式執行
+  return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+function toCSV(rows) { return '﻿' + rows.map(r => r.map(csvCell).join(',')).join('\r\n'); }
+function parseCSV(text) {
+  text = text.replace(/^﻿/, '');
+  const rows = []; let row = [], cur = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (q) {
+      if (ch === '"') { if (text[i + 1] === '"') { cur += '"'; i++; } else q = false; }
+      else cur += ch;
+    } else if (ch === '"' && cur === '') q = true;
+    else if (ch === ',') { row.push(cur); cur = ''; }
+    else if (ch === '\n' || ch === '\r') { if (ch === '\r' && text[i + 1] === '\n') i++; row.push(cur); rows.push(row); row = []; cur = ''; }
+    else cur += ch;
+  }
+  if (q) throw new Error('CSV 格式錯誤：有未結束的引號');
+  if (cur !== '' || row.length) { row.push(cur); rows.push(row); }
+  return rows.filter(r => r.some(c => String(c).trim() !== '')).map(r => r.map(c => c.replace(/^'(?=[=+\-@])/, '')));
+}
+function decodeText(buf) {
+  try { return { text: new TextDecoder('utf-8', { fatal: true }).decode(buf), enc: 'UTF-8' }; }
+  catch (e) {
+    try { return { text: new TextDecoder('big5').decode(buf), enc: 'Big5' }; }
+    catch (x) { throw new Error('無法辨識檔案編碼，請以「CSV UTF-8」格式另存後再匯入'); }
+  }
+}
+async function saveFile(blob, name, desc, mime, ext) {
+  if (window.showSaveFilePicker) {
+    try {
+      const h = await window.showSaveFilePicker({ suggestedName: name, types: [{ description: desc, accept: { [mime]: [ext] } }] });
+      const w = await h.createWritable(); await w.write(blob); await w.close();
+      return true;
+    } catch (e) {
+      if (e && e.name === 'AbortError') return false;
+      console.warn('另存新檔視窗無法使用，改用下載方式', e);
+    }
+  }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = name; a.style.display = 'none';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+  return true;
+}
+const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+function stamp() { const d = new Date(); return `${d.getFullYear()}${pad2(d.getMonth() + 1)}${pad2(d.getDate())}_${pad2(d.getHours())}${pad2(d.getMinutes())}`; }
+
+/* ---------- 欄位定義（匯出與匯入共用） ---------- */
+const COLS = {
+  customers: [['客戶ID', 'id'], ['服務中', 'isActive', 'bool'], ['客戶名稱', 'name'], ['產業', 'industry'], ['統一編號', 'taxId'], ['負責人', 'owner'], ['登記資本', 'capital'], ['地區', 'region'], ['公司電話', 'phone'], ['公司傳真', 'fax'], ['公司註冊地址', 'regAddress'], ['公司聯絡地址', 'contactAddress'], ['公司網址', 'website'], ['Microsoft網域', 'msDomain'], ['建檔日期', 'createdDate', 'date'], ['最後聯絡日期', 'lastContactDate', 'date'], ['下次跟進日期', 'nextFollowUpDate', 'date'], ['客戶備註', 'note'], ['建立時間', 'createdAt', 'iso'], ['最後修改時間', 'updatedAt', 'iso'], ['封存狀態', 'archived', 'arch'], ['封存時間', 'archivedAt', 'iso']],
+  contacts: [['聯絡人ID', 'id'], ['客戶ID', 'customerId'], ['客戶名稱（參考）', '_cname', 'ref'], ['姓名', 'name'], ['部門', 'department'], ['職稱', 'title'], ['電話', 'phone'], ['手機', 'mobile'], ['電子郵件', 'email'], ['備註', 'note'], ['建立時間', 'createdAt', 'iso'], ['最後修改時間', 'updatedAt', 'iso']],
+  activities: [['活動ID', 'id'], ['客戶ID', 'customerId'], ['客戶名稱（參考）', '_cname', 'ref'], ['聯絡人ID', 'contactId'], ['聯繫人', 'contactName'], ['拜訪類型', 'type'], ['拜訪日期時間', 'datetime', 'dt'], ['拜訪紀錄', 'content'], ['下次跟進日期', 'nextFollowUpDate', 'date'], ['建立時間', 'createdAt', 'iso'], ['最後修改時間', 'updatedAt', 'iso']]
+};
+const SHEET_NAMES = { customers: '客戶', contacts: '聯絡人', activities: '業務活動', meta: '系統資訊' };
+function outVal(kind, v) {
+  if (kind === 'bool') return v ? '是' : '否';
+  if (kind === 'arch') return v ? '已封存' : '未封存';
+  if (kind === 'dt') return v ? String(v).replace('T', ' ') : '';
+  return v == null ? '' : v;
+}
+function toRows(kind, list, nameOf) {
+  const cols = COLS[kind];
+  return [cols.map(c => c[0])].concat(list.map(o => cols.map(([, k, t]) => t === 'ref' ? nameOf(o.customerId) : outVal(t, o[k]))));
+}
+async function snapshot() {
+  const [customers, contacts, activities] = await DB.tx(['customers', 'contacts', 'activities'], 'readonly', async s =>
+    Promise.all([req(s.customers.getAll()), req(s.contacts.getAll()), req(s.activities.getAll())]));
+  return { customers, contacts, activities };
+}
+async function exportBackup() {
+  const d = await snapshot();
+  const nameMap = new Map(d.customers.map(c => [c.id, c.name]));
+  const nameOf = id => nameMap.get(id) || '';
+  d.customers.sort((a, b) => a.name.localeCompare(b.name, 'zh-Hant'));
+  const acts = sortActs(d.activities);
+  const now = new Date();
+  const sheets = [
+    { name: SHEET_NAMES.customers, rows: toRows('customers', d.customers, nameOf) },
+    { name: SHEET_NAMES.contacts, rows: toRows('contacts', d.contacts, nameOf) },
+    { name: SHEET_NAMES.activities, rows: toRows('activities', acts, nameOf) },
+    { name: SHEET_NAMES.meta, rows: [['項目', '值'], ['系統名稱', APP.name], ['系統版本', APP.version], ['資料結構版本', String(APP.schemaVersion)], ['備份格式', 'CRM-BACKUP-1'], ['匯出時間', fmtDT(now.toISOString())], ['匯出時間（ISO）', now.toISOString()], ['客戶筆數', String(d.customers.length)], ['聯絡人筆數', String(d.contacts.length)], ['業務活動筆數', String(d.activities.length)], ['說明', '請勿修改各工作表的標題列與 ID 欄位，以免還原時無法正確對應資料。']] }
+  ];
+  const blob = await buildXlsx(sheets);
+  const ok = await saveFile(blob, `CRM備份_${stamp()}.xlsx`, 'Excel 活頁簿', XLSX_MIME, '.xlsx');
+  if (ok) { state.lastBackupAt = now.toISOString(); await DB.setMeta('lastBackupAt', state.lastBackupAt); }
+  return ok ? d : null;
+}
+
+/* ---------- 解析匯入資料列 ---------- */
+// 由系統產生或可省略的欄位：匯入範本中可不提供，不顯示缺欄警告
+const OPTIONAL_COLS = new Set(['id', 'phone', 'fax', 'contactAddress', 'createdAt', 'updatedAt', 'archivedAt', 'archived', 'lastContactDate', 'contactId']);
+const HEADER_ALIASES = { '公司註冊地址': ['公司地址'] };
+function rowsToObjects(rows, cols) {
+  if (!rows.length) return { list: [], missing: cols.map(c => c[0]) };
+  const header = rows[0].map(h => String(h).trim());
+  // 相容舊版備份：V1.0「公司地址」對應到「公司註冊地址」
+  const idx = cols.map(([h]) => { const i = header.indexOf(h); return i >= 0 ? i : (HEADER_ALIASES[h] || []).map(a => header.indexOf(a)).find(x => x >= 0) ?? -1; });
+  const missing = cols.filter((c, i) => idx[i] < 0 && c[2] !== 'ref' && !OPTIONAL_COLS.has(c[1])).map(c => c[0]);
+  const list = rows.slice(1).map((r, n) => {
+    const o = { _row: n + 2 };
+    cols.forEach(([, k], i) => { o[k] = idx[i] >= 0 ? (r[idx[i]] == null ? '' : r[idx[i]]) : ''; });
+    return o;
+  }).filter(o => cols.some(([, k]) => String(o[k]).trim() !== ''));
+  return { list, missing, found: idx.filter((x, i) => x >= 0 && cols[i][2] !== 'ref').length };
+}
+function coerceCustomer(o, errs) {
+  const c = {};
+  const s = k => String(o[k] == null ? '' : o[k]).trim();
+  c.id = s('id'); c.name = s('name');
+  if (!c.name) errs.push('客戶名稱空白');
+  const b = parseBool(o.isActive); if (b === null) errs.push(`「服務中」值無法辨識：${s('isActive')}`); c.isActive = !!b;
+  for (const k of ['industry', 'owner', 'phone', 'fax', 'regAddress', 'contactAddress', 'website', 'msDomain', 'note']) c[k] = s(k);
+  c.taxId = s('taxId').normalize('NFKC').replace(/\s/g, '');
+  if (/^\d{1,7}$/.test(c.taxId)) c.taxId = c.taxId.padStart(8, '0'); // Excel 可能去掉開頭的 0
+  if (c.taxId && !/^\d{8}$/.test(c.taxId)) errs.push(`統一編號格式錯誤：${c.taxId}`);
+  c.capital = s('capital').replace(/[,\s元]/g, ''); if (c.capital && isNaN(Number(c.capital))) errs.push(`登記資本不是數字：${s('capital')}`);
+  c.region = normTW(s('region')); if (c.region && !REGIONS.includes(c.region)) errs.push(`地區不在臺灣縣市清單中：${c.region}`);
+  if (!c.region) c.region = regionFromAddress(s('regAddress') || s('contactAddress')); // 未填地區時依地址判斷
+  for (const k of ['createdDate', 'lastContactDate', 'nextFollowUpDate']) { const d = parseDate(o[k]); if (d === null) errs.push(`日期格式錯誤（${k === 'createdDate' ? '建檔日期' : k === 'lastContactDate' ? '最後聯絡日期' : '下次跟進日期'}）：${s(k)}`); c[k] = d || ''; }
+  if (!c.createdDate) c.createdDate = todayStr();
+  const a = s('archived'); c.archived = ['已封存', '是', 'true', 'y', '1'].includes(a.toLowerCase());
+  c.createdAt = s('createdAt'); c.updatedAt = s('updatedAt'); c.archivedAt = s('archivedAt');
+  c._filled = Object.keys(o).filter(k => !k.startsWith('_') && String(o[k] == null ? '' : o[k]).trim() !== ''); // 檔案中有填寫的欄位
+  return c;
+}
+function coerceContact(o, errs) {
+  const c = {}; const s = k => String(o[k] == null ? '' : o[k]).trim();
+  c.id = s('id'); c.customerId = s('customerId');
+  for (const k of CONTACT_FIELDS) c[k] = s(k);
+  if (!c.name) errs.push('聯絡人姓名空白');
+  if (!c.customerId) errs.push('缺少客戶ID');
+  if (c.email && !isEmail(c.email)) errs.push(`電子郵件格式錯誤：${c.email}`);
+  c.createdAt = s('createdAt'); c.updatedAt = s('updatedAt');
+  return c;
+}
+function coerceActivity(o, errs) {
+  const a = {}; const s = k => String(o[k] == null ? '' : o[k]).trim();
+  a.id = s('id'); a.customerId = s('customerId'); a.contactId = s('contactId'); a.contactName = s('contactName');
+  a.type = s('type'); if (!ACT_TYPES.includes(a.type)) errs.push(`拜訪類型無法辨識：${a.type || '（空白）'}`);
+  const dt = parseDateTime(o.datetime); if (!dt) errs.push(`拜訪日期時間錯誤：${s('datetime') || '（空白）'}`); a.datetime = dt || '';
+  a.content = s('content');
+  const nf = parseDate(o.nextFollowUpDate); if (nf === null) errs.push(`下次跟進日期錯誤：${s('nextFollowUpDate')}`); a.nextFollowUpDate = nf || '';
+  if (!a.customerId) errs.push('缺少客戶ID');
+  a.createdAt = s('createdAt'); a.updatedAt = s('updatedAt');
+  return a;
+}
+
+/* ============================================================
+ * H. 資料匯入、匯出與備份
+ * ============================================================ */
+async function renderData(el) {
+  await Store.loadCustomers();
+  const d = await snapshot();
+  el.innerHTML = `
+    <div class="notice info">所有匯入與匯出都在這台裝置上完成，系統<strong>不會自動上傳或傳送</strong>任何備份檔。匯出時請自行選擇儲存位置並妥善保管檔案（檔案內含客戶個資，未加密）。</div>
+    ${backupNotice()}
+    <div class="card"><h2>📦 Excel 完整備份</h2>
+      <p class="muted small" style="margin-top:0">包含客戶、聯絡人、業務活動與系統資料版本，共 4 個工作表。目前資料：客戶 ${d.customers.length} 筆、聯絡人 ${d.contacts.length} 筆、業務活動 ${d.activities.length} 筆。上次備份：${state.lastBackupAt ? esc(fmtDT(state.lastBackupAt)) : '尚未備份'}</p>
+      <div class="row"><button class="btn primary" id="expX">⬇ 匯出 Excel 備份</button>
+      <label class="btn">⬆ 匯入 Excel 備份…<input type="file" id="impX" accept=".xlsx,${XLSX_MIME}" hidden></label></div>
+      <ul class="steps"><li>匯入時可選擇「新增匯入」（與現有資料合併，重複資料逐筆選擇略過或更新）或「完整還原」（以備份檔取代目前全部資料）。</li><li>匯入前會先顯示預覽與錯誤原因；寫入採單一交易，任何一筆失敗都會整批取消，現有資料不受影響。</li></ul></div>
+    <div class="card"><h2>📄 CSV 客戶資料（UTF-8）</h2>
+      <p class="muted small" style="margin-top:0">適合從其他系統或 Excel 批次匯入客戶名單。CSV 僅包含客戶基本資料，不含聯絡人與活動。</p>
+      <div class="row"><button class="btn" id="expC">⬇ 匯出客戶 CSV</button>
+      <label class="btn">⬆ 匯入客戶 CSV…<input type="file" id="impC" accept=".csv,text/csv" hidden></label>
+      <button class="btn link" id="tplC">下載 CSV 範本</button></div>
+      <ul class="steps"><li>以 Excel 編輯後，請選擇「另存新檔 → CSV UTF-8（逗號分隔）」。若偵測到 Big5 編碼，系統會嘗試轉換並提示您確認。</li><li>「服務中」欄位請填 是／否；日期可用 2026-10-24、2026/10/24 或民國 115/10/24。</li></ul></div>`;
+  $('#expX', el).addEventListener('click', async () => {
+    const r = await guard(() => exportBackup());
+    if (r) { toast(`Excel 備份已匯出（客戶 ${r.customers.length}、聯絡人 ${r.contacts.length}、活動 ${r.activities.length}）`); render(); }
+  });
+  $('#impX', el).addEventListener('change', async e => { const f = e.target.files[0]; e.target.value = ''; if (f) await importBackupFlow(f); });
+  $('#expC', el).addEventListener('click', () => exportCustomersCSV());
+  $('#impC', el).addEventListener('change', async e => { const f = e.target.files[0]; e.target.value = ''; if (f) await importCsvFlow(f); });
+  $('#tplC', el).addEventListener('click', () => {
+    const cols = COLS.customers.filter(c => !['id', 'createdAt', 'updatedAt', 'archivedAt', 'archived', 'lastContactDate'].includes(c[1]));
+    saveFile(new Blob([toCSV([cols.map(c => c[0])])], { type: 'text/csv' }), 'CRM客戶匯入範本.csv', 'CSV 檔', 'text/csv', '.csv');
+  });
+}
+
+async function exportCustomersCSV() {
+  await Store.loadCustomers();
+  const incl = await confirmDialog('是否包含「已封存」的客戶？', { okText: '包含封存客戶', cancelText: '只匯出使用中客戶' });
+  const list = Store.customers.filter(c => incl || !c.archived).sort((a, b) => a.name.localeCompare(b.name, 'zh-Hant'));
+  const rows = toRows('customers', list, () => '');
+  const ok = await guard(() => saveFile(new Blob([toCSV(rows)], { type: 'text/csv;charset=utf-8' }), `CRM客戶_${stamp()}.csv`, 'CSV 檔', 'text/csv', '.csv'));
+  if (ok) toast(`已匯出 ${list.length} 筆客戶 CSV`);
+}
+
+/* ---------- Excel 備份匯入 ---------- */
+async function importBackupFlow(file) {
+  let book;
+  try { book = await readXlsx(await file.arrayBuffer()); }
+  catch (e) { return toast('無法讀取檔案：' + errMsg(e), 'err'); }
+  const errors = []; const warn = [];
+  let parsed = {};
+  if (book[COMBINED_SHEET] && !book[SHEET_NAMES.customers]) {
+    parsed = combinedToParsed(book[COMBINED_SHEET], errors, warn);
+    if (!parsed) return;
+  } else {
+    if (!book[SHEET_NAMES.customers]) return toast(`檔案中找不到「${COMBINED_SHEET}」或「客戶」工作表，請使用本系統的匯入範本或備份檔。`, 'err');
+    for (const kind of ['customers', 'contacts', 'activities']) {
+      const rows = book[SHEET_NAMES[kind]];
+      if (!rows) { if (kind !== 'customers') warn.push(`找不到「${SHEET_NAMES[kind]}」工作表，視為無資料`); parsed[kind] = { list: [], missing: [], found: 0 }; continue; }
+      parsed[kind] = rowsToObjects(rows, COLS[kind]);
+      if (parsed[kind].missing.length) warn.push(`「${SHEET_NAMES[kind]}」缺少欄位：${parsed[kind].missing.join('、')}`);
+    }
+  }
+  const metaRows = book[SHEET_NAMES.meta] || [];
+  const meta = {}; metaRows.slice(1).forEach(r => { meta[r[0]] = r[1]; });
+  if (meta['資料結構版本'] && Number(meta['資料結構版本']) > APP.schemaVersion) return toast('此備份來自較新版本的系統，請使用新版 crm.html 匯入。', 'err');
+  if (!parsed.customers.list.length && !parsed.contacts.list.length) return toast(errors.length ? '檔案中沒有可匯入的資料：' + errors.slice(0, 3).join('；') : '檔案中沒有任何客戶資料', 'warn');
+  const valid = { customers: [], contacts: [], activities: [] };
+  // 匯入範本中的「客戶ID」可以是自訂代號（例如 C001），只用來對應聯絡人與活動；
+  // 寫入系統時一律改用系統產生的唯一識別碼。
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const custMap = new Map(), ctMap = new Map();
+  for (const o of parsed.customers.list) {
+    const errs = []; const c = coerceCustomer(o, errs);
+    const src = c.id;
+    if (src && custMap.has(src)) errs.push('客戶ID 在檔案中重複');
+    if (errs.length) { errors.push(`客戶 第 ${o._row} 列（${c.name || '未命名'}）：${errs.join('；')}`); continue; }
+    c.id = src && UUID_RE.test(src) ? src : uid();
+    if (src) custMap.set(src, c.id);
+    c._row = o._row; valid.customers.push(c);
+  }
+  for (const o of parsed.contacts.list) {
+    const errs = []; const c = coerceContact(o, errs);
+    if (c.customerId && !custMap.has(c.customerId)) errs.push(`找不到對應的客戶（客戶ID「${c.customerId}」不在「客戶」工作表中，或該客戶列有錯誤）`);
+    const src = c.id;
+    if (src && ctMap.has(src)) errs.push('聯絡人ID 在檔案中重複');
+    if (errs.length) { errors.push(`聯絡人 第 ${o._row} 列（${c.name || '未命名'}）：${errs.join('；')}`); continue; }
+    c.customerId = custMap.get(c.customerId);
+    c.id = src && UUID_RE.test(src) ? src : uid();
+    if (src) ctMap.set(src, c.id);
+    valid.contacts.push(c);
+  }
+  const actIds = new Set();
+  for (const o of parsed.activities.list) {
+    const errs = []; const a = coerceActivity(o, errs);
+    if (a.customerId && !custMap.has(a.customerId)) errs.push(`找不到對應的客戶（客戶ID「${a.customerId}」不在「客戶」工作表中，或該客戶列有錯誤）`);
+    if (a.id && actIds.has(a.id)) errs.push('活動ID 在檔案中重複');
+    if (errs.length) { errors.push(`業務活動 第 ${o._row} 列：${errs.join('；')}`); continue; }
+    a.customerId = custMap.get(a.customerId);
+    a.contactId = a.contactId && ctMap.has(a.contactId) ? ctMap.get(a.contactId) : '';
+    if (!a.contactId && a.contactName) { // 依姓名自動連結同一客戶的聯絡人
+      const m = valid.contacts.find(x => x.customerId === a.customerId && x.name === a.contactName);
+      if (m) a.contactId = m.id;
+    }
+    if (!a.id || !UUID_RE.test(a.id)) a.id = uid();
+    actIds.add(a.id); valid.activities.push(a);
+  }
+  await Store.loadCustomers();
+  const current = await snapshot();
+  // 與現有資料比對重複
+  const byId = new Map(current.customers.map(c => [c.id, c]));
+  const dups = [];
+  for (const c of valid.customers) {
+    let ex = byId.get(c.id), why = '客戶ID 相同';
+    if (!ex && c.taxId) { ex = current.customers.find(x => x.taxId === c.taxId); why = '統一編號相同'; }
+    if (!ex) { const n = normName(c.name); ex = current.customers.find(x => normName(x.name) === n); why = '公司名稱相同'; }
+    if (ex) dups.push({ c, ex, why, action: 'skip' });
+  }
+  const total = { customers: parsed.customers.list.length, contacts: parsed.contacts.list.length, activities: parsed.activities.list.length };
+  const m = openModal({
+    title: '匯入 Excel 備份：預覽', size: 'wide',
+    body: `
+      ${parsed.combined ? `<div class="notice info small">偵測到「${COMBINED_SHEET}」匯入範本：每一列為一位聯絡人，相同統一編號或客戶名稱的列會合併為同一家客戶。</div>` : ''}
+      <p class="small muted" style="margin-top:0">檔案：${esc(file.name)}${meta['匯出時間'] ? `｜備份時間：${esc(meta['匯出時間'])}` : ''}${meta['資料結構版本'] ? `｜資料結構版本：${esc(meta['資料結構版本'])}` : ''}</p>
+      <div class="stat-row">
+        <div class="stat ok"><b>${valid.customers.length}</b>客戶可匯入（共 ${total.customers}）</div>
+        <div class="stat ok"><b>${valid.contacts.length}</b>聯絡人可匯入（共 ${total.contacts}）</div>
+        ${parsed.combined ? '' : `<div class="stat ok"><b>${valid.activities.length}</b>活動可匯入（共 ${total.activities}）</div>`}
+        <div class="stat bad"><b>${errors.length}</b>失敗列數</div>
+        <div class="stat dup"><b>${dups.length}</b>與現有客戶重複</div></div>
+      ${warn.length ? `<div class="notice warn">${warn.map(esc).join('<br>')}</div>` : ''}
+      ${errors.length ? `<div class="field"><label>錯誤原因（這些列不會匯入）</label><ul class="err-list">${errors.slice(0, 300).map(e => `<li>${esc(e)}</li>`).join('')}${errors.length > 300 ? `<li>…另有 ${errors.length - 300} 筆</li>` : ''}</ul></div>` : ''}
+      <div class="field" style="margin-top:14px"><label>欄位對應</label><p class="small muted" style="margin:0">依標題列自動對應：${Object.keys(COLS).filter(k => !(parsed.combined && k === 'activities')).map(k => `${SHEET_NAMES[k]}（已對應 ${parsed[k].found || 0} 欄）`).join('、')}</p></div>
+      <div class="field" style="margin-top:14px"><label>匯入模式</label>
+        <div class="seg"><label><input type="radio" name="impMode" value="merge" checked><span>新增匯入（合併）</span></label><label><input type="radio" name="impMode" value="restore"><span>完整還原（取代全部）</span></label></div></div>
+      <div id="modeBox" style="margin-top:12px"></div>
+      <div class="field" style="margin-top:12px"><label>預覽（前 20 位客戶）</label><div class="scroll-box"><table class="list"><thead><tr><th>列</th><th>客戶名稱</th><th>統編</th><th>服務中</th><th>地區</th><th>封存</th></tr></thead><tbody>
+        ${valid.customers.slice(0, 20).map(c => `<tr><td>${c._row}</td><td>${esc(c.name)}</td><td>${esc(c.taxId)}</td><td>${c.isActive ? '是' : '否'}</td><td>${esc(c.region)}</td><td>${c.archived ? '是' : ''}</td></tr>`).join('')}</tbody></table></div></div>`,
+    footer: `<button class="btn" data-close>取消</button><button class="btn primary" id="doImp">開始匯入</button>`
+  });
+  const box = $('#modeBox', m.el);
+  const drawMode = () => {
+    const mode = $('input[name=impMode]:checked', m.el).value;
+    if (mode === 'merge') {
+      box.innerHTML = dups.length ? `<div class="notice warn">有 ${dups.length} 位客戶與現有資料重複，請選擇處理方式。「更新」會以檔案中<b>有填寫的欄位</b>覆蓋該客戶資料（空白欄位保留現有資料），並合併其聯絡人與活動；「略過」則不匯入該客戶及其聯絡人、活動。</div>
+        <div class="row" style="margin-bottom:8px"><button class="btn sm" id="allSkip">全部略過</button><button class="btn sm" id="allUpd">全部更新</button></div>
+        <div class="scroll-box"><table class="list"><thead><tr><th>備份中的客戶</th><th>現有客戶</th><th>比對依據</th><th>處理</th></tr></thead><tbody>
+        ${dups.map((d, i) => `<tr><td>${esc(d.c.name)}</td><td>${esc(d.ex.name)}${d.ex.archived ? '（已封存）' : ''}</td><td>${esc(d.why)}</td><td><select class="input" data-dup="${i}" style="min-height:34px;padding:4px 8px"><option value="skip"${d.action === 'skip' ? ' selected' : ''}>略過</option><option value="update"${d.action === 'update' ? ' selected' : ''}>更新</option></select></td></tr>`).join('')}</tbody></table></div>`
+        : '<div class="notice ok">沒有與現有客戶重複的資料，將全部以新增方式匯入。</div>';
+      $$('[data-dup]', box).forEach(s => s.addEventListener('change', () => { dups[Number(s.dataset.dup)].action = s.value; }));
+      const as = $('#allSkip', box), au = $('#allUpd', box);
+      if (as) as.addEventListener('click', () => { dups.forEach(d => { d.action = 'skip'; }); drawMode(); });
+      if (au) au.addEventListener('click', () => { dups.forEach(d => { d.action = 'update'; }); drawMode(); });
+    } else {
+      box.innerHTML = `<div class="notice danger"><b>⚠ 完整還原會刪除目前裝置中的全部資料</b>，再以備份檔內容取代：<br>目前有客戶 ${current.customers.length} 筆、聯絡人 ${current.contacts.length} 筆、業務活動 ${current.activities.length} 筆將被移除。<br>還原後將有客戶 ${valid.customers.length} 筆、聯絡人 ${valid.contacts.length} 筆、業務活動 ${valid.activities.length} 筆。${errors.length ? `<br>備份中有 ${errors.length} 列錯誤，這些列不會被還原。` : ''}</div>
+        <div class="row"><button class="btn" id="preBk">⬇ 先匯出目前資料備份</button>
+        <label class="row small" style="gap:6px;cursor:pointer"><input type="checkbox" id="ackRestore" style="width:20px;height:20px">我了解目前資料將被取代</label></div>`;
+      $('#preBk', box).addEventListener('click', async () => { const r = await guard(() => exportBackup()); if (r) toast('目前資料已匯出備份'); });
+    }
+  };
+  $$('input[name=impMode]', m.el).forEach(r => r.addEventListener('change', drawMode));
+  drawMode();
+  $('#doImp', m.el).addEventListener('click', async () => {
+    const mode = $('input[name=impMode]:checked', m.el).value;
+    if (!valid.customers.length && !valid.contacts.length && !valid.activities.length) return toast('沒有可匯入的有效資料', 'warn');
+    if (mode === 'restore') {
+      if (!$('#ackRestore', m.el).checked) return toast('請先勾選「我了解目前資料將被取代」', 'warn');
+      if (!await confirmDialog(`最後確認：要以備份檔<b>取代</b>目前全部資料嗎？\n此動作無法復原。`, { title: '完整還原', okText: '確定還原', danger: true })) return;
+      const r = await guard(() => restoreAll(valid));
+      if (r) { m.close(); resultDialog('完整還原完成', [`客戶 ${r.customers} 筆`, `聯絡人 ${r.contacts} 筆`, `業務活動 ${r.activities} 筆`, errors.length ? `未還原（錯誤）${errors.length} 列` : ''], errors); render(); }
+    } else {
+      const upd = dups.filter(d => d.action === 'update').length;
+      if (!await confirmDialog(`確定要匯入嗎？\n新增客戶 ${valid.customers.length - dups.length} 筆，更新 ${upd} 筆，略過 ${dups.length - upd} 筆。`, { okText: '開始匯入' })) return;
+      const r = await guard(() => mergeImport(valid, dups));
+      if (r) { m.close(); resultDialog('新增匯入完成', [`新增客戶 ${r.cAdd} 筆、更新 ${r.cUpd} 筆、略過 ${r.cSkip} 筆`, `聯絡人：新增 ${r.ctAdd}、更新 ${r.ctUpd}、略過 ${r.ctSkip}`, `業務活動：新增 ${r.aAdd}、更新 ${r.aUpd}、略過 ${r.aSkip}`, errors.length ? `失敗（未匯入）${errors.length} 列` : ''], errors); render(); }
+    }
+  });
+}
+function stripTmp(o) { const r = Object.assign({}, o); delete r._row; delete r._cname; delete r._filled; return r; }
+function fillTimes(o, now) { if (!o.createdAt) o.createdAt = now; if (!o.updatedAt) o.updatedAt = o.createdAt; return o; }
+function restoreAll(valid) {
+  const now = nowISO();
+  return DB.tx(['customers', 'contacts', 'activities'], 'readwrite', async s => {
+    await Promise.all([req(s.customers.clear()), req(s.contacts.clear()), req(s.activities.clear())]);
+    for (const c of valid.customers) s.customers.put(fillTimes(Object.assign(blankCustomer(), stripTmp(c)), now));
+    for (const c of valid.contacts) s.contacts.put(fillTimes(stripTmp(c), now));
+    for (const a of valid.activities) s.activities.put(fillTimes(stripTmp(a), now));
+    return { customers: valid.customers.length, contacts: valid.contacts.length, activities: valid.activities.length };
+  }).then(r => Store.loadCustomers().then(() => r));
+}
+function mergeImport(valid, dups) {
+  const now = nowISO();
+  const r = { cAdd: 0, cUpd: 0, cSkip: 0, ctAdd: 0, ctUpd: 0, ctSkip: 0, aAdd: 0, aUpd: 0, aSkip: 0 };
+  return DB.tx(['customers', 'contacts', 'activities'], 'readwrite', async s => {
+    const dupMap = new Map(dups.map(d => [d.c, d]));
+    const idMap = new Map(); const skipped = new Set(); const touched = new Set();
+    for (const c of valid.customers) {
+      const d = dupMap.get(c);
+      if (d && d.action === 'skip') { skipped.add(c.id); r.cSkip++; continue; }
+      if (d) {
+        const cur = await req(s.customers.get(d.ex.id));
+        // 只覆蓋檔案中有填寫的欄位，空白欄位保留現有資料
+        for (const k of c._filled || []) if (!['id', 'createdAt', 'updatedAt'].includes(k)) cur[k] = c[k];
+        if ((c._filled || []).includes('archived') && !c.archived) cur.archivedAt = '';
+        cur.updatedAt = now;
+        s.customers.put(cur); idMap.set(c.id, cur.id); touched.add(cur.id); r.cUpd++;
+      } else {
+        let id = c.id; if (await req(s.customers.get(id))) id = uid();
+        s.customers.put(fillTimes(Object.assign(blankCustomer(), stripTmp(c), { id }), now)); idMap.set(c.id, id); touched.add(id); r.cAdd++;
+      }
+    }
+    const ctMap = new Map();
+    for (const ct of valid.contacts) {
+      if (skipped.has(ct.customerId) || !idMap.has(ct.customerId)) { r.ctSkip++; continue; }
+      const cid = idMap.get(ct.customerId);
+      const data = Object.assign(stripTmp(ct), { customerId: cid });
+      let ex = await req(s.contacts.get(ct.id));
+      if (ex && ex.customerId !== cid) { ex = null; data.id = uid(); }
+      if (!ex) {
+        const sib = await req(s.contacts.index('customerId').getAll(cid));
+        ex = sib.find(x => x.name === data.name && ((data.email && x.email === data.email) || (data.phone && x.phone === data.phone) || (data.mobile && x.mobile === data.mobile) || (!data.email && !data.phone && !data.mobile)));
+        if (ex) data.id = ex.id;
+      }
+      if (ex) { s.contacts.put(Object.assign(data, { createdAt: ex.createdAt, updatedAt: now })); r.ctUpd++; }
+      else { s.contacts.put(fillTimes(data, now)); r.ctAdd++; }
+      ctMap.set(ct.id, data.id);
+    }
+    for (const a of valid.activities) {
+      if (skipped.has(a.customerId) || !idMap.has(a.customerId)) { r.aSkip++; continue; }
+      const cid = idMap.get(a.customerId);
+      const data = Object.assign(stripTmp(a), { customerId: cid, contactId: a.contactId ? (ctMap.get(a.contactId) || '') : '' });
+      let ex = await req(s.activities.get(a.id));
+      if (ex && ex.customerId !== cid) { ex = null; data.id = uid(); }
+      if (!ex) {
+        const sib = await req(s.activities.index('customerId').getAll(cid));
+        ex = sib.find(x => x.datetime === data.datetime && x.type === data.type && x.content === data.content);
+        if (ex) data.id = ex.id;
+      }
+      if (ex) { s.activities.put(Object.assign(data, { createdAt: ex.createdAt, updatedAt: now })); r.aUpd++; }
+      else { s.activities.put(fillTimes(data, now)); r.aAdd++; }
+    }
+    for (const id of touched) { // 重新計算最後聯絡日期
+      const c = await req(s.customers.get(id));
+      const acts = await req(s.activities.index('customerId').getAll(id));
+      if (c && acts.length) { const ld = latestDate(acts); if (ld !== c.lastContactDate) { c.lastContactDate = ld; s.customers.put(c); } }
+    }
+    return r;
+  }).then(x => Store.loadCustomers().then(() => x));
+}
+function resultDialog(title, lines, errors) {
+  openModal({
+    title, size: 'narrow',
+    body: `<div class="notice ok">${lines.filter(Boolean).map(esc).join('<br>')}</div>${errors && errors.length ? `<div class="field"><label>未匯入的錯誤列</label><ul class="err-list">${errors.slice(0, 100).map(e => `<li>${esc(e)}</li>`).join('')}</ul></div>` : ''}`,
+    footer: '<button class="btn primary" data-close>關閉</button>'
+  });
+}
+
+/* ---------- CSV 客戶匯入 ---------- */
+const CSV_SYNONYMS = {
+  id: ['客戶ID', '客戶唯一識別碼', 'ID'], isActive: ['服務中', '是否為服務中客戶', '服務狀態'], name: ['客戶名稱', '公司名稱', '公司', '名稱', 'Company'],
+  industry: ['產業', '行業', '產業別'], taxId: ['統一編號', '統編'], owner: ['負責人', '代表人'], capital: ['登記資本', '資本額', '資本'],
+  region: ['地區', '縣市'], regAddress: ['公司註冊地址', '註冊地址', '登記地址', '公司地址', '地址'], contactAddress: ['公司聯絡地址', '聯絡地址', '通訊地址'], phone: ['公司電話', '電話', '總機'], fax: ['公司傳真', '傳真'], website: ['公司網址', '網址', '網站'], msDomain: ['Microsoft網域', 'Microsoft 網域', 'M365網域', '網域'],
+  createdDate: ['建檔日期'], lastContactDate: ['最後聯絡日期'], nextFollowUpDate: ['下次跟進日期', '跟進日期'], note: ['客戶備註', '備註'], archived: ['封存狀態']
+};
+const CSV_TARGETS = COLS.customers.filter(c => CSV_SYNONYMS[c[1]]);
+async function importCsvFlow(file) {
+  let text, enc;
+  try { ({ text, enc } = decodeText(await file.arrayBuffer())); } catch (e) { return toast(errMsg(e), 'err'); }
+  let rows;
+  try { rows = parseCSV(text); } catch (e) { return toast(errMsg(e), 'err'); }
+  if (rows.length < 2) return toast('CSV 檔中沒有資料列（第一列須為標題）', 'warn');
+  const header = rows[0].map(h => String(h).trim());
+  const data = rows.slice(1);
+  const map = {};
+  for (const [, k] of CSV_TARGETS) {
+    const i = header.findIndex(h => CSV_SYNONYMS[k].some(s => s.toLowerCase() === h.toLowerCase()));
+    map[k] = i;
+  }
+  await Store.loadCustomers();
+  let dupAction = 'skip'; const rowAct = {};
+  const m = openModal({
+    title: '匯入客戶 CSV：欄位對應與預覽', size: 'wide',
+    body: `${enc !== 'UTF-8' ? `<div class="notice warn">此檔案不是 UTF-8 編碼，系統已嘗試以 ${enc} 讀取。請確認下方預覽的中文是否正確；若出現亂碼請取消，並以「CSV UTF-8」重新存檔。</div>` : ''}
+      <p class="small muted" style="margin-top:0">檔案：${esc(file.name)}｜共 ${data.length} 列資料｜編碼：${enc}</p>
+      <div class="field"><label>欄位對應（左側為系統欄位，請選擇 CSV 中對應的欄）</label>
+      <div class="map-grid">${CSV_TARGETS.map(([h, k]) => `<div class="field"><label>${esc(h)}${k === 'name' ? ' <span class="req">*</span>' : ''}</label><select class="input" data-map="${k}"><option value="-1">（不匯入）</option>${header.map((x, i) => `<option value="${i}"${map[k] === i ? ' selected' : ''}>${esc(x || `第 ${i + 1} 欄`)}</option>`).join('')}</select></div>`).join('')}</div></div>
+      <div class="field" style="margin-top:12px"><label>重複資料處理（依客戶ID、統一編號或公司名稱比對）</label>
+        <div class="seg"><label><input type="radio" name="dupAct" value="skip" checked><span>全部略過</span></label><label><input type="radio" name="dupAct" value="update"><span>全部更新</span></label></div>
+        <div class="hint">「更新」只會覆蓋 CSV 中有填寫的欄位，空白欄位不會清除現有資料。也可在下方逐筆調整。</div></div>
+      <div id="csvPrev" style="margin-top:12px"></div>`,
+    footer: `<button class="btn" data-close>取消</button><button class="btn primary" id="doCsv">開始匯入</button>`
+  });
+  let plan = [];
+  const build = () => {
+    plan = [];
+    const seenKeys = new Map();
+    data.forEach((r, n) => {
+      const o = {};
+      for (const [, k] of CSV_TARGETS) o[k] = map[k] >= 0 ? (r[map[k]] || '') : '';
+      const errs = [];
+      const c = coerceCustomer(o, errs);
+      const key1 = c.taxId ? 't:' + c.taxId : '', key2 = 'n:' + normName(c.name);
+      if (c.name && ((key1 && seenKeys.has(key1)) || seenKeys.has(key2))) errs.push(`與檔案第 ${seenKeys.get(key1) || seenKeys.get(key2)} 列重複`);
+      if (c.name) { if (key1) seenKeys.set(key1, n + 2); seenKeys.set(key2, n + 2); }
+      let ex = null, why = '';
+      if (!errs.length) {
+        if (c.id) { ex = Store.customer(c.id); why = '客戶ID'; }
+        if (!ex && c.taxId) { ex = Store.customers.find(x => x.taxId === c.taxId); why = '統一編號'; }
+        if (!ex) { ex = Store.customers.find(x => normName(x.name) === normName(c.name)); why = '公司名稱'; }
+      }
+      plan.push({ row: n + 2, c, raw: o, errs, ex, why });
+    });
+    const ok = plan.filter(p => !p.errs.length), bad = plan.filter(p => p.errs.length), dup = ok.filter(p => p.ex);
+    const status = p => p.errs.length ? `<span class="badge overdue">失敗</span>` : p.ex ? `<select class="input" data-row="${p.row}" style="min-height:32px;padding:2px 6px"><option value="skip"${(rowAct[p.row] || dupAction) === 'skip' ? ' selected' : ''}>重複－略過</option><option value="update"${(rowAct[p.row] || dupAction) === 'update' ? ' selected' : ''}>重複－更新</option></select>` : '<span class="badge active">新增</span>';
+    $('#csvPrev', m.el).innerHTML = `<div class="stat-row"><div class="stat ok"><b>${ok.length - dup.length}</b>可新增</div><div class="stat dup"><b>${dup.length}</b>與現有客戶重複</div><div class="stat bad"><b>${bad.length}</b>失敗</div></div>
+      ${bad.length ? `<div class="field"><label>失敗原因</label><ul class="err-list">${bad.slice(0, 200).map(p => `<li>第 ${p.row} 列（${esc(p.c.name || '未命名')}）：${esc(p.errs.join('；'))}</li>`).join('')}</ul></div>` : ''}
+      ${plan.filter(p => p.c.taxId && !p.errs.length && !checkTaxId(p.c.taxId).ok).length ? `<div class="notice warn" style="margin-top:8px">有 ${plan.filter(p => p.c.taxId && !p.errs.length && !checkTaxId(p.c.taxId).ok).length} 筆統一編號檢查碼不符，仍會匯入，建議事後確認。</div>` : ''}
+      <div class="field" style="margin-top:10px"><label>預覽（前 100 列）</label><div class="scroll-box"><table class="list"><thead><tr><th>列</th><th>狀態</th><th>客戶名稱</th><th>統編</th><th>服務中</th><th>產業</th><th>地區</th><th>比對到</th></tr></thead><tbody>
+      ${plan.slice(0, 100).map(p => `<tr><td>${p.row}</td><td>${status(p)}</td><td>${esc(p.c.name)}</td><td>${esc(p.c.taxId)}</td><td>${p.c.isActive ? '是' : '否'}</td><td>${esc(p.c.industry)}</td><td>${esc(p.c.region)}</td><td>${p.ex ? esc(p.ex.name) + `<span class="muted small">（${p.why}）</span>` : ''}</td></tr>`).join('')}</tbody></table></div></div>`;
+    $$('[data-row]', m.el).forEach(s => s.addEventListener('change', () => { rowAct[s.dataset.row] = s.value; }));
+  };
+  $$('[data-map]', m.el).forEach(s => s.addEventListener('change', () => { map[s.dataset.map] = Number(s.value); build(); }));
+  $$('input[name=dupAct]', m.el).forEach(r => r.addEventListener('change', () => { dupAction = r.value; for (const k in rowAct) delete rowAct[k]; build(); }));
+  build();
+  $('#doCsv', m.el).addEventListener('click', async () => {
+    if (map.name < 0) return toast('請先指定「客戶名稱」對應的欄位', 'warn');
+    const ok = plan.filter(p => !p.errs.length);
+    const add = ok.filter(p => !p.ex), upd = ok.filter(p => p.ex && (rowAct[p.row] || dupAction) === 'update');
+    const skip = ok.length - add.length - upd.length, bad = plan.length - ok.length;
+    if (!add.length && !upd.length) return toast('沒有要新增或更新的資料', 'warn');
+    if (!await confirmDialog(`確定匯入？\n新增 ${add.length} 筆、更新 ${upd.length} 筆、略過 ${skip} 筆、失敗 ${bad} 筆（失敗列不會匯入）。`, { okText: '開始匯入' })) return;
+    const mapped = Object.keys(map).filter(k => map[k] >= 0 && k !== 'id');
+    const now = nowISO();
+    const res = await guard(() => DB.tx('customers', 'readwrite', async s => {
+      for (const p of add) {
+        const c = Object.assign(blankCustomer(), stripTmp(p.c));
+        if (!c.id || await req(s.customers.get(c.id))) c.id = uid();
+        c.createdAt = now; c.updatedAt = now; c.archivedAt = c.archived ? now : '';
+        s.customers.put(c);
+      }
+      for (const p of upd) {
+        const cur = await req(s.customers.get(p.ex.id)); if (!cur) continue;
+        for (const k of mapped) if (String(p.raw[k]).trim() !== '') cur[k] = p.c[k];
+        cur.updatedAt = now; s.customers.put(cur);
+      }
+      return true;
+    }).then(() => Store.loadCustomers()));
+    if (res) { m.close(); resultDialog('CSV 匯入完成', [`新增 ${add.length} 筆`, `更新 ${upd.length} 筆`, `略過 ${skip} 筆`, bad ? `失敗 ${bad} 筆` : ''], plan.filter(p => p.errs.length).map(p => `第 ${p.row} 列（${p.c.name || '未命名'}）：${p.errs.join('；')}`)); render(); }
+  });
+}
+
+/* ---------- 「客戶與聯絡人」單一工作表（匯入範本）----------
+ * 一列 = 一位聯絡人（含所屬公司資料）。同一家公司有多位聯絡人時，每列都填相同的客戶名稱；
+ * 系統依「統一編號」或「客戶名稱」自動歸為同一家客戶，公司欄位只要任一列有填即可。 */
+const COMBINED_SHEET = '客戶與聯絡人';
+const COMBINED_COLS = COLS.customers.filter(c => !['id', 'lastContactDate', 'createdAt', 'updatedAt', 'archived', 'archivedAt'].includes(c[1]))
+  .concat([['聯絡人姓名', 'ct_name'], ['部門', 'ct_department'], ['職稱', 'ct_title'], ['電話', 'ct_phone'], ['手機', 'ct_mobile'], ['電子郵件', 'ct_email'], ['聯絡人備註', 'ct_note']]);
+function combinedToParsed(rows, errors, warn) {
+  const { list, missing, found } = rowsToObjects(rows, COMBINED_COLS);
+  if (missing.includes('客戶名稱')) { toast(`「${COMBINED_SHEET}」工作表缺少「客戶名稱」欄位，請勿修改標題列。`, 'err'); return null; }
+  const optionalMissing = missing.filter(h => h !== '客戶名稱');
+  if (optionalMissing.length) warn.push(`「${COMBINED_SHEET}」缺少欄位（視為空白）：${optionalMissing.join('、')}`);
+  const custKeys = COMBINED_COLS.filter(c => !c[1].startsWith('ct_')).map(c => c[1]);
+  const groups = []; const byTax = new Map(), byName = new Map();
+  const contacts = [];
+  for (const o of list) {
+    const errs = [];
+    const raw = {}; custKeys.forEach(k => { raw[k] = o[k]; });
+    const c = coerceCustomer(raw, errs);
+    const ct = { name: String(o.ct_name || '').trim() };
+    CONTACT_FIELDS.forEach(k => { if (k !== 'name') ct[k] = String(o['ct_' + k] == null ? '' : o['ct_' + k]).trim(); });
+    if (ct.email && !isEmail(ct.email)) errs.push(`電子郵件格式錯誤：${ct.email}`);
+    if (!ct.name && (ct.department || ct.title || ct.phone || ct.mobile || ct.email || ct.note)) errs.push('有填聯絡人資料但「聯絡人姓名」空白');
+    if (errs.length) { errors.push(`第 ${o._row} 列（${c.name || '未命名'}${ct.name ? '／' + ct.name : ''}）：${errs.join('；')}`); continue; }
+    const nn = normName(c.name);
+    let g = (c.taxId && byTax.get(c.taxId)) || byName.get(nn);
+    if (g && c.taxId && g.raw.taxId && String(g.raw.taxId).trim() && coerceCustomer({ name: 'x', taxId: g.raw.taxId }, []).taxId !== c.taxId) {
+      errors.push(`第 ${o._row} 列（${c.name}）：與第 ${g.row} 列為同一客戶名稱，但統一編號不同（${c.taxId}），此列未匯入`); continue;
+    }
+    if (g && c.taxId && byTax.get(c.taxId) === g && normName(g.raw.name) !== nn) {
+      errors.push(`第 ${o._row} 列（${c.name}）：統一編號 ${c.taxId} 與第 ${g.row} 列「${g.raw.name}」相同，但客戶名稱不同，此列未匯入`); continue;
+    }
+    if (!g) { g = { id: 'G' + (groups.length + 1), row: o._row, raw: { _row: o._row }, from: {} }; groups.push(g); }
+    for (const k of custKeys) { // 合併公司欄位：以第一個有填寫的值為準
+      const v = String(raw[k] == null ? '' : raw[k]).trim();
+      if (!v) continue;
+      const cur = String(g.raw[k] == null ? '' : g.raw[k]).trim();
+      if (!cur) { g.raw[k] = raw[k]; g.from[k] = o._row; }
+      else if (k !== 'name' && cur !== v) warn.push(`第 ${o._row} 列「${(COMBINED_COLS.find(x => x[1] === k) || [k])[0]}」與第 ${g.from[k]} 列不同，以第 ${g.from[k]} 列為準（${c.name}）`);
+    }
+    if (c.taxId) byTax.set(c.taxId, g);
+    byName.set(nn, g);
+    if (ct.name) contacts.push(Object.assign({ _row: o._row, id: '', customerId: g.id }, ct));
+  }
+  const customers = groups.map(g => Object.assign({ id: g.id }, g.raw));
+  return {
+    customers: { list: customers, missing: [], found: found - COMBINED_COLS.filter(c => c[1].startsWith('ct_') && !missing.includes(c[0])).length },
+    combined: true,
+    contacts: { list: contacts, missing: [], found: COMBINED_COLS.filter(c => c[1].startsWith('ct_') && !missing.includes(c[0])).length },
+    activities: { list: [], missing: [], found: 0 }
+  };
+}
+
+/* ============================================================
+ * 名片新增：手機拍照 → 文字辨識 → 自動拆解欄位
+ * ============================================================ */
+const TITLE_RE = /(董事長|副董事長|總裁|執行長|總經理|副總經理|副總裁|副總|協理|處長|副處長|總監|經理|副理|襄理|課長|科長|股長|組長|主任|主管|特助|秘書|專員|工程師|業務代表|業務|顧問|院長|副院長|局長|副局長|主秘|技術長|財務長|營運長|廠長|董事|監事|合夥人|負責人|老闆|店長|助理|研究員|管理師|CEO|CTO|CFO|COO|CIO|President|Director|Manager|Engineer|Sales|Consultant|Specialist|Assistant|Supervisor|Chairman|Owner|VP)/i;
+const ORG_RE = /(股份有限公司|有限公司|公司|企業社|企業|集團|工業|工廠|實業|商行|醫院|診所|醫療|大學|學院|學校|政府|公所|議會|基金會|協會|Co\.?,?\s*Ltd|Inc\.?|Corp\.?|Corporation|Limited|LTD|Company|Group)/i;
+const DEPT_RE = /(部門|事業部|事業群|部|處|課|組|中心|室|科|Dept\.?|Department|Division)$/i;
+const TITLE_ONLY_RE = /^(資深|高級|首席|副|助理|代理)?(董事長|總經理|經理|副理|協理|處長|總監|主任|課長|組長|專員|工程師|業務代表|業務經理|業務|顧問|特助|執行長|院長|局長|科長|秘書|助理|襄理|廠長|董事|副總|總裁|技術長|研究員|管理師)$/;
+const SURNAMES = '陳林黃張李王吳劉蔡楊許鄭謝洪郭邱曾廖賴徐周葉蘇莊呂江何蕭羅高潘簡朱鍾游彭詹胡施沈余盧梁趙顏柯翁魏孫戴范方宋鄧杜傅侯曹薛丁卓阮馬董溫唐藍石蔣古紀姚連馮歐程湯田康姜白汪鄒尤巫鐘黎涂龔嚴韓袁金童陸夏柳凃邵錢伍倪于譚駱熊任甘秦顧毛章史官萬俞雷粘饒賀賈尹覃白';
+const INDUSTRY_KW = [['半導體', /(半導體|晶圓|晶片|IC設計|封裝|封測|Semiconductor)/i], ['工具機', /(工具機|CNC|綜合加工機|車床|銑床|磨床)/i], ['醫療單位', /(醫院|診所|醫療|醫學|衛生所|Hospital|Clinic)/i], ['公部門', /(政府|市府|縣府|公所|局$|署|部會|議會|國營|公營)/],
+  ['化妝品', /(化妝品|美妝|保養品|Cosmetic)/i], ['自行車', /(自行車|腳踏車|單車|Bicycle|Bike|Cycling)/i], ['塑膠射出', /(塑膠|射出|塑料|Plastic|Injection)/i], ['手工具', /(手工具|扳手|起子|鉗|Hand ?Tool)/i],
+  ['建築', /(建築|建材|營造|建設|鋼構|Construction)/i], ['五金加工', /(五金|金屬加工|沖壓|螺絲|Hardware)/i], ['家居行業', /(家居|家具|傢俱|居家|寢具|衛浴|Furniture)/i], ['零售業', /(零售|百貨|超市|量販|商店|門市|Retail)/i], ['設備機械', /(機械|設備|自動化|Machinery|Equipment)/i]];
+
+function parseCard(text) {
+  const raw = String(text || '').normalize('NFKC');
+  const lines = raw.split(/\r?\n/).map(l => l.replace(/\s+/g, ' ').trim()).filter(Boolean);
+  const r = { company: '', name: '', title: '', department: '', phone: '', mobile: '', fax: '', email: '', website: '', taxId: '', address: '', region: '', industry: '', rest: [] };
+  const used = new Set();
+  const cleanNum = s => s.replace(/[\s.]+$/, '').replace(/^[\s:：]+/, '').replace(/\s{2,}/g, ' ').trim();
+  // Email
+  const em = raw.match(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/);
+  if (em) r.email = em[0];
+  // 統一編號
+  const tx = raw.match(/(?:統一編號|統編|Tax\s*ID|VAT)\s*[:：#]?\s*(\d{8})/i);
+  if (tx) r.taxId = tx[1];
+  // 電話類
+  const ext = '(?:\\s*(?:#|ext\\.?|分機|轉)\\s*\\d{1,6})?';
+  const mob = raw.match(new RegExp('(?:手機|行動|Mobile|Cell|M)\\s*[:：.]?\\s*((?:\\+?886[-\\s]?|0)9\\d{2}[-\\s]?\\d{3}[-\\s]?\\d{3})', 'i')) || raw.match(/((?:\+?886[-\s]?|0)9\d{2}[-\s]?\d{3}[-\s]?\d{3})/);
+  if (mob) r.mobile = cleanNum(mob[1]);
+  const fax = raw.match(/(?:傳真|FAX|F)\s*[:：.]\s*(\+?[\d()\-\s]{8,18}\d)/i) || raw.match(/(?:傳真|FAX)\s*(\+?[\d()\-\s]{8,18}\d)/i);
+  if (fax) r.fax = cleanNum(fax[1]);
+  const tel = raw.match(new RegExp('(?:電話|總機|專線|TEL|Phone|T)\\s*[:：.]?\\s*(\\+?[\\d()\\-\\s]{8,18}\\d' + ext + ')', 'i'));
+  if (tel && !(r.mobile && tel[1].replace(/\D/g, '') === r.mobile.replace(/\D/g, ''))) r.phone = cleanNum(tel[1]);
+  if (!r.phone) {
+    const all = raw.match(new RegExp('(\\(?0\\d{1,2}\\)?[-\\s]?\\d{3,4}[-\\s]?\\d{4}' + ext + ')', 'g')) || [];
+    const p = all.find(x => !/^\(?09/.test(x) && x.replace(/\D/g, '') !== (r.fax || '').replace(/\D/g, ''));
+    if (p) r.phone = cleanNum(p);
+  }
+  for (let i = 0; i < lines.length; i++) {
+    const l = lines[i];
+    const plain = l.replace(/\s/g, '');
+    // 網址
+    if (!r.website) {
+      const w = l.replace(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g, '').match(/((?:https?:\/\/)?(?:www\.)?[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.(?:com|net|org|gov|edu|tw|io|co|biz|info|cn|jp|hk)(?:\.[a-z]{2})?(?:\/[^\s]*)?)/i);
+      if (w && (/www\.|https?:/i.test(w[1]) || /^(網址|Web|Website|URL)/i.test(l))) { r.website = w[1]; }
+    }
+    // 地址
+    if (!r.address && /(縣|市).{0,12}(區|鄉|鎮|市|村|里|路|街|大道|段|巷|號)/.test(plain) && /\d/.test(plain) && !/@/.test(l)) {
+      r.address = l.replace(/^(地址|住址|公司地址|Add(ress)?|A)\s*[:：.]?\s*/i, '').replace(/\s*(TEL|電話|FAX|傳真).*$/i, '').trim();
+      used.add(i); continue;
+    }
+    if (/@|(電話|TEL|FAX|傳真|手機|Mobile|統一編號|統編|網址|www\.)/i.test(l) || /^[\d\s()+\-#]+$/.test(l)) { used.add(i); continue; }
+    if (!r.company && ORG_RE.test(l) && plain.length <= 40) { r.company = l.replace(/^(公司|Company)\s*[:：]\s*/i, ''); used.add(i); continue; }
+  }
+  // 姓名與職稱
+  const cjkName = /^[一-鿿]{2,4}$/;
+  const remain = lines.map((l, i) => ({ l, i })).filter(x => !used.has(x.i));
+  for (const { l, i } of remain) {
+    const plain = l.replace(/\s/g, '');
+    if (!r.name && /^[一-鿿]{3,}/.test(plain) && SURNAMES.includes(plain[0])) {
+      const cut = [3, 2, 4].find(n => plain.length > n && /^[一-鿿]+$/.test(plain.slice(0, n)) && TITLE_ONLY_RE.test(plain.slice(n)));
+      if (cut) { r.name = plain.slice(0, cut); r.title = plain.slice(cut); used.add(i); continue; }
+    }
+    if (!r.name && cjkName.test(plain) && SURNAMES.includes(plain[0]) && !TITLE_RE.test(plain) && !DEPT_RE.test(plain) && !ORG_RE.test(plain)) { r.name = plain; used.add(i); continue; }
+  }
+  for (const { l, i } of remain) {
+    if (used.has(i)) continue;
+    const plain = l.replace(/\s/g, '');
+    if (!r.title && TITLE_RE.test(l) && plain.length <= 24) {
+      const parts = l.split(/\s*[\/｜|,，、]\s*|\s+/).filter(Boolean);
+      const dep = parts.filter(p => DEPT_RE.test(p) && !TITLE_ONLY_RE.test(p));
+      const tit = parts.filter(p => !dep.includes(p));
+      if (dep.length && !r.department) r.department = dep.join(' ');
+      r.title = tit.join(' ') || l; used.add(i); continue;
+    }
+    if (!r.department && DEPT_RE.test(plain) && plain.length <= 16 && !ORG_RE.test(plain)) { r.department = l; used.add(i); continue; }
+  }
+  if (!r.name) { // 英文姓名或無常見姓氏的備援
+    const c = remain.find(({ l, i }) => !used.has(i) && (/^[A-Z][a-z]+(\s[A-Z][a-z]+){1,2}$/.test(l) || /^[一-鿿]{2,3}$/.test(l.replace(/\s/g, ''))));
+    if (c) { r.name = /[一-鿿]/.test(c.l) ? c.l.replace(/\s+/g, '') : c.l; used.add(c.i); }
+  }
+  if (!r.company) { const c = remain.find(({ i, l }) => !used.has(i) && /[一-鿿]{4,}/.test(l) && !TITLE_RE.test(l)); if (c) { r.company = c.l; used.add(c.i); } }
+  r.region = regionFromAddress(r.address);
+  const ind = INDUSTRY_KW.find(([, re]) => re.test(r.company) || re.test(raw));
+  if (ind) r.industry = ind[0];
+  r.rest = lines.filter((l, i) => !used.has(i) && l !== r.company);
+  return r;
+}
+
+async function detectTextFromImage(file) {
+  if (!('TextDetector' in window)) return null;
+  const bmp = await createImageBitmap(file);
+  const det = new window.TextDetector();
+  const res = await det.detect(bmp);
+  return res.map(x => ({ t: x.rawValue, y: x.boundingBox.y, x: x.boundingBox.x, h: x.boundingBox.height }))
+    .sort((a, b) => Math.abs(a.y - b.y) < Math.min(a.h, b.h) / 2 ? a.x - b.x : a.y - b.y).map(x => x.t).join('\n');
+}
+
+function cardScanForm() {
+  const hasTD = 'TextDetector' in window;
+  const ua = navigator.userAgent;
+  const isIOS = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const isAndroid = /Android/.test(ua);
+  let objUrl = '';
+  const m = openModal({
+    title: '📇 名片新增客戶', size: 'wide',
+    onClose: () => { if (objUrl) URL.revokeObjectURL(objUrl); },
+    body: `
+      <div class="section-t">步驟 1　拍攝名片並取得文字</div>
+      <div class="row" style="margin:10px 0">
+        <label class="btn accent">📷 拍攝名片<input type="file" id="cardCam" accept="image/*" capture="environment" hidden></label>
+        <label class="btn">🖼 從相簿選擇<input type="file" id="cardPick" accept="image/*" hidden></label></div>
+      <img id="cardImg" class="card-preview hidden" alt="名片照片預覽">
+      <div id="ocrStatus" class="small muted"></div>
+      <div class="notice info small" style="margin-top:8px">${hasTD ? '此瀏覽器支援內建文字辨識，拍照後會自動辨識並填入欄位。' : `本系統不連網、不上傳照片，文字辨識使用<b>手機內建的離線辨識功能</b>：
+        <ul class="steps">${isAndroid ? '' : '<li><b>iPhone／iPad</b>：拍完後開啟照片，長按名片上的文字 →「全選」→「拷貝」；或在下方文字框點一下，選「掃描文字」直接對準名片。</li>'}
+        ${isIOS ? '' : '<li><b>Android</b>：在相簿用「Google 智慧鏡頭」或「擷取文字」選取全部文字 → 複製；Gboard 鍵盤也可使用「掃描文字」。</li>'}
+        <li>將文字貼到下方，系統會<b>自動拆解</b>成公司、姓名、職稱、電話、Email 等欄位。</li></ul>`}</div>
+      <div class="field" style="margin-top:10px"><label for="cardText">名片文字</label>
+        <textarea class="input" id="cardText" rows="6" placeholder="將名片上的全部文字貼在這裡（每行一項即可，順序不拘）"></textarea></div>
+      <div class="row" style="margin-top:8px"><button class="btn primary" id="cardParse">🔍 自動解析欄位</button><span class="small muted" id="parseMsg"></span></div>
+      <div id="existBox" style="margin-top:12px"></div>
+      <div class="section-t" style="margin-top:16px">步驟 2　確認客戶資料</div>
+      <div class="form-grid" style="margin-top:10px" id="cardCust">${customerFields(blankCustomer(), 'k')}</div>
+      <div class="section-t" style="margin-top:16px">步驟 3　確認聯絡人資料（姓名空白則不建立聯絡人）</div>
+      <div class="form-grid" style="margin-top:10px">${contactFields({ name: '', department: '', title: '', phone: '', mobile: '', email: '', note: '' }, 'kc')}</div>`,
+    footer: `<button class="btn" data-close>取消</button><button class="btn primary" id="cardSave">儲存</button>`
+  });
+  bindCustomerFields(m.el, 'k', null);
+  let target = 'new';
+  const setVal = (id, v) => { const e = $('#' + id, m.el); if (e && v) { e.value = v; e.dispatchEvent(new Event('input')); } };
+  const apply = () => {
+    const txt = $('#cardText', m.el).value;
+    if (!txt.trim()) return toast('請先貼上或辨識名片文字', 'warn');
+    const r = parseCard(txt);
+    setVal('k_name', r.company); setVal('k_taxId', r.taxId); setVal('k_contactAddress', r.address); setVal('k_phone', r.phone.replace(/\s*(#|ext\.?|分機|轉).*$/i, '')); setVal('k_fax', r.fax); setVal('k_website', r.website);
+    if (r.region) $('#k_region', m.el).value = r.region;
+    if (r.industry) { $('#k_industry', m.el).value = r.industry; $('#k_industryOther', m.el).classList.add('hidden'); }
+    setVal('kc_name', r.name); setVal('kc_title', r.title); setVal('kc_department', r.department);
+    setVal('kc_phone', r.phone); setVal('kc_mobile', r.mobile); setVal('kc_email', r.email);
+    const extra = []; if (r.rest.length) extra.push(...r.rest);
+    if (extra.length && !$('#kc_note', m.el).value) $('#kc_note', m.el).value = extra.join('\n');
+    const filled = ['company', 'name', 'title', 'phone', 'mobile', 'email', 'address', 'website', 'taxId'].filter(k => r[k]).length;
+    $('#parseMsg', m.el).textContent = `已自動填入 ${filled} 個欄位，請逐項確認後再儲存。`;
+    // 既有客戶比對
+    const d = r.company ? Store.findDuplicates({ name: r.company, taxId: r.taxId }) : [];
+    const eb = $('#existBox', m.el);
+    if (d.length) {
+      eb.innerHTML = `<div class="notice warn">系統中已有相同公司：<b>${esc(d[0].name)}</b>${d[0].archived ? '（已封存）' : ''}。請選擇：
+        <div class="seg" style="margin-top:8px;background:#fff"><label><input type="radio" name="cardTarget" value="${esc(d[0].id)}" checked><span>加入為既有客戶的聯絡人</span></label><label><input type="radio" name="cardTarget" value="new"><span>建立新客戶</span></label></div></div>`;
+      target = d[0].id;
+      $$('input[name=cardTarget]', eb).forEach(x => x.addEventListener('change', () => { target = x.value; $('#cardCust', m.el).style.opacity = target === 'new' ? '1' : '.45'; }));
+      $('#cardCust', m.el).style.opacity = '.45';
+    } else { eb.innerHTML = ''; target = 'new'; $('#cardCust', m.el).style.opacity = '1'; }
+  };
+  $('#cardParse', m.el).addEventListener('click', apply);
+  $('#cardText', m.el).addEventListener('paste', () => setTimeout(apply, 50));
+  const onImg = async e => {
+    const f = e.target.files[0]; e.target.value = '';
+    if (!f) return;
+    if (objUrl) URL.revokeObjectURL(objUrl);
+    objUrl = URL.createObjectURL(f);
+    const img = $('#cardImg', m.el); img.src = objUrl; img.classList.remove('hidden');
+    const st = $('#ocrStatus', m.el);
+    if (!hasTD) { st.textContent = '照片僅供對照，不會儲存或上傳。請使用手機內建文字辨識取得文字後貼到下方。'; return; }
+    st.textContent = '辨識中…';
+    try {
+      const t = await detectTextFromImage(f);
+      if (t && t.trim()) { $('#cardText', m.el).value = t; st.textContent = '辨識完成，已自動解析。'; apply(); }
+      else st.textContent = '未辨識到文字，請改用手動貼上。';
+    } catch (err) { st.textContent = '此裝置無法執行內建辨識，請改用手機內建文字辨識後貼上。'; }
+  };
+  $('#cardCam', m.el).addEventListener('change', onImg);
+  $('#cardPick', m.el).addEventListener('change', onImg);
+  $('#cardSave', m.el).addEventListener('click', async () => {
+    const ct = readContactFields(m.el, 'kc');
+    if (!validateContact(m.el, ct, 'kc', false)) return;
+    if (target !== 'new') {
+      if (!ct.name.trim()) return toast('加入既有客戶時，請填寫聯絡人姓名', 'warn');
+      const r = await guard(() => Store.saveContact(Object.assign(ct, { customerId: target })), '聯絡人已加入既有客戶');
+      if (r) { m.close(); openCustomer(target, 'contacts'); }
+      return;
+    }
+    const d = readCustomerFields(m.el, 'k');
+    if (!validateCustomer(m.el, 'k', d)) return;
+    const dups = Store.findDuplicates(d);
+    if (dups.length && !await confirmDialog(`系統中已有相似的客戶「${esc(dups[0].name)}」，仍要建立新客戶嗎？`, { okText: '仍要建立' })) return;
+    const r = await guard(() => Store.createWithContact(d, ct.name.trim() ? ct : null), ct.name.trim() ? '客戶與聯絡人已新增' : '客戶已新增');
+    if (r) { m.close(); openCustomer(r.id); }
+  });
+}
+
+/** 名片新增：客戶與聯絡人在同一交易中建立 */
+Store.createWithContact = async function (custData, contactData) {
+  const c = cleanCustomer(custData);
+  if (!c.name) throw new Error('客戶名稱為必填');
+  const now = nowISO(); c.id = uid(); c.createdAt = now; c.updatedAt = now;
+  await DB.tx(['customers', 'contacts'], 'readwrite', async s => {
+    await req(s.customers.put(c));
+    if (contactData) {
+      const o = { id: uid(), customerId: c.id, createdAt: now, updatedAt: now };
+      for (const k of CONTACT_FIELDS) o[k] = String(contactData[k] || '').trim();
+      await req(s.contacts.put(o));
+    }
+  });
+  await this.loadCustomers();
+  maybePersist();
+  return c;
+};
+
+/* ============================================================
+ * I. 系統設定 與 啟動
+ * ============================================================ */
+let persistAsked = false;
+async function maybePersist() {
+  if (persistAsked || !navigator.storage || !navigator.storage.persist) return;
+  persistAsked = true;
+  try { if (!(await navigator.storage.persisted())) await navigator.storage.persist(); } catch (e) { /* 不支援時略過 */ }
+}
+function envInfo() {
+  const p = location.protocol;
+  const ua = navigator.userAgent;
+  const browser = /Edg\//.test(ua) ? 'Microsoft Edge' : /Firefox\//.test(ua) ? 'Firefox' : /CriOS|Chrome\//.test(ua) ? 'Chrome' : /Safari\//.test(ua) ? 'Safari' : '其他瀏覽器';
+  return { p, browser, origin: p === 'file:' ? 'file://（本機檔案）' : location.origin };
+}
+async function renderSettings(el) {
+  const env = envInfo();
+  let persisted = '不支援查詢', usage = '無法取得';
+  try { if (navigator.storage && navigator.storage.persisted) persisted = (await navigator.storage.persisted()) ? '已啟用（瀏覽器不會自動清除）' : '未啟用（空間不足時瀏覽器可能清除資料）'; } catch (e) { /* 略過 */ }
+  try { if (navigator.storage && navigator.storage.estimate) { const e = await navigator.storage.estimate(); usage = `約 ${(e.usage / 1024 / 1024).toFixed(2)} MB（可用上限約 ${(e.quota / 1024 / 1024 / 1024).toFixed(1)} GB）`; } } catch (e) { /* 略過 */ }
+  const s = Store.stats();
+  el.innerHTML = `
+    <div class="card"><h2>💾 資料儲存位置</h2>
+      <dl class="info">
+        <dt>儲存方式</dt><dd>瀏覽器 IndexedDB（資料庫名稱：${esc(APP.dbName)}）</dd>
+        <dt>目前瀏覽器</dt><dd>${esc(env.browser)}</dd>
+        <dt>網站來源</dt><dd>${esc(env.origin)}</dd>
+        <dt>使用空間</dt><dd>${esc(usage)}</dd>
+        <dt>持久保存</dt><dd>${esc(persisted)} <button class="btn sm" id="askPersist" style="margin-left:6px">申請持久保存</button></dd>
+        <dt>目前資料</dt><dd>客戶 ${s.total + s.archived} 筆（含封存 ${s.archived} 筆）</dd>
+        <dt>上次備份</dt><dd>${state.lastBackupAt ? esc(fmtDT(state.lastBackupAt)) : '尚未備份'}</dd>
+      </dl>
+      <div class="notice warn" style="margin-top:14px;margin-bottom:0"><b>重要提醒</b>
+        <ul class="steps"><li>資料只存在「這台裝置 + 這個瀏覽器 + 這個網站來源」。換電腦、換手機、換瀏覽器（例如 Chrome 改 Edge），都看不到彼此的資料。</li>
+        <li>清除瀏覽器的「Cookie 與網站資料」、使用私密／無痕視窗，都可能讓資料消失或無法保存。</li>
+        <li>iPhone Safari 若連續 7 天未開啟此網頁，系統可能自動清除資料；建議「加入主畫面」後使用，並定期備份。</li>
+        <li>要在不同裝置間移轉資料，請使用「匯出 Excel 備份 → 在另一台裝置匯入」。</li>
+        <li>本系統未對資料另行加密，也未經資安稽核；能使用此裝置與瀏覽器帳號的人即可看到資料，請妥善保管裝置與備份檔。</li></ul></div></div>
+    <div class="card"><h2>🧭 開啟方式與相容性</h2>
+      <div class="tablewrap"><table class="list"><thead><tr><th>開啟方式</th><th>說明</th></tr></thead><tbody>
+        <tr><td>Chrome／Edge 直接開啟 crm.html（file://）</td><td><b>建議</b>。可正常使用，匯出時會出現「另存新檔」視窗。請固定放在同一個資料夾，不要搬移或改名。</td></tr>
+        <tr><td>Firefox 直接開啟（file://）</td><td>可使用，但搬移或重新命名 HTML 檔後會被視為不同來源，看起來像資料不見（資料仍在舊位置）。匯出改為下載方式。</td></tr>
+        <tr><td>Safari（Mac）直接開啟</td><td>file:// 下的 IndexedDB 可能無法使用。建議改用 Chrome／Edge，或使用本機伺服器。</td></tr>
+        <tr><td>手機</td><td>手機無法方便地直接開啟本機 HTML 檔。請將 crm.html 放到公司內網或靜態網頁空間，以 https 網址開啟；客戶資料仍只存在手機瀏覽器中，不會傳到網頁空間。</td></tr>
+        <tr><td>本機伺服器</td><td>在 crm.html 所在資料夾執行 <code>python -m http.server 8000</code>，再開啟 <code>http://localhost:8000/crm.html</code>。注意：localhost 與 file:// 是不同來源，資料不共用，可用備份檔移轉。</td></tr>
+      </tbody></table></div></div>
+    <div class="card"><h2>📋 選項清單</h2>
+      <p class="small"><b>預設產業：</b>${INDUSTRIES.map(esc).join('、')}</p>
+      <div class="small"><b>自行新增的產業：</b>${customIndustries.length ? customIndustries.map(i => `<span class="badge type" style="margin:2px 4px 2px 0">${esc(i)} <button class="btn link" data-rm-ind="${esc(i)}" style="min-height:0;padding:0 2px;color:var(--danger)" aria-label="移除 ${esc(i)}">×</button></span>`).join('') : '<span class="muted">尚無</span>'}</div>
+      <div class="row" style="margin:8px 0 12px;gap:6px"><input class="input" id="newInd" placeholder="輸入新產業名稱" style="max-width:240px"><button class="btn sm primary" id="addInd">＋ 新增產業</button></div>
+      <p class="small muted" style="margin-top:0">移除產業選項不會變更已使用此產業的客戶資料。</p>
+      <p class="small" style="margin-bottom:0"><b>地區：</b>${REGIONS.map(esc).join('、')}</p></div>
+    <div class="card"><h2>⚠ 清除本機全部資料</h2>
+      <p class="small muted" style="margin-top:0">將刪除此瀏覽器中的全部客戶、聯絡人與業務活動。此動作無法復原，請先匯出 Excel 備份。</p>
+      <div class="row"><button class="btn" id="bkFirst">⬇ 先匯出備份</button><button class="btn danger" id="wipe">清除全部資料</button></div></div>
+    <p class="small muted">${esc(APP.name)}　版本 ${APP.version}　資料結構版本 ${APP.schemaVersion}</p>`;
+  $('#addInd', el).addEventListener('click', async () => {
+    const r = await guard(() => addIndustry($('#newInd', el).value));
+    if (r === true) { toast('已新增產業'); render(); } else if (r === false) toast('此產業已在清單中', 'warn');
+  });
+  $$('[data-rm-ind]', el).forEach(b => b.addEventListener('click', async () => {
+    const name = b.dataset.rmInd;
+    if (!await confirmDialog(`確定要從產業清單移除「${esc(name)}」嗎？\n已使用此產業的客戶資料不會變更。`, { okText: '移除' })) return;
+    const ok = await guard(() => removeIndustry(name).then(() => true), '已移除產業選項'); if (ok) render();
+  }));
+  $('#askPersist', el).addEventListener('click', async () => {
+    if (!navigator.storage || !navigator.storage.persist) return toast('此瀏覽器不支援持久保存設定', 'warn');
+    try { const ok = await navigator.storage.persist(); toast(ok ? '已啟用持久保存' : '瀏覽器未同意持久保存（常用的網站通常會自動核准）', ok ? 'ok' : 'warn'); } catch (e) { toast('申請失敗：' + errMsg(e), 'err'); }
+    render();
+  });
+  $('#bkFirst', el).addEventListener('click', async () => { const r = await guard(() => exportBackup()); if (r) { toast('備份已匯出'); render(); } });
+  $('#wipe', el).addEventListener('click', async () => {
+    if (!await confirmDialog('確定要清除本機<b>全部</b>客戶、聯絡人與業務活動嗎？\n此動作無法復原。', { title: '清除全部資料', okText: '下一步', danger: true })) return;
+    if (!await confirmDialog('再次確認：資料清除後無法救回。\n您是否已經匯出備份？', { title: '最後確認', okText: '確定清除全部資料', danger: true })) return;
+    const ok = await guard(() => DB.tx(['customers', 'contacts', 'activities'], 'readwrite', s => Promise.all([req(s.customers.clear()), req(s.contacts.clear()), req(s.activities.clear())])).then(() => Store.loadCustomers()).then(() => true), '已清除全部資料');
+    if (ok) render();
+  });
+}
+
+async function init() {
+  buildNav();
+  try {
+    await DB.open();
+    state.lastBackupAt = (await DB.getMeta('lastBackupAt')) || null;
+    customIndustries = (await DB.getMeta('customIndustries')) || [];
+    await Store.loadCustomers();
+  } catch (e) {
+    console.error(e);
+    const env = envInfo();
+    $('#content').innerHTML = `<div class="fatal"><div class="notice danger"><h2 style="font-size:18px;margin-bottom:8px">無法開啟本機資料庫</h2>
+      <p>錯誤訊息：${esc(errMsg(e))}</p>
+      <p>可能原因：</p><ul class="steps"><li>使用私密／無痕瀏覽模式，或瀏覽器設定封鎖了網站資料。</li>
+      <li>${env.browser === 'Safari' && env.p === 'file:' ? '<b>Safari 以 file:// 開啟時可能無法使用 IndexedDB</b>，請改用 Chrome／Edge，或透過本機伺服器開啟。' : '瀏覽器版本過舊或不支援 IndexedDB。'}</li>
+      <li>資料庫被其他分頁鎖定：請關閉其他 CRM 分頁。</li></ul>
+      <p>為避免資料遺失，系統目前不會進行任何讀寫。</p>
+      <button class="btn primary" id="retry">重新嘗試</button></div></div>`;
+    $('#retry').addEventListener('click', () => location.reload());
+    $('#pageTitle').textContent = '無法開啟資料庫';
+    return;
+  }
+  window.addEventListener('hashchange', route);
+  route();
+}
+window.addEventListener('unhandledrejection', e => { console.error(e.reason); toast('發生未預期的錯誤：' + errMsg(e.reason), 'err'); });
+document.addEventListener('DOMContentLoaded', init);
+
+</script>
+</body>
+</html>
