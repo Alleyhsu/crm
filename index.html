@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-Ov8PfU3w/0C8rLU3IrfI0HJx0ZBZCiewGL4bWBD1BE0='; style-src 'unsafe-inline'; img-src blob: data:; connect-src 'none'; font-src 'none'; media-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; form-action 'none'; base-uri 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-GostvfhU1E6grqnV0/ep3YDhI+3TebVDXzaLUL77vMM='; style-src 'unsafe-inline'; img-src blob: data:; connect-src 'none'; font-src 'none'; media-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; form-action 'none'; base-uri 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#0f2747">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -305,6 +305,28 @@ textarea.input{min-height:90px;resize:vertical}
 .ca-box.done{border-color:#b9e2c9;background:var(--ok-l)}
 .ca-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .ca-box .meta{display:flex;gap:4px 14px;flex-wrap:wrap;color:var(--muted);margin-top:6px}
+/* ===== 商機管理 ===== */
+.fc-chart{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:6px;align-items:end;height:200px}
+.fc-col{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;border:none;background:none;cursor:pointer;padding:0;min-width:0;border-radius:6px}
+.fc-col:hover{background:var(--blue-l)}
+.fc-col.cur span{color:var(--orange-d);font-weight:700}
+.fc-bar{flex:1;width:70%;max-width:44px;display:flex;flex-direction:column-reverse;justify-content:flex-start;border-bottom:2px solid var(--line)}
+.fc-bar i{display:block;width:100%;min-height:0}
+.fc-bar i:last-child{border-radius:4px 4px 0 0}
+.fc-col b{font-size:13px;min-height:18px}.fc-col span{font-size:12px;color:var(--muted)}
+.fc-table td,.fc-table th{text-align:center;white-space:nowrap;padding:8px 6px}
+.fc-table td:first-child,.fc-table th:first-child{text-align:left;position:sticky;left:0;background:#fff;z-index:1}
+.fc-table th:first-child{background:#f7f9fc}
+.fc-cur{background:var(--orange-l)!important}
+.kanban{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;align-items:start}
+.kb-col{background:#eef1f6;border-radius:var(--radius);padding:10px;min-width:0}
+.kb-h{display:flex;align-items:center;gap:8px;padding-bottom:8px;margin-bottom:8px;border-bottom:3px solid}
+.kb-card{background:#fff;border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:8px;cursor:pointer;box-shadow:var(--shadow)}
+.kb-card:hover{border-color:var(--blue)}
+.kb-t{font-weight:600;color:var(--blue);word-break:break-word}
+.kb-card .meta{display:flex;flex-wrap:wrap;gap:2px 10px;color:var(--muted);margin-top:4px}
+.kb-card .acts{margin-top:6px}
+@media (max-width:640px){.fc-chart{height:150px;gap:2px}.fc-bar{width:85%}}
 
 </style>
 </head>
@@ -336,7 +358,7 @@ textarea.input{min-height:90px;resize:vertical}
  * Alley's Systex CRM V1 — 核心：常數、工具、資料庫、服務
  * 所有資料僅存於本機瀏覽器 IndexedDB，程式不發出任何網路請求。
  * ============================================================ */
-const APP = { name: "Alley's Systex CRM", version: '1.3.1', schemaVersion: 3, dbName: 'alley_systex_crm', dbVersion: 3 };
+const APP = { name: "Alley's Systex CRM", version: '1.4.0', schemaVersion: 4, dbName: 'alley_systex_crm', dbVersion: 4 };
 
 const INDUSTRIES = ['公部門', '工具機', '半導體', '設備機械', '手工具', '自行車', '塑膠射出', '五金加工', '建築', '醫療單位', '化妝品', '家居行業', '零售業'];
 const REGIONS = ['基隆市', '臺北市', '新北市', '桃園市', '新竹市', '新竹縣', '苗栗縣', '臺中市', '彰化縣', '南投縣', '雲林縣', '嘉義市', '嘉義縣', '臺南市', '高雄市', '屏東縣', '宜蘭縣', '花蓮縣', '臺東縣', '澎湖縣', '金門縣', '連江縣'];
@@ -539,6 +561,11 @@ const DB = {
           const td = db.createObjectStore('todos', { keyPath: 'id' });
           td.createIndex('projectId', 'projectId');
         }
+        if (ev.oldVersion < 4) {
+          // V1.4：商機管理
+          const d = db.createObjectStore('deals', { keyPath: 'id' });
+          d.createIndex('customerId', 'customerId'); d.createIndex('month', 'month');
+        }
       };
       req.onblocked = () => toast('資料庫正被其他分頁使用中，請關閉其他 CRM 分頁後重新整理。', 'warn', 8000);
       req.onerror = () => reject(req.error || new Error('無法開啟資料庫'));
@@ -683,12 +710,14 @@ const Store = {
 
   /** 永久刪除客戶（含其聯絡人與活動），單一交易 */
   async deleteCustomer(id) {
-    const r = await DB.tx(['customers', 'contacts', 'activities', 'projects'], 'readwrite', async s => {
+    const r = await DB.tx(['customers', 'contacts', 'activities', 'projects', 'deals'], 'readwrite', async s => {
       const c = await req(s.customers.get(id));
       if (!c) throw new Error('找不到此客戶');
       if (!c.archived) throw new Error('只能刪除已封存的客戶');
       const pj = await req(s.projects.index('customerId').count(id));
       if (pj) throw new Error(`此客戶仍有 ${pj} 個 SI 專案，請先刪除這些專案後再刪除客戶`);
+      const dl = await req(s.deals.index('customerId').count(id));
+      if (dl) throw new Error(`此客戶仍有 ${dl} 筆商機，請先刪除這些商機後再刪除客戶`);
       const cts = await req(s.contacts.index('customerId').getAllKeys(id));
       const acts = await req(s.activities.index('customerId').getAllKeys(id));
       for (const k of cts) s.contacts.delete(k);
@@ -828,7 +857,7 @@ const PAGES = {
   dashboard: { k: 'A', t: '首頁儀表板' },
   customers: { k: 'B', t: '客戶管理' },
   activities: { k: 'C', t: '業務活動與跟進' },
-  deals: { k: 'D', t: '商機管理', soon: true },
+  deals: { k: 'D', t: '商機管理' },
   gp: { k: 'E', t: 'GP 營收管理', soon: true },
   si: { k: 'F', t: 'SI 專案管理' },
   reports: { k: 'G', t: '業務統計報表', soon: true },
@@ -910,7 +939,7 @@ async function render() {
   const el = $('#content');
   try {
     if (state.page === 'customers' && state.detailId) await renderDetail(el);
-    else await ({ dashboard: renderDashboard, customers: renderCustomers, activities: renderActivities, si: renderSI, data: renderData, settings: renderSettings }[state.page] || renderSoon)(el);
+    else await ({ dashboard: renderDashboard, customers: renderCustomers, activities: renderActivities, deals: renderDeals, si: renderSI, data: renderData, settings: renderSettings }[state.page] || renderSoon)(el);
   } catch (e) {
     console.error(e);
     el.innerHTML = `<div class="notice danger">頁面載入失敗：${esc(errMsg(e))}</div>`;
@@ -977,16 +1006,17 @@ async function renderDashboard(el) {
       <div class="card"><h2>已逾期跟進 <span class="count">${overdue.length}</span></h2>${fuList(overdue, '目前沒有逾期的跟進項目 👍')}</div>
       <div class="card"><h2>今日待跟進 <span class="count">${today.length}</span></h2>${fuList(today, '今天沒有待跟進項目')}</div>
     </div>
+    ${await dealDashboardHtml()}
     ${await siDashboardHtml()}
     <div class="card"><h2>其他模組指標</h2>
       <p class="muted small" style="margin-top:0">以下模組尚未開發，完成後才會串接真實數據，目前不顯示任何數字。</p>
       <div class="pending-grid">
-        <div><b>進行中商機</b>待「商機管理」完成</div><div><b>未結案 GP</b>待「GP 營收管理」完成</div>
+        <div><b>未結案 GP</b>待「GP 營收管理」完成</div>
         <div><b>已結案 GP</b>待「GP 營收管理」完成</div>
         <div><b>本週活動統計</b>待「業務統計報表」完成</div>
       </div></div>
     <div class="row"><button class="btn primary" data-act="new">＋ 新增客戶</button><button class="btn accent" data-act="card">📇 名片新增</button></div>`;
-  bindFuList(el); bindSiDashboard(el);
+  bindFuList(el); bindSiDashboard(el); bindDealDashboard(el);
   $$('[data-go]', el).forEach(b => b.addEventListener('click', () => {
     const g = b.dataset.go;
     if (g === 'fu') return go('activities');
@@ -1344,6 +1374,9 @@ async function renderDetail(el) {
         : '<div class="empty" style="padding:14px">尚無聯絡人，按「＋ 新增聯絡人」或「編輯」即可新增。</div>'}</div>
       <div class="card"><h2>公司資料</h2><dl class="info">${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v || '<span class="muted">—</span>'}</dd>`).join('')}</dl></div>`;
     $('#infoAddCt', body).addEventListener('click', () => contactForm(c.id));
+    body.insertAdjacentHTML('beforeend', await customerDealsCard(c.id));
+    $('#custNewDeal', body).addEventListener('click', () => dealForm(null, c.id));
+    $$('[data-open-deal]', body).forEach(a => a.addEventListener('click', () => dealForm(DL.get(a.dataset.openDeal))));
     body.insertAdjacentHTML('beforeend', await customerProjectsCard(c.id));
     $('#custNewPj', body).addEventListener('click', () => projectForm(null, c.id));
     $$('[data-open-pj]', body).forEach(a => a.addEventListener('click', () => openProject(a.dataset.openPj)));
@@ -1773,7 +1806,10 @@ const SI_COLS = {
   todos: [['待辦ID', 'id'], ['專案ID', 'projectId'], ['專案名稱（參考）', '_pname', 'pref'], ['會議ID', 'meetingId'], ['待辦內容', 'text'], ['負責人', 'owner'], ['到期日', 'dueDate', 'date'], ['已完成', 'done', 'bool'], ['完成時間', 'doneAt', 'iso'], ['比對鍵', 'key'], ['建立時間', 'createdAt', 'iso'], ['最後修改時間', 'updatedAt', 'iso']]
 };
 SI_COLS.vendors = [['廠商ID', 'id'], ['廠商名稱', 'name'], ['類別', 'category'], ['統一編號', 'taxId'], ['聯絡窗口', 'contact'], ['電話', 'phone'], ['電子郵件', 'email'], ['備註', 'note'], ['建立時間', 'createdAt', 'iso'], ['最後修改時間', 'updatedAt', 'iso']];
-const SI_SHEETS = { vendors: 'SI供應商', projects: 'SI專案', costs: 'SI專案成本', payments: 'SI專案收款', meetings: 'SI會議紀錄', todos: 'SI待辦事項' };
+SI_COLS.deals = [['商機ID', 'id'], ['客戶ID', 'customerId'], ['客戶名稱（參考）', '_cname', 'ref'], ['往來機會（產品）', 'product'], ['產品類別', 'category'], ['預估月份', 'month'], ['預估金額（含稅）', 'amount'],
+  ['是否報價', 'quoted', 'bool'], ['報價日期', 'quoteDate', 'date'], ['是否下單', 'ordered', 'bool'], ['下單日期', 'orderDate', 'date'], ['未成交', 'lost', 'bool'], ['未成交原因', 'lostReason'], ['未成交說明', 'lostNote'], ['未成交日期', 'lostDate', 'date'],
+  ['業務', 'sales'], ['下次跟進日期', 'nextFollowUpDate', 'date'], ['備註', 'note'], ['SI專案ID', 'projectId'], ['推進歷程', 'history', 'json'], ['建立時間', 'createdAt', 'iso'], ['最後修改時間', 'updatedAt', 'iso']];
+const SI_SHEETS = { deals: '商機', vendors: 'SI供應商', projects: 'SI專案', costs: 'SI專案成本', payments: 'SI專案收款', meetings: 'SI會議紀錄', todos: 'SI待辦事項' };
 function outVal(kind, v) {
   if (kind === 'bool') return v ? '是' : '否';
   if (kind === 'arch') return v ? '已封存' : '未封存';
@@ -1787,9 +1823,9 @@ function toRows(kind, list, nameOf, pnameOf) {
   return [cols.map(c => c[0])].concat(list.map(o => cols.map(([, k, t]) => t === 'ref' ? nameOf(o.customerId) : t === 'pref' ? pnameOf(o.projectId) : outVal(t, o[k]))));
 }
 async function snapshot() {
-  const [customers, contacts, activities, projects, meetings, todos] = await DB.tx(['customers', 'contacts', 'activities', 'projects', 'meetings', 'todos'], 'readonly', async s =>
-    Promise.all([req(s.customers.getAll()), req(s.contacts.getAll()), req(s.activities.getAll()), req(s.projects.getAll()), req(s.meetings.getAll()), req(s.todos.getAll())]));
-  return { customers, contacts, activities, projects, meetings, todos };
+  const [customers, contacts, activities, projects, meetings, todos, deals] = await DB.tx(['customers', 'contacts', 'activities', 'projects', 'meetings', 'todos', 'deals'], 'readonly', async s =>
+    Promise.all([req(s.customers.getAll()), req(s.contacts.getAll()), req(s.activities.getAll()), req(s.projects.getAll()), req(s.meetings.getAll()), req(s.todos.getAll()), req(s.deals.getAll())]));
+  return { customers, contacts, activities, projects, meetings, todos, deals };
 }
 async function exportBackup() {
   const d = await snapshot();
@@ -1803,13 +1839,14 @@ async function exportBackup() {
     { name: SHEET_NAMES.customers, rows: toRows('customers', d.customers, nameOf) },
     { name: SHEET_NAMES.contacts, rows: toRows('contacts', d.contacts, nameOf) },
     { name: SHEET_NAMES.activities, rows: toRows('activities', acts, nameOf) },
+    { name: SI_SHEETS.deals, rows: toRows('deals', d.deals.sort((a, b) => a.month.localeCompare(b.month)), nameOf, pnameOf) },
     { name: SI_SHEETS.projects, rows: toRows('projects', d.projects, nameOf, pnameOf) },
     { name: SI_SHEETS.vendors, rows: toRows('vendors', vendorList, nameOf, pnameOf) },
     { name: SI_SHEETS.costs, rows: toRows('costs', d.projects.flatMap(p => (p.costs || []).map(c => Object.assign({ projectId: p.id }, c))), nameOf, pnameOf) },
     { name: SI_SHEETS.payments, rows: toRows('payments', d.projects.flatMap(p => (p.payments || []).map(c => Object.assign({ projectId: p.id }, c))), nameOf, pnameOf) },
     { name: SI_SHEETS.meetings, rows: toRows('meetings', d.meetings.sort((a, b) => (a.datetime || '').localeCompare(b.datetime || '')), nameOf, pnameOf) },
     { name: SI_SHEETS.todos, rows: toRows('todos', d.todos, nameOf, pnameOf) },
-    { name: SHEET_NAMES.meta, rows: [['項目', '值'], ['系統名稱', APP.name], ['系統版本', APP.version], ['資料結構版本', String(APP.schemaVersion)], ['備份格式', 'CRM-BACKUP-1'], ['匯出時間', fmtDT(now.toISOString())], ['匯出時間（ISO）', now.toISOString()], ['客戶筆數', String(d.customers.length)], ['聯絡人筆數', String(d.contacts.length)], ['業務活動筆數', String(d.activities.length)], ['SI專案筆數', String(d.projects.length)], ['SI會議筆數', String(d.meetings.length)], ['SI待辦筆數', String(d.todos.length)], ['自訂產業', customIndustries.join('、')], ['人員清單', staffList.join('、')], ['說明', '請勿修改各工作表的標題列與 ID 欄位，以免還原時無法正確對應資料。']] }
+    { name: SHEET_NAMES.meta, rows: [['項目', '值'], ['系統名稱', APP.name], ['系統版本', APP.version], ['資料結構版本', String(APP.schemaVersion)], ['備份格式', 'CRM-BACKUP-1'], ['匯出時間', fmtDT(now.toISOString())], ['匯出時間（ISO）', now.toISOString()], ['客戶筆數', String(d.customers.length)], ['聯絡人筆數', String(d.contacts.length)], ['業務活動筆數', String(d.activities.length)], ['商機筆數', String(d.deals.length)], ['商機產品類別', dealCats.join('、')], ['SI專案筆數', String(d.projects.length)], ['SI會議筆數', String(d.meetings.length)], ['SI待辦筆數', String(d.todos.length)], ['自訂產業', customIndustries.join('、')], ['人員清單', staffList.join('、')], ['說明', '請勿修改各工作表的標題列與 ID 欄位，以免還原時無法正確對應資料。']] }
   ];
   const blob = await buildXlsx(sheets);
   const ok = await saveFile(blob, `CRM備份_${stamp()}.xlsx`, 'Excel 活頁簿', XLSX_MIME, '.xlsx');
@@ -1924,6 +1961,7 @@ async function importBackupFlow(file) {
   try { book = await readXlsx(await file.arrayBuffer()); }
   catch (e) { return toast('無法讀取檔案：' + errMsg(e), 'err'); }
   if (isSITemplate(book)) return importSITemplateFlow(book, file);
+  if (isDealTemplate(book)) return importDealTemplateFlow(book, file);
   const errors = []; const warn = [];
   let parsed = {};
   if (book[COMBINED_SHEET] && !book[SHEET_NAMES.customers]) {
@@ -1985,6 +2023,7 @@ async function importBackupFlow(file) {
   // SI 專案（V1.2 起的備份才有）
   const si = parseSIBackup(book, custMap, errors);
   valid.projects = si.projects; valid.meetings = si.meetings; valid.todos = si.todos;
+  valid.deals = parseDealsBackup(book, custMap, errors); const dealsPresent = !!book[SI_SHEETS.deals];
   await Store.loadCustomers();
   const current = await snapshot();
   // 與現有資料比對重複
@@ -2006,6 +2045,7 @@ async function importBackupFlow(file) {
         <div class="stat ok"><b>${valid.customers.length}</b>客戶可匯入（共 ${total.customers}）</div>
         <div class="stat ok"><b>${valid.contacts.length}</b>聯絡人可匯入（共 ${total.contacts}）</div>
         ${parsed.combined ? '' : `<div class="stat ok"><b>${valid.activities.length}</b>活動可匯入（共 ${total.activities}）</div>`}
+        ${dealsPresent ? `<div class="stat ok"><b>${valid.deals.length}</b>商機</div>` : ''}
         ${si.present ? `<div class="stat ok"><b>${valid.projects.length}</b>SI 專案（會議 ${valid.meetings.length}、待辦 ${valid.todos.length}）</div>` : ''}
         <div class="stat bad"><b>${errors.length}</b>失敗列數</div>
         <div class="stat dup"><b>${dups.length}</b>與現有客戶重複</div></div>
@@ -2033,7 +2073,7 @@ async function importBackupFlow(file) {
       if (as) as.addEventListener('click', () => { dups.forEach(d => { d.action = 'skip'; }); drawMode(); });
       if (au) au.addEventListener('click', () => { dups.forEach(d => { d.action = 'update'; }); drawMode(); });
     } else {
-      box.innerHTML = `<div class="notice danger"><b>⚠ 完整還原會刪除目前裝置中的全部資料</b>，再以備份檔內容取代：<br>目前有客戶 ${current.customers.length} 筆、聯絡人 ${current.contacts.length} 筆、業務活動 ${current.activities.length} 筆、SI 專案 ${current.projects.length} 個將被移除。<br>還原後將有客戶 ${valid.customers.length} 筆、聯絡人 ${valid.contacts.length} 筆、業務活動 ${valid.activities.length} 筆、SI 專案 ${valid.projects.length} 個。${!si.present && current.projects.length ? '<br><b>此備份檔不含 SI 專案資料（舊版備份），還原後目前的 SI 專案將被清除。</b>' : ''}${errors.length ? `<br>備份中有 ${errors.length} 列錯誤，這些列不會被還原。` : ''}</div>
+      box.innerHTML = `<div class="notice danger"><b>⚠ 完整還原會刪除目前裝置中的全部資料</b>，再以備份檔內容取代：<br>目前有客戶 ${current.customers.length} 筆、聯絡人 ${current.contacts.length} 筆、業務活動 ${current.activities.length} 筆、SI 專案 ${current.projects.length} 個、商機 ${current.deals.length} 筆將被移除。<br>還原後將有客戶 ${valid.customers.length} 筆、聯絡人 ${valid.contacts.length} 筆、業務活動 ${valid.activities.length} 筆、SI 專案 ${valid.projects.length} 個。${!si.present && current.projects.length ? '<br><b>此備份檔不含 SI 專案資料（舊版備份），還原後目前的 SI 專案將被清除。</b>' : ''}${errors.length ? `<br>備份中有 ${errors.length} 列錯誤，這些列不會被還原。` : ''}</div>
         <div class="row"><button class="btn" id="preBk">⬇ 先匯出目前資料備份</button>
         <label class="row small" style="gap:6px;cursor:pointer"><input type="checkbox" id="ackRestore" style="width:20px;height:20px">我了解目前資料將被取代</label></div>`;
       $('#preBk', box).addEventListener('click', async () => { const r = await guard(() => exportBackup()); if (r) toast('目前資料已匯出備份'); });
@@ -2043,6 +2083,8 @@ async function importBackupFlow(file) {
   drawMode();
   const restoreLists = async () => { // 一併合併備份中的自訂產業與人員清單
     const split = v => String(v || '').split('、').map(x => x.trim()).filter(Boolean);
+    const dc = split(meta['商機產品類別']).filter(i => !dealCats.includes(i));
+    if (dc.length) { dealCats = dealCats.concat(dc); await DB.setMeta('dealCategories', dealCats); }
     const inds = split(meta['自訂產業']).filter(i => !industryList().includes(i)), staff = split(meta['人員清單']).filter(i => !staffList.includes(i));
     if (inds.length) { customIndustries = customIndustries.concat(inds); await DB.setMeta('customIndustries', customIndustries); }
     if (staff.length) await PJ.setStaff(staffList.concat(staff));
@@ -2060,12 +2102,12 @@ async function importBackupFlow(file) {
       if (!$('#ackRestore', m.el).checked) return toast('請先勾選「我了解目前資料將被取代」', 'warn');
       if (!await confirmDialog(`最後確認：要以備份檔<b>取代</b>目前全部資料嗎？\n此動作無法復原。`, { title: '完整還原', okText: '確定還原', danger: true })) return;
       const r = await guard(() => restoreAll(valid).then(async x => { await restoreLists(); return x; }));
-      if (r) { m.close(); resultDialog('完整還原完成', [`客戶 ${r.customers} 筆`, `聯絡人 ${r.contacts} 筆`, `業務活動 ${r.activities} 筆`, `SI 專案 ${r.projects} 個、會議 ${r.meetings} 筆、待辦 ${r.todos} 筆`, errors.length ? `未還原（錯誤）${errors.length} 列` : ''], errors); render(); }
+      if (r) { m.close(); resultDialog('完整還原完成', [`客戶 ${r.customers} 筆`, `聯絡人 ${r.contacts} 筆`, `業務活動 ${r.activities} 筆`, `SI 專案 ${r.projects} 個、會議 ${r.meetings} 筆、待辦 ${r.todos} 筆`, `商機 ${r.deals} 筆`, errors.length ? `未還原（錯誤）${errors.length} 列` : ''], errors); render(); }
     } else {
       const upd = dups.filter(d => d.action === 'update').length;
       if (!await confirmDialog(`確定要匯入嗎？\n新增客戶 ${valid.customers.length - dups.length} 筆，更新 ${upd} 筆，略過 ${dups.length - upd} 筆。`, { okText: '開始匯入' })) return;
       const r = await guard(() => mergeImport(valid, dups).then(async x => { await restoreLists(); return x; }));
-      if (r) { m.close(); resultDialog('新增匯入完成', [`新增客戶 ${r.cAdd} 筆、更新 ${r.cUpd} 筆、略過 ${r.cSkip} 筆`, `聯絡人：新增 ${r.ctAdd}、更新 ${r.ctUpd}、略過 ${r.ctSkip}`, `業務活動：新增 ${r.aAdd}、更新 ${r.aUpd}、略過 ${r.aSkip}`, si.present ? `SI 專案：匯入 ${r.pAdd}、更新 ${r.pUpd}、略過 ${r.pSkip}` : '', errors.length ? `失敗（未匯入）${errors.length} 列` : ''], errors); render(); }
+      if (r) { m.close(); resultDialog('新增匯入完成', [`新增客戶 ${r.cAdd} 筆、更新 ${r.cUpd} 筆、略過 ${r.cSkip} 筆`, `聯絡人：新增 ${r.ctAdd}、更新 ${r.ctUpd}、略過 ${r.ctSkip}`, `業務活動：新增 ${r.aAdd}、更新 ${r.aUpd}、略過 ${r.aSkip}`, si.present ? `SI 專案：匯入 ${r.pAdd}、更新 ${r.pUpd}、略過 ${r.pSkip}` : '', dealsPresent ? `商機：匯入 ${r.dAdd}、更新 ${r.dUpd}、略過 ${r.dSkip}` : '', errors.length ? `失敗（未匯入）${errors.length} 列` : ''], errors); render(); }
     }
   });
 }
@@ -2073,21 +2115,22 @@ function stripTmp(o) { const r = Object.assign({}, o); delete r._row; delete r._
 function fillTimes(o, now) { if (!o.createdAt) o.createdAt = now; if (!o.updatedAt) o.updatedAt = o.createdAt; return o; }
 function restoreAll(valid) {
   const now = nowISO();
-  return DB.tx(['customers', 'contacts', 'activities', 'projects', 'meetings', 'todos'], 'readwrite', async s => {
-    await Promise.all(['customers', 'contacts', 'activities', 'projects', 'meetings', 'todos'].map(n => req(s[n].clear())));
+  return DB.tx(['customers', 'contacts', 'activities', 'projects', 'meetings', 'todos', 'deals'], 'readwrite', async s => {
+    await Promise.all(['customers', 'contacts', 'activities', 'projects', 'meetings', 'todos', 'deals'].map(n => req(s[n].clear())));
+    for (const d of valid.deals || []) s.deals.put(fillTimes(stripTmp(d), now));
     for (const p of valid.projects || []) s.projects.put(fillTimes(stripTmp(p), now));
     for (const m of valid.meetings || []) s.meetings.put(fillTimes(stripTmp(m), now));
     for (const t of valid.todos || []) s.todos.put(fillTimes(stripTmp(t), now));
     for (const c of valid.customers) s.customers.put(fillTimes(Object.assign(blankCustomer(), stripTmp(c)), now));
     for (const c of valid.contacts) s.contacts.put(fillTimes(stripTmp(c), now));
     for (const a of valid.activities) s.activities.put(fillTimes(stripTmp(a), now));
-    return { customers: valid.customers.length, contacts: valid.contacts.length, activities: valid.activities.length, projects: (valid.projects || []).length, meetings: (valid.meetings || []).length, todos: (valid.todos || []).length };
+    return { customers: valid.customers.length, contacts: valid.contacts.length, activities: valid.activities.length, projects: (valid.projects || []).length, deals: (valid.deals || []).length, meetings: (valid.meetings || []).length, todos: (valid.todos || []).length };
   }).then(r => Store.loadCustomers().then(() => r));
 }
 function mergeImport(valid, dups) {
   const now = nowISO();
-  const r = { cAdd: 0, cUpd: 0, cSkip: 0, ctAdd: 0, ctUpd: 0, ctSkip: 0, aAdd: 0, aUpd: 0, aSkip: 0, pAdd: 0, pUpd: 0, pSkip: 0 };
-  return DB.tx(['customers', 'contacts', 'activities', 'projects', 'meetings', 'todos'], 'readwrite', async s => {
+  const r = { cAdd: 0, cUpd: 0, cSkip: 0, ctAdd: 0, ctUpd: 0, ctSkip: 0, aAdd: 0, aUpd: 0, aSkip: 0, pAdd: 0, pUpd: 0, pSkip: 0, dAdd: 0, dUpd: 0, dSkip: 0 };
+  return DB.tx(['customers', 'contacts', 'activities', 'projects', 'meetings', 'todos', 'deals'], 'readwrite', async s => {
     const dupMap = new Map(dups.map(d => [d.c, d]));
     const idMap = new Map(); const skipped = new Set(); const touched = new Set();
     for (const c of valid.customers) {
@@ -2146,6 +2189,11 @@ function mergeImport(valid, dups) {
     }
     for (const m of valid.meetings || []) if (pjOk.has(m.projectId)) s.meetings.put(fillTimes(stripTmp(m), now));
     for (const t of valid.todos || []) if (pjOk.has(t.projectId)) s.todos.put(fillTimes(stripTmp(t), now));
+    for (const d of valid.deals || []) {
+      if (skipped.has(d.customerId) || !idMap.has(d.customerId)) { r.dSkip++; continue; }
+      const ex = await req(s.deals.get(d.id));
+      s.deals.put(fillTimes(Object.assign(stripTmp(d), { customerId: idMap.get(d.customerId) }), now)); ex ? r.dUpd++ : r.dAdd++;
+    }
     for (const id of touched) { // 重新計算最後聯絡日期
       const c = await req(s.customers.get(id));
       const acts = await req(s.activities.index('customerId').getAll(id));
@@ -2356,6 +2404,27 @@ function parseSIBackup(book, custMap, errors) {
     if (!p || !s(o, 'text')) { errors.push(`SI待辦事項 第 ${o._row} 列：${!p ? '找不到對應的專案' : '待辦內容空白'}`); continue; }
     out.todos.push({ id: UUID_RE.test(s(o, 'id')) ? s(o, 'id') : uid(), projectId: p.id, meetingId: mMap.get(s(o, 'meetingId')) || '', text: s(o, 'text'), owner: s(o, 'owner'), dueDate: parseDate(o.dueDate) || '',
       done: parseBool(o.done) === true, doneAt: s(o, 'doneAt'), key: s(o, 'key') || normKey(s(o, 'text')), createdAt: s(o, 'createdAt'), updatedAt: s(o, 'updatedAt') });
+  }
+  return out;
+}
+
+/* ---------- 解析備份中的商機工作表 ---------- */
+function parseDealsBackup(book, custMap, errors) {
+  if (!book[SI_SHEETS.deals]) return [];
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const out = [];
+  for (const o of rowsToObjects(book[SI_SHEETS.deals], SI_COLS.deals).list) {
+    const s = k => String(o[k] == null ? '' : o[k]).trim();
+    const errs = [];
+    if (!custMap.has(s('customerId'))) errs.push('找不到對應的客戶');
+    if (!s('product')) errs.push('往來機會空白');
+    const month = parseYM(o.month); if (!month) errs.push(`預估月份錯誤：${s('month')}`);
+    if (errs.length) { errors.push(`商機 第 ${o._row} 列（${s('product') || '未命名'}）：${errs.join('；')}`); continue; }
+    let history = []; try { history = s('history') ? JSON.parse(s('history')) : []; } catch (e) { history = []; }
+    out.push(Object.assign(DL.blank(), { id: UUID_RE.test(s('id')) ? s('id') : uid(), customerId: custMap.get(s('customerId')), product: s('product'), category: s('category'), month,
+      amount: s('amount') === '' ? '' : (isNaN(parseMoney(s('amount'))) ? '' : parseMoney(s('amount'))), quoted: parseBool(o.quoted) === true, quoteDate: parseDate(o.quoteDate) || '',
+      ordered: parseBool(o.ordered) === true, orderDate: parseDate(o.orderDate) || '', lost: parseBool(o.lost) === true, lostReason: s('lostReason'), lostNote: s('lostNote'), lostDate: parseDate(o.lostDate) || '',
+      sales: s('sales'), nextFollowUpDate: parseDate(o.nextFollowUpDate) || '', note: s('note'), projectId: s('projectId'), history: Array.isArray(history) ? history : [], createdAt: s('createdAt'), updatedAt: s('updatedAt') }));
   }
   return out;
 }
@@ -4049,6 +4118,467 @@ async function commitSITemplate(add, upd, newCustomers, newContacts, newVendors,
 }
 
 /* ============================================================
+ * D. 商機管理（Pipeline）
+ * 一筆商機＝一項產品；階段由「是否報價／是否下單／未成交」推導
+ * ============================================================ */
+const DEAL_CATS_DEFAULT = ['M365', 'Azure', '雲端服務', '資安', '網路', '硬體', '軟體授權', '系統整合', '維護服務', '教育訓練'];
+const LOST_REASONS = ['價格因素', '預算不足', '選擇競爭對手', '需求取消', '時程延後', '其他'];
+const DEAL_STAGES = [{ k: 'open', t: '未報價', c: '#8a94a6' }, { k: 'quoted', t: '已報價', c: '#f08a24' }, { k: 'ordered', t: '已下單', c: '#1d8a4e' }, { k: 'lost', t: '未成交', c: '#cf3e3e' }];
+let dealCats = DEAL_CATS_DEFAULT.slice();
+state.deal = { tab: 'list', q: '', ctype: '', sales: '', cat: '', stage: '', range: 'all', showLost: false, sort: 'month', dir: 'asc', fYear: '' };
+
+function dealStage(d) { return d.lost ? 'lost' : d.ordered ? 'ordered' : d.quoted ? 'quoted' : 'open'; }
+function dealStageBadge(d) { const s = DEAL_STAGES.find(x => x.k === dealStage(d)); return `<span class="badge" style="background:${s.c}1a;color:${s.c};border-color:${s.c}55">${s.t}</span>`; }
+function ym(d = todayStr()) { return d.slice(0, 7); }
+function addYM(m, n) { return addMonths(m + '-01', n).slice(0, 7); }
+function ymLabel(m) { return m ? `${m.slice(0, 4)} 年 ${Number(m.slice(5, 7))} 月` : ''; }
+function isDealOverdue(d) { return !d.ordered && !d.lost && d.month && d.month < ym(); }
+function custTypeBadge(id) { const c = Store.customer(id); return !c ? '' : c.isActive ? '<span class="badge active">服務中</span>' : '<span class="badge prospect">潛在</span>'; }
+
+const DL = {
+  deals: [],
+  async load() { this.deals = await DB.getAll('deals'); return this.deals; },
+  get(id) { return this.deals.find(d => d.id === id); },
+  ofCustomer(cid) { return this.deals.filter(d => d.customerId === cid); },
+  blank() { return { id: '', customerId: '', product: '', category: '', month: ym(), amount: '', quoted: false, quoteDate: '', ordered: false, orderDate: '', lost: false, lostReason: '', lostNote: '', lostDate: '', sales: '', nextFollowUpDate: '', note: '', projectId: '', history: [], createdAt: '', updatedAt: '' }; },
+  async save(data) {
+    const now = nowISO();
+    const d = Object.assign(this.blank(), data);
+    d.product = String(d.product || '').trim();
+    if (!d.customerId) throw new Error('請選擇客戶');
+    if (!d.product) throw new Error('請輸入往來機會（產品）');
+    if (!/^\d{4}-\d{2}$/.test(d.month || '')) throw new Error('請選擇預估月份');
+    if (d.amount !== '' && d.amount != null) { d.amount = parseMoney(d.amount); if (isNaN(d.amount)) throw new Error('預估金額請輸入數字'); } else d.amount = '';
+    if (!d.quoted) d.quoteDate = ''; if (!d.ordered) d.orderDate = '';
+    if (d.ordered && !d.quoted) { d.quoted = true; } // 已下單視為已報價
+    await DB.tx(['deals', 'customers'], 'readwrite', async s => {
+      if (!await req(s.customers.get(d.customerId))) throw new Error('所選客戶不存在');
+      if (data.id) {
+        const old = await req(s.deals.get(data.id)); if (!old) throw new Error('找不到此商機，可能已被刪除');
+        d.createdAt = old.createdAt; d.history = old.history || []; d.projectId = old.projectId || d.projectId || '';
+        if (dealStage(old) !== dealStage(d)) d.history.push({ from: dealStage(old), to: dealStage(d), at: now });
+      } else { d.id = uid(); d.createdAt = now; d.history = [{ from: '', to: dealStage(d), at: now }]; }
+      d.updatedAt = now;
+      await req(s.deals.put(d));
+    });
+    await this.load();
+    return d;
+  },
+  async patch(id, fn) {
+    await DB.tx('deals', 'readwrite', async s => {
+      const d = await req(s.deals.get(id)); if (!d) throw new Error('找不到此商機');
+      const before = dealStage(d); fn(d); const after = dealStage(d);
+      if (before !== after) (d.history = d.history || []).push({ from: before, to: after, at: nowISO() });
+      d.updatedAt = nowISO(); await req(s.deals.put(d));
+    });
+    await this.load();
+  },
+  async remove(id) { await DB.tx('deals', 'readwrite', s => req(s.deals.delete(id))); await this.load(); }
+};
+async function addDealCat(name) {
+  const v = String(name || '').trim(); if (!v) throw new Error('請輸入類別名稱');
+  if (dealCats.includes(v)) return false;
+  dealCats = dealCats.concat([v]); await DB.setMeta('dealCategories', dealCats); return true;
+}
+
+/* ---------- 頁面 ---------- */
+async function renderDeals(el) {
+  await Promise.all([Store.loadCustomers(), DL.load(), PJ.load()]);
+  const f = state.deal;
+  el.innerHTML = `<div class="toolbar"><button class="btn primary" id="dlNew">＋ 新增商機</button><label class="btn">⬆ 匯入商機 Excel<input type="file" id="dlImp" accept=".xlsx,${XLSX_MIME}" hidden></label><span class="spacer"></span>${moneyToggleHtml()}</div>
+    <div class="tabs">${[['list', '商機清單'], ['forecast', '月份預測'], ['board', '推進看板']].map(([k, t]) => `<button class="tab${f.tab === k ? ' active' : ''}" data-dl-tab="${k}">${t}</button>`).join('')}</div><div id="dlBody"></div>`;
+  bindMoneyToggle(el);
+  $('#dlNew', el).addEventListener('click', () => dealForm());
+  $('#dlImp', el).addEventListener('change', async e => { const file = e.target.files[0]; e.target.value = ''; if (!file) return;
+    let book; try { book = await readXlsx(await file.arrayBuffer()); } catch (x) { return toast('無法讀取檔案：' + errMsg(x), 'err'); }
+    if (!isDealTemplate(book)) return toast('找不到「商機清單」工作表，請使用「商機匯入範本」。', 'err');
+    importDealTemplateFlow(book, file); });
+  $$('[data-dl-tab]', el).forEach(b => b.addEventListener('click', () => { f.tab = b.dataset.dlTab; render(); }));
+  const body = $('#dlBody', el);
+  if (f.tab === 'forecast') return renderForecast(body);
+  if (f.tab === 'board') return renderDealBoard(body);
+  renderDealList(body);
+}
+function dealInRange(d, range) {
+  const m = ym();
+  if (range === 'month') return d.month === m;
+  if (range === 'next3') return d.month >= m && d.month <= addYM(m, 2);
+  if (range === 'quarter') { const q = Math.floor((Number(m.slice(5, 7)) - 1) / 3) * 3 + 1; const s = `${m.slice(0, 4)}-${pad2(q)}`; return d.month >= s && d.month <= addYM(s, 2); }
+  if (range === 'year') return d.month.slice(0, 4) === m.slice(0, 4);
+  if (range === 'overdue') return isDealOverdue(d);
+  if (/^\d{4}-\d{2}$/.test(range)) return d.month === range;
+  return true;
+}
+function filteredDeals(opt = {}) {
+  const f = state.deal, q = f.q.trim().toLowerCase().replace(/台/g, '臺');
+  return DL.deals.filter(d => {
+    const c = Store.customer(d.customerId);
+    if (f.ctype === 'active' && !(c && c.isActive)) return false;
+    if (f.ctype === 'prospect' && (!c || c.isActive)) return false;
+    if (f.sales && d.sales !== f.sales) return false;
+    if (f.cat && d.category !== f.cat) return false;
+    if (!opt.ignoreStage) { if (f.stage) { if (dealStage(d) !== f.stage) return false; } else if (!f.showLost && d.lost) return false; }
+    if (!opt.ignoreRange && !dealInRange(d, f.range)) return false;
+    if (q && !((c ? c.name : '') + ' ' + d.product + ' ' + d.category + ' ' + d.note).toLowerCase().replace(/台/g, '臺').includes(q)) return false;
+    return true;
+  });
+}
+function dealFiltersHtml(withStage = true) {
+  const f = state.deal;
+  const people = [...new Set(staffList.concat(DL.deals.map(d => d.sales)).filter(Boolean))];
+  const cats = [...new Set(dealCats.concat(DL.deals.map(d => d.category)).filter(Boolean))];
+  const m = ym();
+  const ranges = [['all', '全部月份'], ['month', `本月（${Number(m.slice(5))} 月）`], ['next3', '本月起 3 個月'], ['quarter', '本季'], ['year', `今年（${m.slice(0, 4)}）`], ['overdue', '月份已過未下單']];
+  return `<div class="toolbar"><input class="input search" type="search" id="dq" placeholder="搜尋客戶、產品或備註" value="${esc(f.q)}">
+    <select class="input" id="drange">${ranges.map(([k, l]) => `<option value="${k}"${f.range === k ? ' selected' : ''}>${l}</option>`).join('')}${/^\d{4}-\d{2}$/.test(f.range) ? `<option value="${f.range}" selected>${ymLabel(f.range)}</option>` : ''}</select>
+    <select class="input" id="dctype"><option value="">全部客戶</option><option value="active"${f.ctype === 'active' ? ' selected' : ''}>服務中客戶</option><option value="prospect"${f.ctype === 'prospect' ? ' selected' : ''}>潛在客戶</option></select>
+    <select class="input" id="dsales">${optionList(people, f.sales, '全部業務')}</select>
+    <select class="input" id="dcat">${optionList(cats, f.cat, '全部產品類別')}</select>
+    ${withStage ? `<label class="row small" style="gap:6px;cursor:pointer"><input type="checkbox" id="dlost"${f.showLost ? ' checked' : ''} style="width:18px;height:18px">顯示未成交</label>` : ''}
+    <button class="btn link" id="dreset">清除篩選</button></div>`;
+}
+function bindDealFilters(body, redraw) {
+  const f = state.deal;
+  $('#dq', body).addEventListener('input', e => { f.q = e.target.value; redraw(true); });
+  [['#drange', 'range'], ['#dctype', 'ctype'], ['#dsales', 'sales'], ['#dcat', 'cat']].forEach(([s, k]) => $(s, body).addEventListener('change', e => { f[k] = e.target.value; redraw(); }));
+  const l = $('#dlost', body); if (l) l.addEventListener('change', e => { f.showLost = e.target.checked; redraw(); });
+  $('#dreset', body).addEventListener('click', () => { Object.assign(f, { q: '', ctype: '', sales: '', cat: '', stage: '', range: 'all', showLost: false }); redraw(); });
+}
+
+/* ---------- 商機清單 ---------- */
+function renderDealList(body) {
+  const f = state.deal;
+  const all = filteredDeals({ ignoreStage: true });
+  const cnt = k => all.filter(d => dealStage(d) === k).length;
+  body.innerHTML = `<div class="status-chips">${DEAL_STAGES.map(s => `<button class="chip${f.stage === s.k ? ' on' : ''}" data-dst="${s.k}" style="--c:${s.c}"><b>${cnt(s.k)}</b>${s.t}</button>`).join('')}
+      <button class="chip${f.range === 'overdue' ? ' on' : ''}" data-dover style="--c:#cf3e3e"><b>${DL.deals.filter(isDealOverdue).length}</b>月份已過未下單</button></div>
+    ${dealFiltersHtml()}<div id="dlist"></div>`;
+  const draw = () => {
+    const list = filteredDeals(), mv = moneyVisible();
+    const k = f.sort, dir = f.dir === 'asc' ? 1 : -1;
+    const val = d => k === 'customer' ? customerName(d.customerId) : k === 'amount' ? Number(d.amount) || 0 : k === 'stage' ? DEAL_STAGES.findIndex(s => s.k === dealStage(d)) : (d[k] || '');
+    list.sort((a, b) => { const x = val(a), y = val(b); if (typeof x === 'number') return (x - y) * dir; if (!x && y) return 1; if (x && !y) return -1; return String(x).localeCompare(String(y), 'zh-Hant') * dir || customerName(a.customerId).localeCompare(customerName(b.customerId), 'zh-Hant'); });
+    const th = (key, l) => `<th class="sortable" data-sort="${key}">${l}${f.sort === key ? ` <span class="sort-ind">${f.dir === 'asc' ? '▲' : '▼'}</span>` : ''}</th>`;
+    const sum = list.filter(d => !d.lost).reduce((s, d) => s + (Number(d.amount) || 0), 0);
+    const box = $('#dlist', body);
+    if (!list.length) { box.innerHTML = `<div class="card empty">${DL.deals.length ? '沒有符合條件的商機。' : '尚無商機，請按「＋ 新增商機」開始建立。'}</div>`; return; }
+    box.innerHTML = `<div class="stat-row"><div class="stat"><b>${list.length}</b>筆商機</div><div class="stat"><b>${new Set(list.map(d => d.customerId)).size}</b>家客戶</div>${mv ? `<div class="stat"><b>${nt(sum) || 'NT$ 0'}</b>預估金額合計（不含未成交）</div>` : ''}</div>
+      <div class="tablewrap cards"><table class="list"><thead><tr>${th('customer', '客戶名稱')}${th('product', '往來機會（產品）')}${th('month', '預估月份')}${th('stage', '進度')}<th>報價</th><th>下單</th>${mv ? th('amount', '預估金額') : ''}${th('sales', '業務')}${th('nextFollowUpDate', '下次跟進')}<th></th></tr></thead><tbody>
+      ${list.map(d => `<tr class="clickable" data-id="${esc(d.id)}">
+        <td class="name" data-label="客戶名稱">${esc(customerName(d.customerId))} ${custTypeBadge(d.customerId)}</td>
+        <td data-label="往來機會">${esc(d.product)}${d.category ? ` <span class="small muted">（${esc(d.category)}）</span>` : ''}${d.projectId && PJ.get(d.projectId) ? ' <span class="badge type">已轉專案</span>' : ''}</td>
+        <td data-label="預估月份">${esc(d.month)}${isDealOverdue(d) ? ' <span class="badge overdue">月份已過</span>' : ''}</td>
+        <td data-label="進度">${dealStageBadge(d)}</td>
+        <td data-label="報價" style="white-space:nowrap" title="${esc(d.quoteDate)}">${d.quoted ? `✓ <span class="small muted">${esc(d.quoteDate.slice(5).replace('-', '/'))}</span>` : '—'}</td>
+        <td data-label="下單" style="white-space:nowrap" title="${esc(d.orderDate)}">${d.ordered ? `✓ <span class="small muted">${esc(d.orderDate.slice(5).replace('-', '/'))}</span>` : '—'}</td>
+        ${mv ? `<td data-label="預估金額" class="${d.amount !== '' ? '' : 'empty-cell'}">${nt(d.amount)}</td>` : ''}
+        <td data-label="業務" class="${d.sales ? '' : 'empty-cell'}" style="white-space:nowrap">${esc(d.sales)}</td>
+        <td data-label="下次跟進">${d.lost || d.ordered ? '<span class="muted">—</span>' : followBadge(d.nextFollowUpDate)}</td>
+        <td data-label="操作">${dealQuickBtns(d)}</td></tr>`).join('')}</tbody></table></div>`;
+    $$('tr.clickable', box).forEach(tr => tr.addEventListener('click', e => { if (e.target.closest('button')) return; dealForm(DL.get(tr.dataset.id)); }));
+    bindDealQuick(box);
+    $$('th.sortable', box).forEach(h => h.addEventListener('click', () => { const key = h.dataset.sort; if (f.sort === key) f.dir = f.dir === 'asc' ? 'desc' : 'asc'; else { f.sort = key; f.dir = 'asc'; } draw(); }));
+  };
+  $$('[data-dst]', body).forEach(b => b.addEventListener('click', () => { f.stage = f.stage === b.dataset.dst ? '' : b.dataset.dst; if (f.range === 'overdue') f.range = 'all'; renderDealList(body); }));
+  $('[data-dover]', body).addEventListener('click', () => { f.range = f.range === 'overdue' ? 'all' : 'overdue'; f.stage = ''; renderDealList(body); });
+  bindDealFilters(body, (soft) => soft ? draw() : renderDealList(body));
+  draw();
+}
+function dealQuickBtns(d) {
+  if (d.lost) return '<button class="btn sm" data-dreopen>重新開啟</button>';
+  if (d.ordered) return d.projectId && PJ.get(d.projectId) ? '<button class="btn sm" data-dopenpj>查看專案</button>' : '<button class="btn sm primary" data-dconvert>轉 SI 專案</button>';
+  return d.quoted ? '<button class="btn sm primary" data-dorder>✓ 已下單</button>' : '<button class="btn sm primary" data-dquote>✓ 已報價</button>';
+}
+function bindDealQuick(root) {
+  const id = b => b.closest('[data-id]').dataset.id;
+  $$('[data-dquote]', root).forEach(b => b.addEventListener('click', async () => { const ok = await guard(() => DL.patch(id(b), d => { d.quoted = true; d.quoteDate = d.quoteDate || todayStr(); }).then(() => true), '已標示為已報價'); if (ok) render(); }));
+  $$('[data-dorder]', root).forEach(b => b.addEventListener('click', async () => {
+    const d = DL.get(id(b));
+    const ok = await guard(() => DL.patch(d.id, x => { x.ordered = true; x.quoted = true; x.orderDate = x.orderDate || todayStr(); x.quoteDate = x.quoteDate || todayStr(); }).then(() => true), '已標示為已下單');
+    if (ok) { if (await confirmDialog(`「${esc(d.product)}」已下單，是否立即轉成 SI 專案？`, { okText: '轉成 SI 專案', cancelText: '稍後再說' })) convertDealToProject(DL.get(d.id)); else render(); }
+  }));
+  $$('[data-dreopen]', root).forEach(b => b.addEventListener('click', async () => { const ok = await guard(() => DL.patch(id(b), d => { d.lost = false; d.lostReason = ''; d.lostNote = ''; d.lostDate = ''; }).then(() => true), '商機已重新開啟'); if (ok) render(); }));
+  $$('[data-dconvert]', root).forEach(b => b.addEventListener('click', () => convertDealToProject(DL.get(id(b)))));
+  $$('[data-dopenpj]', root).forEach(b => b.addEventListener('click', () => openProject(DL.get(id(b)).projectId)));
+}
+async function convertDealToProject(d) {
+  if (d.projectId && PJ.get(d.projectId)) return openProject(d.projectId);
+  const name = `${d.product}`;
+  if (!await confirmDialog(`將以此商機建立 SI 專案：\n專案名稱：${esc(name)}\n客戶：${esc(customerName(d.customerId))}\n業務：${esc(d.sales || '—')}${moneyVisible() && d.amount !== '' ? `\n合約金額：${esc(nt(d.amount))}` : ''}\n\n建立後可在專案頁補充其他資料。`, { title: '轉為 SI 專案', okText: '建立專案' })) return;
+  const p = await guard(() => PJ.save({ name, customerId: d.customerId, status: 'planning', sales: d.sales, amount: d.amount, signStatus: d.ordered ? '已簽約' : '報價中', important: d.note ? `商機備註：${d.note}` : '' }));
+  if (!p) return;
+  await guard(() => DL.patch(d.id, x => { x.projectId = p.id; }));
+  toast('已建立 SI 專案，請補充專案資料'); openProject(p.id);
+}
+
+/* ---------- 月份預測 ---------- */
+function renderForecast(body) {
+  const f = state.deal, mv = moneyVisible();
+  const years = [...new Set(DL.deals.map(d => d.month.slice(0, 4)).concat([ym().slice(0, 4)]))].sort();
+  f.fYear = f.fYear || ym().slice(0, 4);
+  body.innerHTML = `<div class="toolbar"><span class="small muted">年度</span><select class="input" id="fy">${years.map(y => `<option${y === f.fYear ? ' selected' : ''}>${y}</option>`).join('')}</select>
+      <select class="input" id="dctype"><option value="">全部客戶</option><option value="active"${f.ctype === 'active' ? ' selected' : ''}>服務中客戶</option><option value="prospect"${f.ctype === 'prospect' ? ' selected' : ''}>潛在客戶</option></select>
+      <select class="input" id="dsales">${optionList([...new Set(staffList.concat(DL.deals.map(d => d.sales)).filter(Boolean))], f.sales, '全部業務')}</select>
+      <select class="input" id="dcat">${optionList([...new Set(dealCats.concat(DL.deals.map(d => d.category)).filter(Boolean))], f.cat, '全部產品類別')}</select></div><div id="fbody"></div>`;
+  const draw = () => {
+    const list = filteredDeals({ ignoreStage: true, ignoreRange: true }).filter(d => d.month.slice(0, 4) === f.fYear);
+    const months = Array.from({ length: 12 }, (_, i) => `${f.fYear}-${pad2(i + 1)}`), cur = ym();
+    const agg = m => { const l = list.filter(d => d.month === m); const by = k => l.filter(d => dealStage(d) === k);
+      const amt = a => a.reduce((s, d) => s + (Number(d.amount) || 0), 0);
+      return { all: l.filter(d => !d.lost), open: by('open'), quoted: by('quoted'), ordered: by('ordered'), lost: by('lost'), amtAll: amt(l.filter(d => !d.lost)), amtOrdered: amt(by('ordered')), overdue: l.filter(isDealOverdue) }; };
+    const A = months.map(agg);
+    const tot = k => A.reduce((s, a) => s + (Array.isArray(a[k]) ? a[k].length : a[k]), 0);
+    const max = Math.max(1, ...A.map(a => a.all.length));
+    const cell = (a, k) => a[k].length ? a[k].length : '<span class="muted">0</span>';
+    const rows = [['預估商機（不含未成交）', a => `<b>${a.all.length || '<span class="muted">0</span>'}</b>`, tot('all')], ['　未報價', a => cell(a, 'open'), tot('open')], ['　已報價', a => cell(a, 'quoted'), tot('quoted')], ['　已下單', a => cell(a, 'ordered'), tot('ordered')], ['未成交', a => cell(a, 'lost'), tot('lost')], ['月份已過未下單', a => a.overdue.length ? `<span class="badge overdue">${a.overdue.length}</span>` : '<span class="muted">0</span>', tot('overdue')]]
+      .concat(mv ? [['預估金額', a => a.amtAll ? `<span class="small">${nt(a.amtAll)}</span>` : '<span class="muted">—</span>', nt(A.reduce((s, a) => s + a.amtAll, 0))], ['已下單金額', a => a.amtOrdered ? `<span class="small">${nt(a.amtOrdered)}</span>` : '<span class="muted">—</span>', nt(A.reduce((s, a) => s + a.amtOrdered, 0))]] : []);
+    $('#fbody', body).innerHTML = `
+      <div class="card"><h2>${f.fYear} 年各月份商機</h2>
+        <div class="fc-chart">${A.map((a, i) => { const m = months[i]; const h = n => (n / max * 100).toFixed(1); return `<button class="fc-col${m === cur ? ' cur' : ''}" data-month="${m}" title="${ymLabel(m)}：未報價 ${a.open.length}、已報價 ${a.quoted.length}、已下單 ${a.ordered.length}">
+          <div class="fc-bar"><i style="height:${h(a.ordered.length)}%;background:#1d8a4e"></i><i style="height:${h(a.quoted.length)}%;background:#f08a24"></i><i style="height:${h(a.open.length)}%;background:#b8c1d1"></i></div>
+          <b>${a.all.length || ''}</b><span>${i + 1}月</span></button>`; }).join('')}</div>
+        <div class="gantt-legend small" style="margin-top:8px"><span><i style="background:#b8c1d1"></i>未報價</span><span><i style="background:#f08a24"></i>已報價</span><span><i style="background:#1d8a4e"></i>已下單</span><span>點選月份可查看該月商機清單</span></div></div>
+      <div class="tablewrap fc-table"><table class="list"><thead><tr><th>項目</th>${months.map((m, i) => `<th class="${m === cur ? 'fc-cur' : ''}">${i + 1}月</th>`).join('')}<th>合計</th></tr></thead><tbody>
+        ${rows.map(([l, fn, t]) => `<tr><td><b>${l}</b></td>${A.map((a, i) => `<td class="${months[i] === cur ? 'fc-cur' : ''}">${fn(a)}</td>`).join('')}<td><b>${t}</b></td></tr>`).join('')}</tbody></table></div>`;
+    $$('[data-month]', body).forEach(b => b.addEventListener('click', () => { f.range = b.dataset.month; f.tab = 'list'; f.stage = ''; render(); }));
+  };
+  $('#fy', body).addEventListener('change', e => { f.fYear = e.target.value; draw(); });
+  [['#dctype', 'ctype'], ['#dsales', 'sales'], ['#dcat', 'cat']].forEach(([s, k]) => $(s, body).addEventListener('change', e => { f[k] = e.target.value; draw(); }));
+  draw();
+}
+
+/* ---------- 推進看板 ---------- */
+function renderDealBoard(body) {
+  const f = state.deal, mv = moneyVisible();
+  body.innerHTML = `${dealFiltersHtml(false)}<div id="dboard"></div>`;
+  const draw = () => {
+    const list = filteredDeals({ ignoreStage: true });
+    const col = s => { const l = list.filter(d => dealStage(d) === s.k).sort((a, b) => a.month.localeCompare(b.month));
+      return `<div class="kb-col"><div class="kb-h" style="border-color:${s.c}"><b>${s.t}</b><span class="badge" style="background:${s.c};color:#fff">${l.length}</span>${mv ? `<span class="small muted">${nt(l.reduce((x, d) => x + (Number(d.amount) || 0), 0)) || ''}</span>` : ''}</div>
+        ${l.map(d => `<div class="kb-card" data-id="${esc(d.id)}"><div class="kb-t">${esc(customerName(d.customerId))} ${custTypeBadge(d.customerId)}</div><div>${esc(d.product)}</div>
+          <div class="meta small"><span>📅 ${esc(d.month)}${isDealOverdue(d) ? ' <span class="badge overdue">已過</span>' : ''}</span>${d.sales ? `<span>👤 ${esc(d.sales)}</span>` : ''}${mv && d.amount !== '' ? `<span>${nt(d.amount)}</span>` : ''}${d.lost && d.lostReason ? `<span>原因：${esc(d.lostReason)}</span>` : ''}</div>
+          <div class="acts">${dealQuickBtns(d)}</div></div>`).join('') || '<div class="empty small" style="padding:14px">無</div>'}</div>`; };
+    $('#dboard', body).innerHTML = `<div class="kanban">${DEAL_STAGES.filter(s => s.k !== 'lost' || f.showLost).map(col).join('')}</div>
+      ${!f.showLost ? `<p class="small muted">未成交 ${list.filter(d => d.lost).length} 筆未顯示。<a href="#" id="kbLost">顯示未成交</a></p>` : ''}`;
+    $$('.kb-card', body).forEach(c => c.addEventListener('click', e => { if (e.target.closest('button')) return; dealForm(DL.get(c.dataset.id)); }));
+    bindDealQuick($('#dboard', body));
+    const kl = $('#kbLost', body); if (kl) kl.addEventListener('click', e => { e.preventDefault(); f.showLost = true; draw(); });
+  };
+  bindDealFilters(body, (soft) => soft ? draw() : renderDealBoard(body));
+  draw();
+}
+
+/* ---------- 商機表單 ---------- */
+function monthSelectHtml(id, value) {
+  const y0 = Number(ym().slice(0, 4)); const [vy, vm] = (value || ym()).split('-');
+  const years = []; for (let y = Math.min(y0 - 2, Number(vy)); y <= Math.max(y0 + 4, Number(vy)); y++) years.push(String(y));
+  return `<div class="row" style="gap:6px;flex-wrap:nowrap"><select class="input" id="${id}_y" style="flex:1;min-width:0">${years.map(y => `<option${y === vy ? ' selected' : ''}>${y}</option>`).join('')}</select><span>年</span>
+    <select class="input" id="${id}_m" style="flex:1;min-width:0">${Array.from({ length: 12 }, (_, i) => pad2(i + 1)).map(m => `<option value="${m}"${m === vm ? ' selected' : ''}>${Number(m)}</option>`).join('')}</select><span>月</span></div>`;
+}
+async function dealForm(existing, presetCustomerId) {
+  await Store.loadCustomers();
+  const d = Object.assign(DL.blank(), existing || {}, existing ? {} : { customerId: presetCustomerId || '' });
+  const custs = () => Store.customers.filter(c => !c.archived || c.id === d.customerId).sort((a, b) => (b.isActive - a.isActive) || a.name.localeCompare(b.name, 'zh-Hant'));
+  const custOpts = sel => `<option value="">請選擇客戶</option><optgroup label="服務中客戶">${custs().filter(c => c.isActive).map(c => `<option value="${esc(c.id)}"${c.id === sel ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</optgroup><optgroup label="潛在客戶">${custs().filter(c => !c.isActive).map(c => `<option value="${esc(c.id)}"${c.id === sel ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</optgroup><option value="__add">＋ 新增客戶…</option>`;
+  const cats = [...new Set(dealCats.concat(d.category ? [d.category] : []))];
+  const hist = (d.history || []).slice().reverse();
+  const pj = d.projectId && PJ.get(d.projectId);
+  const m = openModal({ title: existing ? '編輯商機' : '新增商機', size: 'wide', body: `
+    ${d.lost ? `<div class="notice danger small">此商機已標示<b>未成交</b>（${esc(d.lostDate)}）：${esc(d.lostReason)}${d.lostNote ? `－${esc(d.lostNote)}` : ''}</div>` : ''}
+    ${pj ? `<div class="notice ok small">已轉為 SI 專案：<a href="#" id="dfPj">${esc(pj.name)}</a></div>` : ''}
+    <div class="form-grid">
+    <div class="field"><label>客戶名稱 <span class="req">*</span></label><input class="input" id="d_custq" placeholder="輸入關鍵字篩選" style="margin-bottom:6px"><select class="input" id="d_cust">${custOpts(d.customerId)}</select></div>
+    <div class="field"><label>往來機會（產品） <span class="req">*</span></label><input class="input" id="d_product" value="${esc(d.product)}" list="dprodList" placeholder="例如 M365 E5 授權 300 套"><datalist id="dprodList">${[...new Set(DL.deals.map(x => x.product))].map(x => `<option value="${esc(x)}">`).join('')}</datalist></div>
+    <div class="field"><label>產品類別</label><select class="input" id="d_cat">${optionList(cats, d.category, '請選擇')}<option value="__add">＋ 新增類別…</option></select></div>
+    <div class="field"><label>預估月份 <span class="req">*</span></label>${monthSelectHtml('d_month', d.month)}</div>
+    <div class="field"><label>是否報價</label><div class="row" style="gap:8px"><div class="seg"><label><input type="radio" name="d_quoted" value="1"${d.quoted ? ' checked' : ''}><span>是</span></label><label><input type="radio" name="d_quoted" value="0"${!d.quoted ? ' checked' : ''}><span>否</span></label></div>
+      <input type="date" class="input" id="d_qdate" value="${esc(d.quoteDate)}" style="width:auto;flex:1;min-width:140px" aria-label="報價日期"></div></div>
+    <div class="field"><label>是否下單</label><div class="row" style="gap:8px"><div class="seg"><label><input type="radio" name="d_ordered" value="1"${d.ordered ? ' checked' : ''}><span>是</span></label><label><input type="radio" name="d_ordered" value="0"${!d.ordered ? ' checked' : ''}><span>否</span></label></div>
+      <input type="date" class="input" id="d_odate" value="${esc(d.orderDate)}" style="width:auto;flex:1;min-width:140px" aria-label="下單日期"></div></div>
+    <div class="field"><label>預估金額（含稅）</label><div class="row" style="gap:6px;flex-wrap:nowrap"><input class="input" id="d_amount" type="${moneyVisible() ? 'text' : 'password'}" autocomplete="off" inputmode="numeric" value="${d.amount === '' ? '' : Number(d.amount).toLocaleString('zh-TW')}" style="flex:1;min-width:0"><button type="button" class="btn sm" id="d_eye">${moneyVisible() ? '🙈' : '👁'}</button></div></div>
+    <div class="field"><label>業務</label>${staffSelectHtml('d_sales', d.sales)}</div>
+    <div class="field"><label>下次跟進日期</label><input type="date" class="input" id="d_next" value="${esc(d.nextFollowUpDate)}"></div>
+    <div class="field full"><label>備註</label><textarea class="input" id="d_note" rows="3" placeholder="客戶需求、競爭對手、決策者…">${esc(d.note)}</textarea></div></div>
+    ${hist.length > 1 ? `<div class="section-t" style="margin-top:12px">推進歷程</div><div class="small">${hist.map(h => `<div>${esc(fmtDT(h.at))}　${h.from ? `${DEAL_STAGES.find(s => s.k === h.from).t} → ` : '建立：'}${DEAL_STAGES.find(s => s.k === h.to).t}</div>`).join('')}</div>` : ''}`,
+    footer: `${existing ? `<button class="btn danger" id="dfDel">刪除</button>${d.lost ? '<button class="btn" id="dfReopen">重新開啟</button>' : '<button class="btn" id="dfLost">標示未成交</button>'}${d.ordered && !pj ? '<button class="btn" id="dfConvert">轉 SI 專案</button>' : ''}` : ''}<span class="spacer"></span><button class="btn" data-close>取消</button><button class="btn primary" data-save>儲存</button>` });
+  bindStaffSelects(m.el);
+  const cs = $('#d_cust', m.el); let prevC = cs.value;
+  $('#d_custq', m.el).addEventListener('input', e => { const k = e.target.value.trim().toLowerCase(); $$('option', cs).forEach(o => { if (o.value && o.value !== '__add') o.hidden = k && !o.textContent.toLowerCase().includes(k); }); });
+  cs.addEventListener('change', () => {
+    if (cs.value !== '__add') { prevC = cs.value; return; }
+    cs.value = prevC;
+    const q = openModal({ title: '快速新增客戶', size: 'narrow', body: `<div class="field"><label>客戶名稱 <span class="req">*</span></label><input class="input" id="qc_name" value="${esc($('#d_custq', m.el).value)}"></div>
+      <div class="field" style="margin-top:10px"><label>客戶類型</label><div class="seg"><label><input type="radio" name="qc_act" value="0" checked><span>潛在客戶</span></label><label><input type="radio" name="qc_act" value="1"><span>服務中</span></label></div></div>
+      <div class="field" style="margin-top:10px"><label>產業</label>${industrySelectHtml('qc', '')}</div><p class="small muted">其他資料可之後到「客戶管理」補充。</p>`,
+      footer: `<button class="btn" data-close>取消</button><button class="btn primary" data-ok>新增</button>` });
+    bindIndustry(q.el, 'qc');
+    $('[data-ok]', q.el).addEventListener('click', async () => {
+      const name = $('#qc_name', q.el).value.trim(); if (!name) return toast('請輸入客戶名稱', 'warn');
+      const dup = Store.findDuplicates({ name, taxId: '' });
+      if (dup.length && !await confirmDialog(`已有相似客戶「${esc(dup[0].name)}」，仍要新增？`, { okText: '仍要新增' })) return;
+      const ind = $('#qc_industry', q.el).value;
+      const c = await guard(() => Store.saveCustomer({ name, isActive: $('input[name=qc_act]:checked', q.el).value === '1', industry: ind === '__other' ? $('#qc_industryOther', q.el).value.trim() : ind }), '客戶已新增');
+      if (c) { q.close(); d.customerId = c.id; cs.innerHTML = custOpts(c.id); prevC = c.id; }
+    });
+  });
+  const catSel = $('#d_cat', m.el); let prevCat = catSel.value;
+  catSel.addEventListener('change', () => {
+    if (catSel.value !== '__add') { prevCat = catSel.value; return; }
+    catSel.value = prevCat;
+    const q = openModal({ title: '新增產品類別', size: 'narrow', body: '<input class="input" id="nc" autofocus>', footer: '<button class="btn" data-close>取消</button><button class="btn primary" data-ok>新增</button>' });
+    $('[data-ok]', q.el).addEventListener('click', async () => { const v = $('#nc', q.el).value.trim(); const r = await guard(() => addDealCat(v)); if (r === undefined) return;
+      catSel.innerHTML = optionList(dealCats, v, '請選擇') + '<option value="__add">＋ 新增類別…</option>'; prevCat = v; q.close(); });
+  });
+  const syncDates = () => {
+    const qd = $('#d_qdate', m.el), od = $('#d_odate', m.el);
+    const q = $('input[name=d_quoted]:checked', m.el).value === '1', o = $('input[name=d_ordered]:checked', m.el).value === '1';
+    if (o && !q) $('input[name=d_quoted][value="1"]', m.el).checked = true;
+    const q2 = $('input[name=d_quoted]:checked', m.el).value === '1';
+    qd.disabled = !q2; od.disabled = !o;
+    if (q2 && !qd.value) qd.value = todayStr(); if (o && !od.value) od.value = todayStr();
+  };
+  $$('input[name=d_quoted],input[name=d_ordered]', m.el).forEach(r => r.addEventListener('change', syncDates)); syncDates();
+  $('#d_eye', m.el).addEventListener('click', e => { const i = $('#d_amount', m.el); i.type = i.type === 'password' ? 'text' : 'password'; e.target.textContent = i.type === 'password' ? '👁' : '🙈'; });
+  const read = () => ({ id: d.id, customerId: cs.value === '__add' ? '' : cs.value, product: $('#d_product', m.el).value, category: catSel.value === '__add' ? '' : catSel.value,
+    month: `${$('#d_month_y', m.el).value}-${$('#d_month_m', m.el).value}`, amount: $('#d_amount', m.el).value.trim(),
+    quoted: $('input[name=d_quoted]:checked', m.el).value === '1', quoteDate: $('#d_qdate', m.el).value, ordered: $('input[name=d_ordered]:checked', m.el).value === '1', orderDate: $('#d_odate', m.el).value,
+    sales: $('#d_sales', m.el).value === '__add' ? '' : $('#d_sales', m.el).value, nextFollowUpDate: $('#d_next', m.el).value, note: $('#d_note', m.el).value,
+    lost: d.lost, lostReason: d.lostReason, lostNote: d.lostNote, lostDate: d.lostDate, projectId: d.projectId });
+  $('[data-save]', m.el).addEventListener('click', async () => {
+    const data = read();
+    if (!data.customerId) return toast('請選擇客戶', 'warn');
+    if (!data.product.trim()) return toast('請輸入往來機會（產品）', 'warn');
+    const r = await guard(() => DL.save(data), existing ? '商機已更新' : '商機已新增');
+    if (!r) return;
+    m.close();
+    if (r.ordered && !(existing && existing.ordered) && !r.projectId && await confirmDialog(`「${esc(r.product)}」已下單，是否立即轉成 SI 專案？`, { okText: '轉成 SI 專案', cancelText: '稍後再說' })) return convertDealToProject(r);
+    render();
+  });
+  if (existing) {
+    $('#dfDel', m.el).addEventListener('click', async () => { if (!await confirmDialog(`確定刪除商機「${esc(d.product)}」？此動作無法復原。`, { okText: '刪除', danger: true })) return; const ok = await guard(() => DL.remove(d.id).then(() => true), '商機已刪除'); if (ok) { m.close(); render(); } });
+    const lost = $('#dfLost', m.el); if (lost) lost.addEventListener('click', () => {
+      const q = openModal({ title: '標示未成交', size: 'narrow', body: `<div class="field"><label>原因</label><select class="input" id="lr">${optionList(LOST_REASONS, '價格因素')}</select></div><div class="field" style="margin-top:10px"><label>說明</label><textarea class="input" id="ln" rows="3" placeholder="例如：客戶選擇 X 公司方案"></textarea></div>`,
+        footer: '<button class="btn" data-close>取消</button><button class="btn danger solid" data-ok>標示未成交</button>' });
+      $('[data-ok]', q.el).addEventListener('click', async () => { const ok = await guard(() => DL.patch(d.id, x => { x.lost = true; x.lostReason = $('#lr', q.el).value; x.lostNote = $('#ln', q.el).value.trim(); x.lostDate = todayStr(); }).then(() => true), '已標示未成交'); if (ok) { q.close(); m.close(); render(); } });
+    });
+    const re = $('#dfReopen', m.el); if (re) re.addEventListener('click', async () => { const ok = await guard(() => DL.patch(d.id, x => { x.lost = false; x.lostReason = ''; x.lostNote = ''; x.lostDate = ''; }).then(() => true), '商機已重新開啟'); if (ok) { m.close(); render(); } });
+    const cv = $('#dfConvert', m.el); if (cv) cv.addEventListener('click', () => { m.close(); convertDealToProject(d); });
+  }
+  const pl = $('#dfPj', m.el); if (pl) pl.addEventListener('click', e => { e.preventDefault(); m.close(); openProject(pj.id); });
+}
+
+/* ---------- 儀表板與客戶頁 ---------- */
+async function dealDashboardHtml() {
+  await DL.load();
+  const live = DL.deals.filter(d => !d.lost && !d.ordered), m = ym();
+  const thisMonth = DL.deals.filter(d => !d.lost && d.month === m);
+  const amt = live.reduce((s, d) => s + (Number(d.amount) || 0), 0);
+  return `<div class="card"><h2>商機概況 <span class="spacer"></span><a class="btn sm" href="#/deals">前往商機管理 →</a></h2><div class="mini-kpis">
+    <div class="clickable-k" data-dl-go="list"><span>進行中商機</span><b>${live.length}</b></div>
+    <div><span>其中已報價</span><b>${live.filter(d => d.quoted).length}</b></div>
+    <div class="clickable-k" data-dl-go="month"><span>本月預估（已下單）</span><b>${thisMonth.length}（${thisMonth.filter(d => d.ordered).length}）</b></div>
+    <div class="clickable-k" data-dl-go="overdue"><span>月份已過未下單</span><b style="color:${DL.deals.filter(isDealOverdue).length ? 'var(--danger)' : 'inherit'}">${DL.deals.filter(isDealOverdue).length}</b></div>
+    <div><span>進行中預估金額</span><b>${moneyVisible() ? (nt(amt) || 'NT$ 0') : MASK}</b></div></div></div>`;
+}
+function bindDealDashboard(el) {
+  $$('[data-dl-go]', el).forEach(b => b.addEventListener('click', () => { const g = b.dataset.dlGo; Object.assign(state.deal, { tab: 'list', stage: '', range: g === 'list' ? 'all' : g }); go('deals'); }));
+}
+async function customerDealsCard(cid) {
+  await DL.load();
+  const list = DL.ofCustomer(cid).sort((a, b) => b.month.localeCompare(a.month));
+  return `<div class="card"><h2>商機 <span class="count">${list.length}</span><span class="spacer"></span><button class="btn sm" id="custNewDeal">＋ 新增商機</button></h2>
+    ${list.length ? list.map(d => `<div class="fu-row"><span class="nm" data-open-deal="${esc(d.id)}">${esc(d.product)}</span>${dealStageBadge(d)}<span class="spacer"></span><span class="small">${esc(d.month)}</span>${moneyVisible() && d.amount !== '' ? `<span class="small muted">${nt(d.amount)}</span>` : ''}</div>`).join('') : '<div class="empty" style="padding:12px">尚無商機</div>'}</div>`;
+}
+
+/* ---------- 商機匯入範本 ---------- */
+const DLT_SHEET = '商機清單';
+const DLT_COLS = [['客戶名稱', 'customer'], ['客戶統一編號', 'taxId'], ['客戶類型', 'ctype'], ['往來機會（產品）', 'product'], ['產品類別', 'category'], ['預估月份', 'month'], ['預估金額（含稅）', 'amount'],
+  ['是否報價', 'quoted'], ['報價日期', 'quoteDate'], ['是否下單', 'ordered'], ['下單日期', 'orderDate'], ['業務', 'sales'], ['下次跟進日期', 'nextFollowUpDate'], ['備註', 'note']];
+function isDealTemplate(book) { return !!book[DLT_SHEET]; }
+function parseYM(v) {
+  if (v == null || v === '') return '';
+  if (typeof v === 'number' || /^\d{5}(\.\d+)?$/.test(String(v).trim())) { const d = excelSerialToDate(Number(v)); return d ? d.slice(0, 7) : null; }
+  const s = String(v).trim().normalize('NFKC');
+  let m = s.match(/^(\d{4})\s*[-/.年]\s*(\d{1,2})\s*月?(?:[-/.]\d{1,2}日?)?$/) || s.match(/^(\d{2,3})\s*[-/.年]\s*(\d{1,2})\s*月?$/);
+  if (!m) return null;
+  let y = Number(m[1]); if (y < 1000) y += 1911;
+  const mo = Number(m[2]); if (mo < 1 || mo > 12) return null;
+  return `${y}-${pad2(mo)}`;
+}
+async function importDealTemplateFlow(book, file) {
+  await Promise.all([Store.loadCustomers(), DL.load()]);
+  const { list, missing } = rowsToObjects(book[DLT_SHEET], DLT_COLS);
+  if (missing.includes('客戶名稱') || missing.includes('往來機會（產品）')) return toast('「商機清單」缺少「客戶名稱」或「往來機會（產品）」欄位，請勿修改標題列。', 'err');
+  const s = (o, k) => String(o[k] == null ? '' : o[k]).trim(), yes = v => parseBool(v) === true;
+  const errors = [], plan = [], newCustomers = new Map(), newStaff = new Set(), newCats = new Set();
+  for (const o of list) {
+    const errs = [];
+    const cname = s(o, 'customer'), product = s(o, 'product');
+    if (!cname) errs.push('客戶名稱空白'); if (!product) errs.push('往來機會（產品）空白');
+    const month = parseYM(o.month); if (!month) errs.push(month === '' ? '預估月份空白' : `預估月份格式錯誤：${s(o, 'month')}（請填 2026-12）`);
+    let amount = ''; if (s(o, 'amount')) { amount = parseMoney(s(o, 'amount')); if (isNaN(amount)) errs.push(`預估金額不是數字：${s(o, 'amount')}`); }
+    const qd = parseDate(o.quoteDate), od = parseDate(o.orderDate), nf = parseDate(o.nextFollowUpDate);
+    if (qd === null || od === null || nf === null) errs.push('日期格式錯誤');
+    let taxId = s(o, 'taxId').normalize('NFKC').replace(/\s/g, ''); if (/^\d{1,7}$/.test(taxId)) taxId = taxId.padStart(8, '0');
+    if (taxId && !/^\d{8}$/.test(taxId)) errs.push(`客戶統一編號格式錯誤：${taxId}`);
+    const ct = s(o, 'ctype'); if (ct && !['服務中', '潛在', '潛在客戶', '是', '否'].includes(ct)) errs.push(`客戶類型請填「服務中」或「潛在」：${ct}`);
+    if (errs.length) { errors.push(`第 ${o._row} 列（${cname || '未命名'}／${product || '—'}）：${errs.join('；')}`); continue; }
+    let cust = (taxId && Store.customers.find(c => c.taxId === taxId)) || Store.customers.find(c => normName(c.name) === normName(cname)), custRef;
+    if (cust) custRef = { id: cust.id, name: cust.name, existing: true };
+    else { const nk = taxId || normName(cname); if (!newCustomers.has(nk)) newCustomers.set(nk, { id: uid(), name: cname, taxId, isActive: ct === '服務中' || ct === '是' }); custRef = Object.assign({ existing: false }, newCustomers.get(nk)); }
+    if (s(o, 'sales') && !staffList.includes(s(o, 'sales'))) newStaff.add(s(o, 'sales'));
+    if (s(o, 'category') && !dealCats.includes(s(o, 'category'))) newCats.add(s(o, 'category'));
+    const ordered = yes(o.ordered), quoted = yes(o.quoted) || ordered;
+    const d = Object.assign(DL.blank(), { customerId: custRef.id, product, category: s(o, 'category'), month, amount, quoted, quoteDate: quoted ? (qd || '') : '', ordered, orderDate: ordered ? (od || '') : '',
+      sales: s(o, 'sales'), nextFollowUpDate: nf || '', note: s(o, 'note') });
+    const filled = DLT_COLS.map(c => c[1]).filter(k => s(o, k) !== '');
+    const ex = custRef.existing ? DL.deals.find(x => x.customerId === custRef.id && normName(x.product) === normName(product) && x.month === month) : null;
+    if (plan.some(p => p.d.customerId === d.customerId && normName(p.d.product) === normName(product) && p.d.month === month)) { errors.push(`第 ${o._row} 列：與檔案中其他列重複（同客戶、同產品、同月份）`); continue; }
+    plan.push({ row: o._row, d, cust: custRef, filled, ex, action: ex ? 'skip' : 'add' });
+  }
+  if (!plan.length) return resultDialog('沒有可匯入的商機', [errors.length ? `共 ${errors.length} 個錯誤，請修正後再匯入` : '「商機清單」中沒有資料'], errors);
+  const dups = plan.filter(p => p.ex);
+  const m = openModal({ title: '匯入商機：預覽', size: 'wide', body: `<p class="small muted" style="margin-top:0">檔案：${esc(file.name)}</p>
+    <div class="stat-row"><div class="stat ok"><b>${plan.length - dups.length}</b>新商機</div><div class="stat dup"><b>${dups.length}</b>與現有商機重複</div><div class="stat bad"><b>${errors.length}</b>錯誤</div></div>
+    ${newCustomers.size || newStaff.size || newCats.size ? `<div class="notice info small">將一併新增：${[newCustomers.size ? `客戶 ${newCustomers.size} 家（${[...newCustomers.values()].map(c => esc(c.name) + (c.isActive ? '・服務中' : '・潛在')).join('、')}）` : '', newStaff.size ? `人員 ${[...newStaff].map(esc).join('、')}` : '', newCats.size ? `產品類別 ${[...newCats].map(esc).join('、')}` : ''].filter(Boolean).join('；')}</div>` : ''}
+    ${errors.length ? `<div class="field"><label>錯誤原因（這些列不會匯入）</label><ul class="err-list">${errors.slice(0, 300).map(e => `<li>${esc(e)}</li>`).join('')}</ul></div>` : ''}
+    ${dups.length ? `<div class="field" style="margin-top:12px"><label>重複商機（同客戶、同產品、同月份）</label><div class="row" style="margin-bottom:6px"><button class="btn sm" id="dAllSkip">全部略過</button><button class="btn sm" id="dAllUpd">全部更新</button></div>
+      <div class="scroll-box"><table class="list"><thead><tr><th>列</th><th>客戶</th><th>產品</th><th>月份</th><th>處理</th></tr></thead><tbody>${dups.map((p, i) => `<tr><td>${p.row}</td><td>${esc(p.cust.name)}</td><td>${esc(p.d.product)}</td><td>${p.d.month}</td><td><select class="input" data-ddup="${i}" style="min-height:34px;padding:4px 8px"><option value="skip">略過</option><option value="update">更新</option></select></td></tr>`).join('')}</tbody></table></div></div>` : ''}
+    <div class="field" style="margin-top:12px"><label>預覽（前 50 筆）</label><div class="scroll-box"><table class="list"><thead><tr><th>列</th><th>客戶</th><th>往來機會</th><th>月份</th><th>報價</th><th>下單</th><th>業務</th></tr></thead><tbody>
+      ${plan.slice(0, 50).map(p => `<tr><td>${p.row}</td><td>${esc(p.cust.name)}${p.cust.existing ? '' : ' <span class="badge type">新客戶</span>'}</td><td>${esc(p.d.product)}${p.ex ? ' <span class="badge prospect">重複</span>' : ''}</td><td>${p.d.month}</td><td>${p.d.quoted ? '✓' : ''}</td><td>${p.d.ordered ? '✓' : ''}</td><td>${esc(p.d.sales)}</td></tr>`).join('')}</tbody></table></div></div>`,
+    footer: `<button class="btn" data-close>取消</button><button class="btn primary" id="dDoImp">開始匯入</button>` });
+  $$('[data-ddup]', m.el).forEach(x => x.addEventListener('change', () => { dups[Number(x.dataset.ddup)].action = x.value; }));
+  const setAll = a => { dups.forEach(p => { p.action = a; }); $$('[data-ddup]', m.el).forEach(x => { x.value = a; }); };
+  const b1 = $('#dAllSkip', m.el), b2 = $('#dAllUpd', m.el); if (b1) b1.addEventListener('click', () => setAll('skip')); if (b2) b2.addEventListener('click', () => setAll('update'));
+  $('#dDoImp', m.el).addEventListener('click', async () => {
+    const add = plan.filter(p => p.action === 'add'), upd = plan.filter(p => p.action === 'update');
+    if (!add.length && !upd.length) return toast('沒有要新增或更新的商機', 'warn');
+    if (!await confirmDialog(`確定匯入？\n新增 ${add.length} 筆、更新 ${upd.length} 筆、略過 ${plan.length - add.length - upd.length} 筆。`, { okText: '開始匯入' })) return;
+    const now = nowISO(); const used = new Set(add.concat(upd).map(p => p.cust.id)); let custs = 0;
+    const ok = await guard(() => DB.tx(['customers', 'deals', 'meta'], 'readwrite', async st => {
+      for (const c of newCustomers.values()) if (used.has(c.id)) { st.customers.put(Object.assign(blankCustomer(), c, { createdAt: now, updatedAt: now })); custs++; }
+      const staff = ((await req(st.meta.get('staff'))) || { value: [] }).value.slice(); newStaff.forEach(n => { if (!staff.includes(n)) staff.push(n); }); st.meta.put({ key: 'staff', value: staff });
+      const cats = ((await req(st.meta.get('dealCategories'))) || { value: DEAL_CATS_DEFAULT.slice() }).value.slice(); newCats.forEach(n => { if (!cats.includes(n)) cats.push(n); }); st.meta.put({ key: 'dealCategories', value: cats });
+      for (const p of add) st.deals.put(Object.assign({}, p.d, { id: uid(), history: [{ from: '', to: dealStage(p.d), at: now }], createdAt: now, updatedAt: now }));
+      for (const p of upd) {
+        const cur = await req(st.deals.get(p.ex.id)); if (!cur) continue; const before = dealStage(cur);
+        const map = { quoteDate: 'quoteDate', orderDate: 'orderDate' };
+        for (const k of p.filled) if (!['customer', 'taxId', 'ctype'].includes(k)) cur[map[k] || k] = p.d[k];
+        if (cur.ordered) cur.quoted = true;
+        if (before !== dealStage(cur)) (cur.history = cur.history || []).push({ from: before, to: dealStage(cur), at: now });
+        cur.updatedAt = now; st.deals.put(cur);
+      }
+      return true;
+    }));
+    if (!ok) return;
+    staffList = (await DB.getMeta('staff')) || []; dealCats = (await DB.getMeta('dealCategories')) || dealCats;
+    await Promise.all([Store.loadCustomers(), DL.load()]);
+    m.close(); resultDialog('商機匯入完成', [`新增 ${add.length} 筆、更新 ${upd.length} 筆`, custs ? `新增客戶 ${custs} 家` : '', errors.length ? `未匯入（錯誤）${errors.length} 列` : ''], errors);
+    state.page = 'deals'; state.deal.tab = 'list'; if (location.hash !== '#/deals') location.hash = '#/deals'; else render();
+  });
+}
+
+/* ============================================================
  * I. 系統設定 與 啟動
  * ============================================================ */
 let persistAsked = false;
@@ -4098,6 +4628,9 @@ async function renderSettings(el) {
       <div class="small">${staffList.length ? staffList.map(i => `<span class="badge type" style="margin:2px 4px 2px 0">${esc(i)} <button class="btn link" data-rm-staff="${esc(i)}" style="min-height:0;padding:0 2px;color:var(--danger)" aria-label="移除 ${esc(i)}">×</button></span>`).join('') : '<span class="muted">尚未建立人員</span>'}</div>
       <div class="row" style="margin:8px 0 4px;gap:6px"><input class="input" id="newStaffS" placeholder="輸入姓名" style="max-width:240px"><button class="btn sm primary" id="addStaffS">＋ 新增人員</button></div>
       <p class="small muted" style="margin:0">SI 專案的 PM、業務會從這份清單選擇。移除人員不會變更已指派的專案。</p></div>
+    <div class="card"><h2>🏷 商機產品類別</h2>
+      <div class="small">${dealCats.map(i => `<span class="badge type" style="margin:2px 4px 2px 0">${esc(i)} <button class="btn link" data-rm-dcat="${esc(i)}" style="min-height:0;padding:0 2px;color:var(--danger)" aria-label="移除 ${esc(i)}">×</button></span>`).join('')}</div>
+      <div class="row" style="margin:8px 0 4px;gap:6px"><input class="input" id="newDcat" placeholder="輸入類別名稱" style="max-width:240px"><button class="btn sm primary" id="addDcat">＋ 新增類別</button></div></div>
     <div class="card"><h2>📋 選項清單</h2>
       <p class="small"><b>預設產業：</b>${INDUSTRIES.map(esc).join('、')}</p>
       <div class="small"><b>自行新增的產業：</b>${customIndustries.length ? customIndustries.map(i => `<span class="badge type" style="margin:2px 4px 2px 0">${esc(i)} <button class="btn link" data-rm-ind="${esc(i)}" style="min-height:0;padding:0 2px;color:var(--danger)" aria-label="移除 ${esc(i)}">×</button></span>`).join('') : '<span class="muted">尚無</span>'}</div>
@@ -4108,6 +4641,9 @@ async function renderSettings(el) {
       <p class="small muted" style="margin-top:0">將刪除此瀏覽器中的全部客戶、聯絡人與業務活動。此動作無法復原，請先匯出 Excel 備份。</p>
       <div class="row"><button class="btn" id="bkFirst">⬇ 先匯出備份</button><button class="btn danger" id="wipe">清除全部資料</button></div></div>
     <p class="small muted">${esc(APP.name)}　版本 ${APP.version}　資料結構版本 ${APP.schemaVersion}</p>`;
+  $('#addDcat', el).addEventListener('click', async () => { const r = await guard(() => addDealCat($('#newDcat', el).value)); if (r === true) { toast('已新增類別'); render(); } else if (r === false) toast('此類別已存在', 'warn'); });
+  $$('[data-rm-dcat]', el).forEach(b => b.addEventListener('click', async () => { const n = b.dataset.rmDcat; if (!await confirmDialog(`從清單移除「${esc(n)}」？已使用此類別的商機不受影響。`, { okText: '移除' })) return;
+    const ok = await guard(async () => { dealCats = dealCats.filter(x => x !== n); await DB.setMeta('dealCategories', dealCats); return true; }, '已移除類別'); if (ok) render(); }));
   $('#addStaffS', el).addEventListener('click', async () => {
     const r = await guard(() => addStaff($('#newStaffS', el).value));
     if (r === true) { toast('已新增人員'); render(); } else if (r === false) toast('此人員已在清單中', 'warn');
@@ -4148,6 +4684,7 @@ async function init() {
     customIndustries = (await DB.getMeta('customIndustries')) || [];
     staffList = (await DB.getMeta('staff')) || [];
     vendorList = (await DB.getMeta('vendors')) || [];
+    dealCats = (await DB.getMeta('dealCategories')) || DEAL_CATS_DEFAULT.slice();
     state.showMoney = loadMoneyPref();
     try { await migrateVendors(); } catch (e) { console.error(e); }
     await Store.loadCustomers();
