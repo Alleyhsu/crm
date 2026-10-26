@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-qH5Y83ja2ogivLqrvCFAnMRt3yBAYxthjzEM/HbEUcY='; style-src 'unsafe-inline'; img-src blob: data:; connect-src 'none'; font-src 'none'; media-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; form-action 'none'; base-uri 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-Ov8PfU3w/0C8rLU3IrfI0HJx0ZBZCiewGL4bWBD1BE0='; style-src 'unsafe-inline'; img-src blob: data:; connect-src 'none'; font-src 'none'; media-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; form-action 'none'; base-uri 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#0f2747">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -336,7 +336,7 @@ textarea.input{min-height:90px;resize:vertical}
  * Alley's Systex CRM V1 — 核心：常數、工具、資料庫、服務
  * 所有資料僅存於本機瀏覽器 IndexedDB，程式不發出任何網路請求。
  * ============================================================ */
-const APP = { name: "Alley's Systex CRM", version: '1.3.0', schemaVersion: 3, dbName: 'alley_systex_crm', dbVersion: 3 };
+const APP = { name: "Alley's Systex CRM", version: '1.3.1', schemaVersion: 3, dbName: 'alley_systex_crm', dbVersion: 3 };
 
 const INDUSTRIES = ['公部門', '工具機', '半導體', '設備機械', '手工具', '自行車', '塑膠射出', '五金加工', '建築', '醫療單位', '化妝品', '家居行業', '零售業'];
 const REGIONS = ['基隆市', '臺北市', '新北市', '桃園市', '新竹市', '新竹縣', '苗栗縣', '臺中市', '彰化縣', '南投縣', '雲林縣', '嘉義市', '嘉義縣', '臺南市', '高雄市', '屏東縣', '宜蘭縣', '花蓮縣', '臺東縣', '澎湖縣', '金門縣', '連江縣'];
@@ -1889,7 +1889,7 @@ async function renderData(el) {
       <p class="muted small" style="margin-top:0">包含客戶、聯絡人、業務活動與系統資料版本，共 4 個工作表。目前資料：客戶 ${d.customers.length} 筆、聯絡人 ${d.contacts.length} 筆、業務活動 ${d.activities.length} 筆。上次備份：${state.lastBackupAt ? esc(fmtDT(state.lastBackupAt)) : '尚未備份'}</p>
       <div class="row"><button class="btn primary" id="expX">⬇ 匯出 Excel 備份</button>
       <label class="btn">⬆ 匯入 Excel 備份…<input type="file" id="impX" accept=".xlsx,${XLSX_MIME}" hidden></label></div>
-      <ul class="steps"><li>匯入時可選擇「新增匯入」（與現有資料合併，重複資料逐筆選擇略過或更新）或「完整還原」（以備份檔取代目前全部資料）。</li><li>匯入前會先顯示預覽與錯誤原因；寫入採單一交易，任何一筆失敗都會整批取消，現有資料不受影響。</li></ul></div>
+      <ul class="steps"><li>也可匯入「客戶資料匯入範本」與「SI 專案匯入範本」，系統會自動辨識。</li><li>匯入時可選擇「新增匯入」（與現有資料合併，重複資料逐筆選擇略過或更新）或「完整還原」（以備份檔取代目前全部資料）。</li><li>匯入前會先顯示預覽與錯誤原因；寫入採單一交易，任何一筆失敗都會整批取消，現有資料不受影響。</li></ul></div>
     <div class="card"><h2>📄 CSV 客戶資料（UTF-8）</h2>
       <p class="muted small" style="margin-top:0">適合從其他系統或 Excel 批次匯入客戶名單。CSV 僅包含客戶基本資料，不含聯絡人與活動。</p>
       <div class="row"><button class="btn" id="expC">⬇ 匯出客戶 CSV</button>
@@ -1923,6 +1923,7 @@ async function importBackupFlow(file) {
   let book;
   try { book = await readXlsx(await file.arrayBuffer()); }
   catch (e) { return toast('無法讀取檔案：' + errMsg(e), 'err'); }
+  if (isSITemplate(book)) return importSITemplateFlow(book, file);
   const errors = []; const warn = [];
   let parsed = {};
   if (book[COMBINED_SHEET] && !book[SHEET_NAMES.customers]) {
@@ -2899,11 +2900,15 @@ async function renderSI(el) {
   await Promise.all([Store.loadCustomers(), PJ.load()]);
   if (state.projectId) return renderProject(el);
   const tab = state.si.tab;
-  el.innerHTML = `<div class="toolbar"><button class="btn primary" id="pjNew">＋ 新增專案</button><button class="btn accent" id="pjWeekly">📊 產生週報</button>
+  el.innerHTML = `<div class="toolbar"><button class="btn primary" id="pjNew">＋ 新增專案</button><button class="btn accent" id="pjWeekly">📊 產生週報</button><label class="btn">⬆ 匯入專案 Excel<input type="file" id="pjImp" accept=".xlsx,${XLSX_MIME}" hidden></label>
     <span class="spacer"></span>${moneyVisible() ? '<span class="small muted">金額皆為含稅；GP = 合約總金額 − 成本合計</span>' : ''}${moneyToggleHtml()}</div>${siTabs(tab)}<div id="siBody"></div>`;
   bindMoneyToggle(el);
   $('#pjNew', el).addEventListener('click', () => projectForm());
   $('#pjWeekly', el).addEventListener('click', () => weeklyReportDialog());
+  $('#pjImp', el).addEventListener('change', async e => { const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+    let book; try { book = await readXlsx(await f.arrayBuffer()); } catch (x) { return toast('無法讀取檔案：' + errMsg(x), 'err'); }
+    if (!isSITemplate(book)) return toast('找不到「專案清單」工作表，請使用「SI 專案匯入範本」。', 'err');
+    importSITemplateFlow(book, f); });
   $$('[data-si-tab]', el).forEach(b => b.addEventListener('click', () => { state.si.tab = b.dataset.siTab; render(); }));
   const body = $('#siBody', el);
   if (tab === 'gantt') return renderGantt(body);
@@ -3866,6 +3871,181 @@ function vendorDetail(st) {
     footer: `<button class="btn" id="vdEdit">編輯供應商</button><button class="btn primary" data-close>關閉</button>` });
   $('#vdEdit', m.el).addEventListener('click', () => { m.close(); vendorForm(v); });
   $$('[data-open-pj]', m.el).forEach(a => a.addEventListener('click', e => { e.preventDefault(); m.close(); openProject(a.dataset.openPj, 'cost'); }));
+}
+
+/* ============================================================
+ * SI 專案匯入範本（Excel）
+ * 工作表：專案清單、廠商與成本、收款期別、會議紀錄
+ * 以「專案名稱」串連各工作表；客戶依統一編號或名稱對應既有客戶，找不到時新增。
+ * ============================================================ */
+const SIT = {
+  sheets: { projects: '專案清單', costs: '廠商與成本', payments: '收款期別', meetings: '會議紀錄' },
+  projects: [['專案名稱', 'name'], ['客戶名稱', 'customer'], ['客戶統一編號', 'taxId'], ['專案狀態', 'status'], ['客戶承辦人', 'contactName'], ['PM', 'pm'], ['業務', 'sales'],
+    ['簽約形式', 'contractType'], ['簽約狀態', 'signStatus'], ['是否公告', 'announced'], ['公告日期', 'announceDate'], ['標案案號', 'announceNo'], ['合約總金額（含稅）', 'amount'],
+    ['預計開始日', 'startDate'], ['預計結束日', 'endDate'], ['下次跟進日期', 'nextFollowUpDate'], ['驗收日期', 'acceptanceDate'], ['驗收條件', 'acceptanceTerms'], ['合約到期日', 'contractEndDate'],
+    ['重要事項', 'important'], ['成本分析已完成', 'caDone'], ['成本分析完成人', 'caBy'], ['成本分析日期', 'caDate'], ['成本分析說明', 'caNote']],
+  costs: [['專案名稱', 'project'], ['合作廠商', 'vendor'], ['廠商類別', 'category'], ['往來產品／服務', 'item'], ['數量', 'qty'], ['成本單價（含稅）', 'unitCost'], ['廠商已提供成本', 'quoted'], ['報價日期', 'quoteDate'], ['備註', 'note']],
+  payments: [['專案名稱', 'project'], ['期別', 'term'], ['金額（含稅）', 'amount'], ['預計收款日', 'dueDate'], ['實收日', 'paidDate'], ['發票號碼', 'invoiceNo'], ['備註', 'note']],
+  meetings: [['專案名稱', 'project'], ['會議時間', 'datetime'], ['會議主題', 'title'], ['地點', 'location'], ['與會者', 'attendees'], ['會議紀錄', 'notes']]
+};
+function isSITemplate(book) { return !!book[SIT.sheets.projects]; }
+
+async function importSITemplateFlow(book, file) {
+  await Promise.all([Store.loadCustomers(), PJ.load()]);
+  const errors = [], warns = [];
+  const rows = k => book[SIT.sheets[k]] ? rowsToObjects(book[SIT.sheets[k]], SIT[k]) : { list: [], missing: [] };
+  const P = rows('projects');
+  if (P.missing.includes('專案名稱') || P.missing.includes('客戶名稱')) return toast('「專案清單」缺少「專案名稱」或「客戶名稱」欄位，請勿修改標題列。', 'err');
+  const s = (o, k) => String(o[k] == null ? '' : o[k]).trim();
+  const yes = v => parseBool(v) === true;
+  const allCt = CONTRACT_TYPES.flatMap(g => g[1]);
+  const newCustomers = new Map(), newStaff = new Set(), newVendors = new Map(), newContacts = [];
+  const plan = []; const byKey = new Map();
+  for (const o of P.list) {
+    const errs = []; const name = s(o, 'name'), cname = s(o, 'customer');
+    if (!name) errs.push('專案名稱空白');
+    if (!cname) errs.push('客戶名稱空白');
+    const key = normName(name);
+    if (name && byKey.has(key)) errs.push(`專案名稱與第 ${byKey.get(key).row} 列重複`);
+    let status = 'idea';
+    if (s(o, 'status')) { const st = PJ_STATUS.find(x => x.t === s(o, 'status') || x.k === s(o, 'status')); if (st) status = st.k; else errs.push(`專案狀態無法辨識：${s(o, 'status')}`); }
+    const sign = s(o, 'signStatus') || '未簽約'; if (!SIGN_STATUS.includes(sign)) errs.push(`簽約狀態無法辨識：${sign}`);
+    let amount = ''; if (s(o, 'amount')) { amount = parseMoney(s(o, 'amount')); if (isNaN(amount)) errs.push(`合約總金額不是數字：${s(o, 'amount')}`); }
+    const dates = {};
+    for (const k of ['announceDate', 'startDate', 'endDate', 'nextFollowUpDate', 'acceptanceDate', 'contractEndDate', 'caDate']) { const d = parseDate(o[k]); if (d === null) errs.push(`日期格式錯誤：${s(o, k)}`); dates[k] = d || ''; }
+    if (dates.startDate && dates.endDate && dates.endDate < dates.startDate) errs.push('預計結束日早於開始日');
+    let taxId = s(o, 'taxId').normalize('NFKC').replace(/\s/g, ''); if (/^\d{1,7}$/.test(taxId)) taxId = taxId.padStart(8, '0');
+    if (taxId && !/^\d{8}$/.test(taxId)) errs.push(`客戶統一編號格式錯誤：${taxId}`);
+    if (errs.length) { errors.push(`專案清單 第 ${o._row} 列（${name || '未命名'}）：${errs.join('；')}`); continue; }
+    if (s(o, 'contractType') && !allCt.includes(s(o, 'contractType'))) warns.push(`第 ${o._row} 列簽約形式「${s(o, 'contractType')}」不在預設選項中，仍會匯入`);
+    // 客戶對應：統編 → 名稱 → 新增
+    let cust = (taxId && Store.customers.find(c => c.taxId === taxId)) || Store.customers.find(c => normName(c.name) === normName(cname));
+    let custRef;
+    if (cust) custRef = { id: cust.id, name: cust.name, existing: true };
+    else {
+      const nk = taxId || normName(cname);
+      if (!newCustomers.has(nk)) newCustomers.set(nk, { id: uid(), name: cname, taxId, industry: '', region: '' });
+      custRef = Object.assign({ existing: false }, newCustomers.get(nk));
+    }
+    for (const k of ['pm', 'sales', 'caBy']) if (s(o, k) && !staffList.includes(s(o, k))) newStaff.add(s(o, k));
+    const p = Object.assign(PJ.blank(), {
+      name, customerId: custRef.id, status, contactName: s(o, 'contactName'), pm: s(o, 'pm'), sales: s(o, 'sales'), contractType: s(o, 'contractType'), signStatus: sign,
+      announced: yes(o.announced), announceNo: s(o, 'announceNo'), amount, acceptanceTerms: s(o, 'acceptanceTerms'), important: s(o, 'important'),
+      announceDate: dates.announceDate, startDate: dates.startDate, endDate: dates.endDate, nextFollowUpDate: dates.nextFollowUpDate, acceptanceDate: dates.acceptanceDate, contractEndDate: dates.contractEndDate,
+      costAnalysis: yes(o.caDone) || s(o, 'caBy') ? { done: yes(o.caDone), by: s(o, 'caBy'), date: dates.caDate || (yes(o.caDone) ? todayStr() : ''), note: s(o, 'caNote'), at: nowISO() } : null
+    });
+    const filled = SIT.projects.map(c => c[1]).filter(k => s(o, k) !== '');
+    const ex = custRef.existing ? PJ.projects.find(x => x.customerId === custRef.id && normName(x.name) === key) : null;
+    const item = { row: o._row, key, p, cust: custRef, filled, ex, action: ex ? 'skip' : 'add', costs: [], payments: [], meetings: [] };
+    plan.push(item); byKey.set(key, item);
+  }
+  const child = (k, fn) => {
+    const R = rows(k);
+    if (book[SIT.sheets[k]] && R.missing.includes('專案名稱')) { errors.push(`「${SIT.sheets[k]}」缺少「專案名稱」欄位`); return; }
+    for (const o of R.list) {
+      const it = byKey.get(normName(s(o, 'project')));
+      if (!it) { errors.push(`${SIT.sheets[k]} 第 ${o._row} 列：找不到專案「${s(o, 'project') || '（空白）'}」（請確認與「專案清單」的專案名稱完全相同，或該專案列有錯誤）`); continue; }
+      const e = fn(o, it); if (e) errors.push(`${SIT.sheets[k]} 第 ${o._row} 列：${e}`);
+    }
+  };
+  child('costs', (o, it) => {
+    const vname = s(o, 'vendor'), item = s(o, 'item');
+    if (!vname) return '合作廠商空白'; if (!item) return '往來產品／服務空白';
+    const qty = s(o, 'qty') === '' ? 1 : Number(s(o, 'qty')); if (isNaN(qty) || qty < 0) return `數量不是數字：${s(o, 'qty')}`;
+    const unit = s(o, 'unitCost') === '' ? 0 : parseMoney(s(o, 'unitCost')); if (isNaN(unit)) return `成本單價不是數字：${s(o, 'unitCost')}`;
+    const qd = parseDate(o.quoteDate); if (qd === null) return `報價日期錯誤：${s(o, 'quoteDate')}`;
+    let v = vendorList.find(x => normName(x.name) === normName(vname));
+    if (!v) { const nk = normName(vname); if (!newVendors.has(nk)) newVendors.set(nk, { id: uid(), name: vname, category: s(o, 'category'), taxId: '', contact: '', phone: '', email: '', note: '', createdAt: nowISO(), updatedAt: nowISO() }); v = newVendors.get(nk); }
+    it.costs.push({ id: uid(), vendorId: v.id, vendor: v.name, item, qty, unitCost: unit, quoted: yes(o.quoted), quoteDate: qd || '', note: s(o, 'note') });
+  });
+  child('payments', (o, it) => {
+    if (!s(o, 'term')) return '期別空白';
+    const amt = parseMoney(s(o, 'amount')); if (s(o, 'amount') === '' || isNaN(amt)) return `金額錯誤：${s(o, 'amount') || '（空白）'}`;
+    const due = parseDate(o.dueDate), paid = parseDate(o.paidDate); if (due === null || paid === null) return '日期格式錯誤';
+    it.payments.push({ id: uid(), term: s(o, 'term'), amount: amt, dueDate: due || '', paidDate: paid || '', invoiceNo: s(o, 'invoiceNo'), note: s(o, 'note') });
+  });
+  child('meetings', (o, it) => {
+    const dt = parseDateTime(o.datetime); if (!dt) return `會議時間錯誤：${s(o, 'datetime') || '（空白）'}`;
+    it.meetings.push({ id: uid(), datetime: dt, title: s(o, 'title'), location: s(o, 'location'), attendees: s(o, 'attendees'), notes: String(o.notes == null ? '' : o.notes) });
+  });
+  if (!plan.length) return resultDialog('沒有可匯入的專案', [errors.length ? `共 ${errors.length} 個錯誤，請修正後再匯入` : '「專案清單」中沒有資料'], errors);
+  // 承辦人：對應客戶聯絡人，找不到則新增聯絡人
+  for (const it of plan) if (it.p.contactName) {
+    const cts = it.cust.existing ? (Store.contactsByCustomer.get(it.cust.id) || []) : [];
+    const ct = cts.find(c => c.name === it.p.contactName) || newContacts.find(c => c.customerId === it.cust.id && c.name === it.p.contactName);
+    if (ct) it.p.contactId = ct.id;
+    else { const n = { id: uid(), customerId: it.cust.id, name: it.p.contactName, department: '', title: '', phone: '', mobile: '', email: '', note: '', createdAt: nowISO(), updatedAt: nowISO() }; newContacts.push(n); it.p.contactId = n.id; }
+  }
+  const dups = plan.filter(x => x.ex);
+  const cnt = k => plan.reduce((n, x) => n + x[k].length, 0);
+  const todoCount = plan.reduce((n, x) => n + x.meetings.reduce((m, mt) => m + parseTodos(mt.notes, mt.datetime.slice(0, 10)).length, 0), 0);
+  const m = openModal({ title: '匯入 SI 專案：預覽', size: 'wide', body: `
+    <p class="small muted" style="margin-top:0">檔案：${esc(file.name)}</p>
+    <div class="stat-row"><div class="stat ok"><b>${plan.length - dups.length}</b>新專案</div><div class="stat dup"><b>${dups.length}</b>與現有專案重複</div>
+      <div class="stat"><b>${cnt('costs')}</b>成本項目</div><div class="stat"><b>${cnt('payments')}</b>收款期別</div><div class="stat"><b>${cnt('meetings')}</b>會議（待辦 ${todoCount}）</div><div class="stat bad"><b>${errors.length}</b>錯誤</div></div>
+    ${newCustomers.size || newVendors.size || newStaff.size || newContacts.length ? `<div class="notice info small">將一併新增：${[newCustomers.size ? `客戶 ${newCustomers.size} 家（${[...newCustomers.values()].map(c => esc(c.name)).join('、')}）` : '', newContacts.length ? `客戶承辦人 ${newContacts.length} 位` : '', newVendors.size ? `供應商 ${newVendors.size} 家` : '', newStaff.size ? `人員 ${[...newStaff].map(esc).join('、')}` : ''].filter(Boolean).join('；')}。${newCustomers.size ? '<br>新客戶只建立名稱與統編，其他資料請到「客戶管理」補充；若是名稱寫法不同造成，請先修正檔案中的客戶名稱。' : ''}</div>` : ''}
+    ${warns.length ? `<div class="notice warn small">${warns.map(esc).join('<br>')}</div>` : ''}
+    ${errors.length ? `<div class="field"><label>錯誤原因（這些列不會匯入）</label><ul class="err-list">${errors.slice(0, 300).map(e => `<li>${esc(e)}</li>`).join('')}</ul></div>` : ''}
+    ${dups.length ? `<div class="field" style="margin-top:12px"><label>重複專案（同客戶、同專案名稱）</label>
+      <div class="row" style="margin-bottom:6px"><button class="btn sm" id="sAllSkip">全部略過</button><button class="btn sm" id="sAllUpd">全部更新</button></div>
+      <div class="hint" style="margin-bottom:6px">「更新」只覆蓋檔案中有填寫的欄位；成本、收款、會議會新增到該專案（完全相同的項目不重複新增）。</div>
+      <div class="scroll-box"><table class="list"><thead><tr><th>列</th><th>專案</th><th>客戶</th><th>處理</th></tr></thead><tbody>
+      ${dups.map((d, i) => `<tr><td>${d.row}</td><td>${esc(d.p.name)}</td><td>${esc(d.cust.name)}</td><td><select class="input" data-sdup="${i}" style="min-height:34px;padding:4px 8px"><option value="skip">略過</option><option value="update">更新</option></select></td></tr>`).join('')}</tbody></table></div></div>` : ''}
+    <div class="field" style="margin-top:12px"><label>預覽（前 30 個專案）</label><div class="scroll-box"><table class="list"><thead><tr><th>列</th><th>專案名稱</th><th>客戶</th><th>狀態</th><th>PM／業務</th><th>成本</th><th>收款</th><th>會議</th></tr></thead><tbody>
+      ${plan.slice(0, 30).map(x => `<tr><td>${x.row}</td><td>${esc(x.p.name)}${x.ex ? ' <span class="badge prospect">重複</span>' : ''}</td><td>${esc(x.cust.name)}${x.cust.existing ? '' : ' <span class="badge type">新客戶</span>'}</td><td>${pjBadge(x.p.status)}</td><td>${esc([x.p.pm, x.p.sales].filter(Boolean).join('／'))}</td><td>${x.costs.length}</td><td>${x.payments.length}</td><td>${x.meetings.length}</td></tr>`).join('')}</tbody></table></div></div>`,
+    footer: `<button class="btn" data-close>取消</button><button class="btn primary" id="sDoImp">開始匯入</button>` });
+  $$('[data-sdup]', m.el).forEach(sel => sel.addEventListener('change', () => { dups[Number(sel.dataset.sdup)].action = sel.value; }));
+  const setAll = a => { dups.forEach(d => { d.action = a; }); $$('[data-sdup]', m.el).forEach(sel => { sel.value = a; }); };
+  const b1 = $('#sAllSkip', m.el), b2 = $('#sAllUpd', m.el); if (b1) b1.addEventListener('click', () => setAll('skip')); if (b2) b2.addEventListener('click', () => setAll('update'));
+  $('#sDoImp', m.el).addEventListener('click', async () => {
+    const add = plan.filter(x => x.action === 'add'), upd = plan.filter(x => x.action === 'update');
+    if (!add.length && !upd.length) return toast('沒有要新增或更新的專案', 'warn');
+    if (!await confirmDialog(`確定匯入？\n新增專案 ${add.length} 個、更新 ${upd.length} 個、略過 ${plan.length - add.length - upd.length} 個；錯誤列 ${errors.length} 列不會匯入。`, { okText: '開始匯入' })) return;
+    const r = await guard(() => commitSITemplate(add, upd, newCustomers, newContacts, newVendors, newStaff));
+    if (r) { m.close(); resultDialog('SI 專案匯入完成', [`新增專案 ${r.add} 個、更新 ${r.upd} 個`, `成本 ${r.costs} 筆、收款 ${r.pays} 筆、會議 ${r.meets} 筆、待辦 ${r.todos} 筆`, r.custs ? `新增客戶 ${r.custs} 家` : '', r.vendors ? `新增供應商 ${r.vendors} 家` : '', errors.length ? `未匯入（錯誤）${errors.length} 列` : ''], errors); state.page = 'si'; state.projectId = null; state.si.tab = 'list'; if (location.hash !== '#/si') location.hash = '#/si'; else render(); }
+  });
+}
+async function commitSITemplate(add, upd, newCustomers, newContacts, newVendors, newStaff) {
+  const now = nowISO(); const r = { add: 0, upd: 0, costs: 0, pays: 0, meets: 0, todos: 0, custs: 0, vendors: 0 };
+  const used = new Set(add.concat(upd).map(x => x.cust.id));
+  await DB.tx(['customers', 'contacts', 'projects', 'meetings', 'todos', 'meta'], 'readwrite', async s => {
+    for (const c of newCustomers.values()) if (used.has(c.id)) { s.customers.put(Object.assign(blankCustomer(), c, { createdAt: now, updatedAt: now })); r.custs++; }
+    for (const ct of newContacts) if (used.has(ct.customerId)) s.contacts.put(ct);
+    const vend = (await req(s.meta.get('vendors')) || { value: [] }).value.slice();
+    for (const v of newVendors.values()) if (!vend.some(x => normName(x.name) === normName(v.name))) { vend.push(v); r.vendors++; }
+    s.meta.put({ key: 'vendors', value: vend });
+    const staff = (await req(s.meta.get('staff')) || { value: [] }).value.slice();
+    for (const n of newStaff) if (!staff.includes(n)) staff.push(n);
+    s.meta.put({ key: 'staff', value: staff });
+    const writeChildren = (pid, it) => {
+      for (const mt of it.meetings) {
+        const meeting = Object.assign({ projectId: pid, createdAt: now, updatedAt: now }, mt); s.meetings.put(meeting); r.meets++;
+        for (const td of parseTodos(mt.notes, mt.datetime.slice(0, 10))) { s.todos.put({ id: uid(), projectId: pid, meetingId: meeting.id, key: td.key, text: td.text, owner: td.owner, dueDate: td.due, done: td.done, doneAt: td.done ? now : '', createdAt: now, updatedAt: now }); r.todos++; }
+      }
+    };
+    for (const it of add) {
+      const p = Object.assign({}, it.p, { id: uid(), costs: it.costs, payments: it.payments, statusHistory: [{ from: '', to: it.p.status, at: now }], createdAt: now, updatedAt: now });
+      s.projects.put(p); r.add++; r.costs += it.costs.length; r.pays += it.payments.length; writeChildren(p.id, it);
+    }
+    for (const it of upd) {
+      const cur = await req(s.projects.get(it.ex.id)); if (!cur) continue;
+      for (const k of it.filled) {
+        if (['name', 'customer', 'taxId'].includes(k)) continue;
+        if (k.startsWith('ca')) cur.costAnalysis = it.p.costAnalysis; else cur[k] = it.p[k];
+      }
+      if (it.filled.includes('contactName')) cur.contactId = it.p.contactId;
+      if (it.filled.includes('status') && it.ex.status !== it.p.status) (cur.statusHistory = cur.statusHistory || []).push({ from: it.ex.status, to: it.p.status, at: now });
+      const same = (a, b, ks) => ks.every(k => String(a[k]) === String(b[k]));
+      cur.costs = cur.costs || []; for (const c of it.costs) if (!cur.costs.some(x => same(x, c, ['vendor', 'item', 'qty', 'unitCost']))) { cur.costs.push(c); r.costs++; }
+      cur.payments = cur.payments || []; for (const x of it.payments) if (!cur.payments.some(y => same(y, x, ['term', 'amount']))) { cur.payments.push(x); r.pays++; }
+      const exMeet = await req(s.meetings.index('projectId').getAll(cur.id));
+      it.meetings = it.meetings.filter(mt => !exMeet.some(e => e.datetime === mt.datetime && (e.title || '') === (mt.title || '')));
+      cur.updatedAt = now; s.projects.put(cur); r.upd++; writeChildren(cur.id, it);
+    }
+  });
+  vendorList = (await DB.getMeta('vendors')) || []; staffList = (await DB.getMeta('staff')) || [];
+  await Promise.all([Store.loadCustomers(), PJ.load()]);
+  return r;
 }
 
 /* ============================================================
