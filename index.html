@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-MQxK58w2amxN4roxKtEz3h7zcDLHYaJnGijzQl+Arfw='; style-src 'unsafe-inline'; img-src blob: data:; connect-src 'none'; font-src 'none'; media-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; form-action 'none'; base-uri 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-qH5Y83ja2ogivLqrvCFAnMRt3yBAYxthjzEM/HbEUcY='; style-src 'unsafe-inline'; img-src blob: data:; connect-src 'none'; font-src 'none'; media-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; form-action 'none'; base-uri 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#0f2747">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -301,6 +301,10 @@ textarea.input{min-height:90px;resize:vertical}
   .todo{flex-wrap:wrap}.todo-acts{width:100%;justify-content:flex-end}
   .mini-kpis{grid-template-columns:1fr 1fr}
 }
+.ca-box{border:1px solid #f5d2ab;background:var(--orange-l);border-radius:var(--radius);padding:12px 14px;margin-bottom:14px}
+.ca-box.done{border-color:#b9e2c9;background:var(--ok-l)}
+.ca-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ca-box .meta{display:flex;gap:4px 14px;flex-wrap:wrap;color:var(--muted);margin-top:6px}
 
 </style>
 </head>
@@ -332,7 +336,7 @@ textarea.input{min-height:90px;resize:vertical}
  * Alley's Systex CRM V1 — 核心：常數、工具、資料庫、服務
  * 所有資料僅存於本機瀏覽器 IndexedDB，程式不發出任何網路請求。
  * ============================================================ */
-const APP = { name: "Alley's Systex CRM", version: '1.2.0', schemaVersion: 3, dbName: 'alley_systex_crm', dbVersion: 3 };
+const APP = { name: "Alley's Systex CRM", version: '1.3.0', schemaVersion: 3, dbName: 'alley_systex_crm', dbVersion: 3 };
 
 const INDUSTRIES = ['公部門', '工具機', '半導體', '設備機械', '手工具', '自行車', '塑膠射出', '五金加工', '建築', '醫療單位', '化妝品', '家居行業', '零售業'];
 const REGIONS = ['基隆市', '臺北市', '新北市', '桃園市', '新竹市', '新竹縣', '苗栗縣', '臺中市', '彰化縣', '南投縣', '雲林縣', '嘉義市', '嘉義縣', '臺南市', '高雄市', '屏東縣', '宜蘭縣', '花蓮縣', '臺東縣', '澎湖縣', '金門縣', '連江縣'];
@@ -1762,13 +1766,14 @@ const SI_COLS = {
   projects: [['專案ID', 'id'], ['客戶ID', 'customerId'], ['客戶名稱（參考）', '_cname', 'ref'], ['專案名稱', 'name'], ['專案狀態', 'status', 'pjst'], ['客戶承辦人ID', 'contactId'], ['客戶承辦人', 'contactName'],
     ['PM', 'pm'], ['業務', 'sales'], ['簽約形式', 'contractType'], ['簽約狀態', 'signStatus'], ['是否公告', 'announced', 'bool'], ['公告日期', 'announceDate', 'date'], ['標案案號', 'announceNo'],
     ['合約總金額（含稅）', 'amount'], ['預計開始日', 'startDate', 'date'], ['預計結束日', 'endDate', 'date'], ['下次跟進日期', 'nextFollowUpDate', 'date'], ['驗收日期', 'acceptanceDate', 'date'], ['驗收條件', 'acceptanceTerms'],
-    ['合約到期日', 'contractEndDate', 'date'], ['重要事項', 'important'], ['狀態歷程', 'statusHistory', 'json'], ['建立時間', 'createdAt', 'iso'], ['最後修改時間', 'updatedAt', 'iso']],
-  costs: [['專案ID', 'projectId'], ['專案名稱（參考）', '_pname', 'pref'], ['項目ID', 'id'], ['合作廠商', 'vendor'], ['產品／服務', 'item'], ['數量', 'qty'], ['成本單價（含稅）', 'unitCost'], ['廠商已提供成本', 'quoted', 'bool'], ['報價日期', 'quoteDate', 'date'], ['備註', 'note']],
+    ['合約到期日', 'contractEndDate', 'date'], ['重要事項', 'important'], ['業務成本分析', 'costAnalysis', 'json'], ['狀態歷程', 'statusHistory', 'json'], ['建立時間', 'createdAt', 'iso'], ['最後修改時間', 'updatedAt', 'iso']],
+  costs: [['專案ID', 'projectId'], ['專案名稱（參考）', '_pname', 'pref'], ['項目ID', 'id'], ['廠商ID', 'vendorId'], ['合作廠商', 'vendor'], ['產品／服務', 'item'], ['數量', 'qty'], ['成本單價（含稅）', 'unitCost'], ['廠商已提供成本', 'quoted', 'bool'], ['報價日期', 'quoteDate', 'date'], ['備註', 'note']],
   payments: [['專案ID', 'projectId'], ['專案名稱（參考）', '_pname', 'pref'], ['期別ID', 'id'], ['期別', 'term'], ['金額（含稅）', 'amount'], ['預計收款日', 'dueDate', 'date'], ['實收日', 'paidDate', 'date'], ['發票號碼', 'invoiceNo'], ['備註', 'note']],
   meetings: [['會議ID', 'id'], ['專案ID', 'projectId'], ['專案名稱（參考）', '_pname', 'pref'], ['會議時間', 'datetime', 'dt'], ['會議主題', 'title'], ['地點', 'location'], ['與會者', 'attendees'], ['會議紀錄', 'notes'], ['建立時間', 'createdAt', 'iso'], ['最後修改時間', 'updatedAt', 'iso']],
   todos: [['待辦ID', 'id'], ['專案ID', 'projectId'], ['專案名稱（參考）', '_pname', 'pref'], ['會議ID', 'meetingId'], ['待辦內容', 'text'], ['負責人', 'owner'], ['到期日', 'dueDate', 'date'], ['已完成', 'done', 'bool'], ['完成時間', 'doneAt', 'iso'], ['比對鍵', 'key'], ['建立時間', 'createdAt', 'iso'], ['最後修改時間', 'updatedAt', 'iso']]
 };
-const SI_SHEETS = { projects: 'SI專案', costs: 'SI專案成本', payments: 'SI專案收款', meetings: 'SI會議紀錄', todos: 'SI待辦事項' };
+SI_COLS.vendors = [['廠商ID', 'id'], ['廠商名稱', 'name'], ['類別', 'category'], ['統一編號', 'taxId'], ['聯絡窗口', 'contact'], ['電話', 'phone'], ['電子郵件', 'email'], ['備註', 'note'], ['建立時間', 'createdAt', 'iso'], ['最後修改時間', 'updatedAt', 'iso']];
+const SI_SHEETS = { vendors: 'SI供應商', projects: 'SI專案', costs: 'SI專案成本', payments: 'SI專案收款', meetings: 'SI會議紀錄', todos: 'SI待辦事項' };
 function outVal(kind, v) {
   if (kind === 'bool') return v ? '是' : '否';
   if (kind === 'arch') return v ? '已封存' : '未封存';
@@ -1799,6 +1804,7 @@ async function exportBackup() {
     { name: SHEET_NAMES.contacts, rows: toRows('contacts', d.contacts, nameOf) },
     { name: SHEET_NAMES.activities, rows: toRows('activities', acts, nameOf) },
     { name: SI_SHEETS.projects, rows: toRows('projects', d.projects, nameOf, pnameOf) },
+    { name: SI_SHEETS.vendors, rows: toRows('vendors', vendorList, nameOf, pnameOf) },
     { name: SI_SHEETS.costs, rows: toRows('costs', d.projects.flatMap(p => (p.costs || []).map(c => Object.assign({ projectId: p.id }, c))), nameOf, pnameOf) },
     { name: SI_SHEETS.payments, rows: toRows('payments', d.projects.flatMap(p => (p.payments || []).map(c => Object.assign({ projectId: p.id }, c))), nameOf, pnameOf) },
     { name: SI_SHEETS.meetings, rows: toRows('meetings', d.meetings.sort((a, b) => (a.datetime || '').localeCompare(b.datetime || '')), nameOf, pnameOf) },
@@ -2039,6 +2045,12 @@ async function importBackupFlow(file) {
     const inds = split(meta['自訂產業']).filter(i => !industryList().includes(i)), staff = split(meta['人員清單']).filter(i => !staffList.includes(i));
     if (inds.length) { customIndustries = customIndustries.concat(inds); await DB.setMeta('customIndustries', customIndustries); }
     if (staff.length) await PJ.setStaff(staffList.concat(staff));
+    if (si.vendors.length) { // 供應商主檔：依廠商ID 或名稱合併
+      const list = vendorList.slice();
+      for (const v of si.vendors) { const i = list.findIndex(x => x.id === v.id || normName(x.name) === normName(v.name)); if (i < 0) list.push(v); else if (list[i].id === v.id) list[i] = Object.assign({}, list[i], v); }
+      await saveVendors(list);
+    }
+    try { await migrateVendors(); } catch (e) { console.error(e); }
   };
   $('#doImp', m.el).addEventListener('click', async () => {
     const mode = $('input[name=impMode]:checked', m.el).value;
@@ -2297,8 +2309,11 @@ function combinedToParsed(rows, errors, warn) {
 
 /* ---------- 解析備份中的 SI 專案工作表 ---------- */
 function parseSIBackup(book, custMap, errors) {
-  const out = { present: !!book[SI_SHEETS.projects], projects: [], meetings: [], todos: [] };
+  const out = { present: !!book[SI_SHEETS.projects], projects: [], meetings: [], todos: [], vendors: [] };
   if (!out.present) return out;
+  out.vendors = (book[SI_SHEETS.vendors] ? rowsToObjects(book[SI_SHEETS.vendors], SI_COLS.vendors).list : []).filter(o => String(o.name || '').trim())
+    .map(o => ({ id: String(o.id || '').trim() || uid(), name: String(o.name).trim(), category: String(o.category || '').trim(), taxId: String(o.taxId || '').trim(), contact: String(o.contact || '').trim(),
+      phone: String(o.phone || '').trim(), email: String(o.email || '').trim(), note: String(o.note || '').trim(), createdAt: String(o.createdAt || ''), updatedAt: String(o.updatedAt || '') }));
   const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   const rows = k => book[SI_SHEETS[k]] ? rowsToObjects(book[SI_SHEETS[k]], SI_COLS[k]).list : [];
   const s = (o, k) => String(o[k] == null ? '' : o[k]).trim();
@@ -2314,6 +2329,7 @@ function parseSIBackup(book, custMap, errors) {
     p.announced = parseBool(o.announced) === true;
     p.amount = p.amount === '' ? '' : parseMoney(p.amount); if (p.amount !== '' && isNaN(p.amount)) errs.push('合約總金額不是數字');
     for (const k of ['announceDate', 'startDate', 'endDate', 'nextFollowUpDate', 'acceptanceDate', 'contractEndDate']) { const d = parseDate(o[k]); if (d === null) errs.push(`日期格式錯誤：${s(o, k)}`); p[k] = d || ''; }
+    try { p.costAnalysis = s(o, 'costAnalysis') ? JSON.parse(s(o, 'costAnalysis')) : null; } catch (e) { p.costAnalysis = null; }
     try { p.statusHistory = s(o, 'statusHistory') ? JSON.parse(s(o, 'statusHistory')) : []; if (!Array.isArray(p.statusHistory)) p.statusHistory = []; } catch (e) { p.statusHistory = []; }
     if (errs.length) { errors.push(`SI專案 第 ${o._row} 列（${p.name || '未命名'}）：${errs.join('；')}`); continue; }
     const src = p.id; p.id = UUID_RE.test(src) ? src : uid(); p.customerId = custMap.get(p.customerId); p.costs = []; p.payments = [];
@@ -2321,7 +2337,7 @@ function parseSIBackup(book, custMap, errors) {
   }
   for (const o of rows('costs')) {
     const p = pMap.get(s(o, 'projectId')); if (!p) { errors.push(`SI專案成本 第 ${o._row} 列：找不到對應的專案`); continue; }
-    p.costs.push({ id: s(o, 'id') || uid(), vendor: s(o, 'vendor'), item: s(o, 'item'), qty: Number(s(o, 'qty')) || 0, unitCost: parseMoney(s(o, 'unitCost')) || 0, quoted: parseBool(o.quoted) === true, quoteDate: parseDate(o.quoteDate) || '', note: s(o, 'note') });
+    p.costs.push({ id: s(o, 'id') || uid(), vendorId: s(o, 'vendorId'), vendor: s(o, 'vendor'), item: s(o, 'item'), qty: Number(s(o, 'qty')) || 0, unitCost: parseMoney(s(o, 'unitCost')) || 0, quoted: parseBool(o.quoted) === true, quoteDate: parseDate(o.quoteDate) || '', note: s(o, 'note') });
   }
   for (const o of rows('payments')) {
     const p = pMap.get(s(o, 'projectId')); if (!p) { errors.push(`SI專案收款 第 ${o._row} 列：找不到對應的專案`); continue; }
@@ -2651,7 +2667,7 @@ const PJ = {
   blank() {
     return { id: '', customerId: '', name: '', status: 'idea', contactId: '', contactName: '', pm: '', sales: '', contractType: '', signStatus: '未簽約',
       announced: false, announceDate: '', announceNo: '', amount: '', startDate: '', endDate: '', nextFollowUpDate: '', acceptanceDate: '', acceptanceTerms: '',
-      contractEndDate: '', important: '', costs: [], payments: [], statusHistory: [], createdAt: '', updatedAt: '' };
+      contractEndDate: '', important: '', costAnalysis: null, costs: [], payments: [], statusHistory: [], createdAt: '', updatedAt: '' };
   },
   async save(data) {
     const now = nowISO();
@@ -2673,7 +2689,7 @@ const PJ = {
       if (data.id) {
         const old = await req(s.projects.get(data.id));
         if (!old) throw new Error('找不到此專案，可能已被刪除');
-        p.createdAt = old.createdAt; p.costs = data.costs || old.costs || []; p.payments = data.payments || old.payments || [];
+        p.createdAt = old.createdAt; p.costs = data.costs || old.costs || []; p.payments = data.payments || old.payments || []; p.costAnalysis = data.costAnalysis !== undefined ? data.costAnalysis : (old.costAnalysis || null);
         p.statusHistory = old.statusHistory || [];
         if (old.status !== p.status) p.statusHistory.push({ from: old.status, to: p.status, at: now });
       } else {
@@ -2796,6 +2812,73 @@ async function addStaff(name) {
 function customerName(id) { const c = Store.customer(id); return c ? c.name : '（客戶已刪除）'; }
 function isGovCustomer(id) { const c = Store.customer(id); return !!(c && c.industry === '公部門'); }
 
+/* ---------- 金額顯示控制（預設隱藏） ---------- */
+function loadMoneyPref() { try { return localStorage.getItem('crm_showMoney') === '1'; } catch (e) { return false; } }
+function moneyVisible() { return !!state.showMoney; }
+function setMoneyVisible(v) { state.showMoney = !!v; try { localStorage.setItem('crm_showMoney', v ? '1' : '0'); } catch (e) { /* 無法保存時只在本次有效 */ } }
+const MASK = '＊＊＊';
+function ntm(n) { if (n == null || n === '' || isNaN(n)) return ''; return moneyVisible() ? nt(n) : MASK; }
+function pctm(p) { return p == null ? '' : moneyVisible() ? p.toFixed(1) + '%' : MASK; }
+function moneyToggleHtml() { return `<button class="btn sm" data-money-toggle title="切換是否顯示金額、成本與 GP">${moneyVisible() ? '🙈 隱藏金額' : '👁 顯示金額'}</button>`; }
+function bindMoneyToggle(root) { $$('[data-money-toggle]', root).forEach(b => b.addEventListener('click', () => { setMoneyVisible(!moneyVisible()); render(); })); }
+
+/* ---------- 供應商（合作廠商）主檔：meta.vendors ---------- */
+let vendorList = [];
+function vendorById(id) { return vendorList.find(v => v.id === id); }
+function vendorName(c) { const v = c.vendorId && vendorById(c.vendorId); return v ? v.name : (c.vendor || ''); }
+async function saveVendors(list) { await DB.setMeta('vendors', list); vendorList = list; }
+async function saveVendor(data) {
+  const name = String(data.name || '').trim();
+  if (!name) throw new Error('請輸入廠商名稱');
+  const dup = vendorList.find(v => v.id !== data.id && normName(v.name) === normName(name));
+  if (dup) throw new Error(`已有相同名稱的廠商「${dup.name}」`);
+  const now = nowISO();
+  const v = { id: data.id || uid(), name, category: String(data.category || '').trim(), taxId: String(data.taxId || '').trim(), contact: String(data.contact || '').trim(),
+    phone: String(data.phone || '').trim(), email: String(data.email || '').trim(), note: String(data.note || '').trim(), createdAt: data.createdAt || now, updatedAt: now };
+  if (v.email && !isEmail(v.email)) throw new Error('電子郵件格式不正確');
+  const list = vendorList.filter(x => x.id !== v.id).concat([v]);
+  await saveVendors(list);
+  // 改名時同步更新各專案成本中的廠商名稱快照
+  await DB.tx('projects', 'readwrite', async s => {
+    const ps = await req(s.projects.getAll());
+    for (const p of ps) { let ch = false; (p.costs || []).forEach(c => { if (c.vendorId === v.id && c.vendor !== v.name) { c.vendor = v.name; ch = true; } }); if (ch) s.projects.put(p); }
+  });
+  await PJ.load();
+  return v;
+}
+async function removeVendor(id) { await saveVendors(vendorList.filter(v => v.id !== id)); }
+/** 舊資料：成本中只有廠商名稱時，自動建立供應商主檔並連結 */
+async function migrateVendors() {
+  await PJ.load();
+  const list = vendorList.slice(); let changed = false;
+  const byName = n => list.find(v => normName(v.name) === normName(n));
+  const orphan = c => c.vendor && (!c.vendorId || !list.some(v => v.id === c.vendorId));
+  for (const p of PJ.projects) for (const c of p.costs || []) if (orphan(c) && !byName(c.vendor)) { list.push({ id: uid(), name: c.vendor, category: '', taxId: '', contact: '', phone: '', email: '', note: '', createdAt: nowISO(), updatedAt: nowISO() }); changed = true; }
+  if (changed) await saveVendors(list);
+  const need = PJ.projects.some(p => (p.costs || []).some(orphan));
+  if (!need) return;
+  await DB.tx('projects', 'readwrite', async s => {
+    const ps = await req(s.projects.getAll());
+    for (const p of ps) { let ch = false; (p.costs || []).forEach(c => { if (orphan(c)) { const v = byName(c.vendor); if (v) { c.vendorId = v.id; ch = true; } } }); if (ch) s.projects.put(p); }
+  });
+  await PJ.load();
+}
+/** 供應商往來統計 */
+function vendorStats() {
+  const map = new Map();
+  vendorList.forEach(v => map.set(v.id, { v, projects: new Set(), customers: new Set(), items: [], products: new Set(), pending: 0, total: 0, last: '' }));
+  for (const p of PJ.projects) for (const c of p.costs || []) {
+    const key = c.vendorId && map.has(c.vendorId) ? c.vendorId : null; if (!key) continue;
+    const s = map.get(key);
+    s.projects.add(p.id); s.customers.add(p.customerId); s.items.push({ p, c });
+    if (c.item) s.products.add(c.item);
+    if (!c.quoted) s.pending++;
+    s.total += (Number(c.qty) || 0) * (Number(c.unitCost) || 0);
+    const d = c.quoteDate || (p.updatedAt || '').slice(0, 10); if (d > s.last) s.last = d;
+  }
+  return [...map.values()];
+}
+
 /* ============================================================
  * F. SI 專案管理 — 介面：總覽、專案表單、詳細頁
  * ============================================================ */
@@ -2809,7 +2892,7 @@ function openProject(id, tab = 'info') {
   render();
 }
 function siTabs(active) {
-  const tabs = [['list', '專案總覽'], ['gantt', '甘特圖'], ['todos', '待辦事項'], ['expiry', '合約到期']];
+  const tabs = [['list', '專案總覽'], ['gantt', '甘特圖'], ['todos', '待辦事項'], ['expiry', '合約到期'], ['vendors', '供應商']];
   return `<div class="tabs" role="tablist">${tabs.map(([k, t]) => `<button class="tab${active === k ? ' active' : ''}" data-si-tab="${k}">${t}</button>`).join('')}</div>`;
 }
 async function renderSI(el) {
@@ -2817,7 +2900,8 @@ async function renderSI(el) {
   if (state.projectId) return renderProject(el);
   const tab = state.si.tab;
   el.innerHTML = `<div class="toolbar"><button class="btn primary" id="pjNew">＋ 新增專案</button><button class="btn accent" id="pjWeekly">📊 產生週報</button>
-    <span class="spacer"></span><span class="small muted">金額皆為含稅；GP = 合約總金額 − 成本合計</span></div>${siTabs(tab)}<div id="siBody"></div>`;
+    <span class="spacer"></span>${moneyVisible() ? '<span class="small muted">金額皆為含稅；GP = 合約總金額 − 成本合計</span>' : ''}${moneyToggleHtml()}</div>${siTabs(tab)}<div id="siBody"></div>`;
+  bindMoneyToggle(el);
   $('#pjNew', el).addEventListener('click', () => projectForm());
   $('#pjWeekly', el).addEventListener('click', () => weeklyReportDialog());
   $$('[data-si-tab]', el).forEach(b => b.addEventListener('click', () => { state.si.tab = b.dataset.siTab; render(); }));
@@ -2825,6 +2909,7 @@ async function renderSI(el) {
   if (tab === 'gantt') return renderGantt(body);
   if (tab === 'todos') return renderTodoBoard(body);
   if (tab === 'expiry') return renderExpiry(body);
+  if (tab === 'vendors') return renderVendors(body);
   return renderProjectList(body);
 }
 
@@ -2868,15 +2953,16 @@ function renderProjectList(body) {
     const th = (key, label) => `<th class="sortable" data-sort="${key}">${label}${f.sort === key ? ` <span class="sort-ind">${f.dir === 'asc' ? '▲' : '▼'}</span>` : ''}</th>`;
     const box = $('#plist', body);
     if (!list.length) { box.innerHTML = `<div class="card empty">${PJ.projects.length ? '沒有符合條件的專案。' : '尚無專案，請按「＋ 新增專案」開始建立。'}</div>`; return; }
-    box.innerHTML = `<div class="stat-row"><div class="stat"><b>${list.length}</b>專案數</div><div class="stat"><b>${nt(sumAmt)}</b>合約總金額</div><div class="stat ok"><b>${nt(sumGP)}</b>GP 合計${sumAmt ? `（${(sumGP / sumAmt * 100).toFixed(1)}%）` : ''}</div></div>
-    <div class="tablewrap cards"><table class="list"><thead><tr>${th('name', '專案名稱')}${th('customer', '客戶')}${th('status', '狀態')}<th>簽約</th>${th('amount', '合約金額')}${th('gp', 'GP%')}<th>PM／業務</th>${th('nextFollowUpDate', '下次跟進')}${th('contractEndDate', '合約到期')}</tr></thead><tbody>
+    const mv = moneyVisible();
+    box.innerHTML = `<div class="stat-row"><div class="stat"><b>${list.length}</b>專案數</div>${mv ? `<div class="stat"><b>${nt(sumAmt) || 'NT$ 0'}</b>合約總金額</div><div class="stat ok"><b>${nt(sumGP) || 'NT$ 0'}</b>GP 合計${sumAmt ? `（${(sumGP / sumAmt * 100).toFixed(1)}%）` : ''}</div>` : ''}</div>
+    <div class="tablewrap cards"><table class="list"><thead><tr>${th('name', '專案名稱')}${th('customer', '客戶')}${th('status', '狀態')}<th>簽約</th>${mv ? th('amount', '合約金額') + th('gp', 'GP%') : ''}<th>PM／業務</th>${th('nextFollowUpDate', '下次跟進')}${th('contractEndDate', '合約到期')}</tr></thead><tbody>
     ${list.map(p => { const g = pjGP(p); const open = PJ.todosOf(p.id).filter(t => !t.done).length; return `<tr class="clickable" data-id="${esc(p.id)}">
-      <td class="name" data-label="專案名稱">${esc(p.name)}${open ? ` <span class="badge type" title="未完成待辦">待辦 ${open}</span>` : ''}</td>
+      <td class="name" data-label="專案名稱">${esc(p.name)}${open ? ` <span class="badge type" title="未完成待辦">待辦 ${open}</span>` : ''}${p.costAnalysis && p.costAnalysis.done ? ' <span class="badge active" title="業務已完成成本分析">成本✓</span>' : ''}</td>
       <td data-label="客戶">${esc(customerName(p.customerId))}</td>
       <td data-label="狀態">${pjBadge(p.status)}</td>
       <td data-label="簽約" class="${p.contractType || p.signStatus ? '' : 'empty-cell'}"><span class="small">${esc([p.contractType, p.signStatus].filter(Boolean).join('・'))}</span></td>
-      <td data-label="合約金額" class="${p.amount !== '' ? '' : 'empty-cell'}">${nt(p.amount)}</td>
-      <td data-label="GP%" class="${g.pct == null ? 'empty-cell' : ''}">${g.pct == null ? '' : `<span style="color:${g.gp < 0 ? 'var(--danger)' : 'inherit'}">${g.pct.toFixed(1)}%</span>`}</td>
+      ${mv ? `<td data-label="合約金額" class="${p.amount !== '' ? '' : 'empty-cell'}">${nt(p.amount)}</td>
+      <td data-label="GP%" class="${g.pct == null ? 'empty-cell' : ''}">${g.pct == null ? '' : `<span style="color:${g.gp < 0 ? 'var(--danger)' : 'inherit'}">${g.pct.toFixed(1)}%</span>`}</td>` : ''}
       <td data-label="PM／業務" class="${p.pm || p.sales ? '' : 'empty-cell'}">${esc([p.pm, p.sales].filter(Boolean).join('／'))}</td>
       <td data-label="下次跟進">${followBadge(p.nextFollowUpDate)}</td>
       <td data-label="合約到期">${expiryBadge(p.contractEndDate)}</td></tr>`; }).join('')}</tbody></table></div>`;
@@ -2987,7 +3073,7 @@ async function projectForm(existing, presetCustomerId) {
 }
 
 /* ---------- 專案詳細頁 ---------- */
-const PJ_TABS = [['info', '基本資料'], ['cost', '成本與 GP'], ['meetings', '會議紀錄'], ['todos', '待辦事項'], ['payment', '驗收與收款'], ['notes', '重要事項與歷程']];
+const PJ_TABS = [['info', '基本資料'], ['cost', '合作廠商與成本'], ['meetings', '會議紀錄'], ['todos', '待辦事項'], ['payment', '驗收與收款'], ['notes', '重要事項與歷程']];
 async function renderProject(el) {
   const p = PJ.get(state.projectId);
   if (!p) { el.innerHTML = `<div class="notice danger">找不到此專案，可能已被刪除。</div><button class="btn" id="pjBack2">← 返回專案總覽</button>`; $('#pjBack2', el).addEventListener('click', () => { state.projectId = null; render(); }); return; }
@@ -2999,17 +3085,18 @@ async function renderProject(el) {
     <button class="btn link" id="pjBack" style="margin-bottom:8px;padding-left:0">← 返回專案總覽</button>
     <div class="detail-head"><div style="flex:1;min-width:0"><h2>${esc(p.name)}</h2>
       <div class="row small muted" style="margin-top:6px;gap:8px">${pjBadge(p.status)}<a href="#" id="pjCust">${esc(customerName(p.customerId))}</a>${p.contractType ? `<span>・${esc(p.contractType)}</span>` : ''}${p.signStatus ? `<span>・${esc(p.signStatus)}</span>` : ''}</div></div>
-      <div class="row"><button class="btn" id="pjEdit">編輯</button><button class="btn danger" id="pjDel">刪除</button></div></div>
+      <div class="row">${moneyToggleHtml()}<button class="btn" id="pjEdit">編輯</button><button class="btn danger" id="pjDel">刪除</button></div></div>
     <div class="stepper">${PJ_STATUS.map((s, i) => `<button class="step${i < idx ? ' done' : ''}${i === idx ? ' cur' : ''}" data-set-status="${s.k}" title="切換為「${s.t}」"><i>${i < idx ? '✓' : i + 1}</i>${s.t}</button>`).join('')}</div>
     <div class="mini-kpis">
-      <div><span>合約總金額</span><b>${nt(p.amount) || '—'}</b></div><div><span>成本合計</span><b>${nt(g.cost) || '—'}</b></div>
-      <div><span>GP</span><b style="color:${g.gp < 0 ? 'var(--danger)' : 'var(--ok)'}">${p.amount !== '' ? nt(g.gp) + (g.pct != null ? `（${g.pct.toFixed(1)}%）` : '') : '—'}</b>${p.amount !== '' && !(p.costs || []).length ? '<span class="small">尚未輸入成本</span>' : ''}</div>
-      <div><span>已收款</span><b>${pi.total ? nt(pi.paid) + (pi.pct != null ? `（${pi.pct.toFixed(0)}%）` : '') : '—'}</b></div>
+      <div><span>合約總金額</span><b>${ntm(p.amount) || '—'}</b></div><div><span>成本合計</span><b>${(p.costs || []).length ? ntm(g.cost) : '—'}</b></div>
+      <div><span>GP</span><b style="color:${!moneyVisible() ? 'inherit' : g.gp < 0 ? 'var(--danger)' : 'var(--ok)'}">${p.amount !== '' ? ntm(g.gp) + (g.pct != null && moneyVisible() ? `（${g.pct.toFixed(1)}%）` : '') : '—'}</b>${p.amount !== '' && !(p.costs || []).length ? '<span class="small">尚未輸入成本</span>' : ''}</div>
+      <div><span>收款進度</span><b>${pi.total ? (moneyVisible() ? nt(pi.paid) + (pi.pct != null ? `（${pi.pct.toFixed(0)}%）` : '') : (pi.pct != null ? `${pi.pct.toFixed(0)}%` : MASK)) : '—'}</b></div>
       <div><span>未完成待辦</span><b>${openTodos}</b></div><div><span>合約到期</span><b>${expiryBadge(p.contractEndDate)}</b></div></div>
     <div class="follow-box"><b>下次跟進日期</b>${followBadge(p.nextFollowUpDate)}<span class="spacer"></span>
       <input type="date" class="input" id="pjFu" value="${esc(p.nextFollowUpDate)}" aria-label="下次跟進日期"><button class="btn sm primary" id="pjFuSave">設定</button>${p.nextFollowUpDate ? '<button class="btn sm" id="pjFuDone">完成跟進</button>' : ''}</div>
     <div class="tabs">${PJ_TABS.map(([k, t]) => `<button class="tab${tab === k ? ' active' : ''}" data-pj-tab="${k}">${t}${k === 'meetings' ? `（${meetings.length}）` : k === 'todos' ? `（${openTodos}）` : ''}</button>`).join('')}</div>
     <div id="pjBody"></div>`;
+  bindMoneyToggle(el);
   $('#pjBack', el).addEventListener('click', () => { state.projectId = null; render(); });
   $('#pjCust', el).addEventListener('click', e => { e.preventDefault(); openCustomer(p.customerId); });
   $('#pjEdit', el).addEventListener('click', () => projectForm(p));
@@ -3037,58 +3124,126 @@ function pjInfoTab(body, p) {
     ['下次跟進', esc(p.nextFollowUpDate)], ['驗收日期', esc(p.acceptanceDate)]])}</div>
     <div class="card"><h2>簽約資訊</h2>${dlRows([
     ['簽約形式', esc(p.contractType)], ['簽約狀態', esc(p.signStatus)], ['是否公告', p.announced ? '已公告' : '未公告'], ['公告日期', esc(p.announceDate)], ['標案案號', esc(p.announceNo)],
-    ['合約總金額（含稅）', esc(nt(p.amount))], ['未稅參考', p.amount !== '' ? esc(nt(exTax(p.amount))) : ''], ['合約到期日', expiryBadge(p.contractEndDate)]])}</div></div>
+    ['合約總金額（含稅）', esc(ntm(p.amount))], ['未稅參考', p.amount !== '' ? esc(ntm(exTax(p.amount))) : ''], ['合約到期日', expiryBadge(p.contractEndDate)]])}</div></div>
     ${p.important ? `<div class="notice warn"><b>重要事項</b><div style="white-space:pre-wrap;margin-top:4px">${esc(p.important)}</div></div>` : ''}`;
 }
 
-/* ---------- 成本與 GP ---------- */
+/* ---------- 合作廠商與成本 ---------- */
 function pjCostTab(body, p) {
-  const g = pjGP(p), costs = p.costs || [];
-  const vendors = [...new Set(costs.map(c => c.vendor).filter(Boolean))];
+  const g = pjGP(p), costs = p.costs || [], mv = moneyVisible();
+  const vendors = [...new Set(costs.map(c => c.vendorId || c.vendor).filter(Boolean))];
   const pending = costs.filter(c => !c.quoted).length;
-  body.innerHTML = `<div class="stat-row"><div class="stat"><b>${nt(g.amt) || '—'}</b>合約總金額（含稅）</div><div class="stat"><b>${nt(g.cost)}</b>成本合計（含稅）</div>
-    <div class="stat ${g.gp < 0 ? 'bad' : 'ok'}"><b>${p.amount !== '' ? nt(g.gp) : '—'}</b>GP${g.pct != null ? `（${g.pct.toFixed(1)}%）` : ''}</div><div class="stat"><b>${vendors.length}</b>合作廠商</div>${pending ? `<div class="stat dup"><b>${pending}</b>項尚未取得廠商成本</div>` : ''}</div>
-    ${p.amount === '' ? '<div class="notice warn">尚未填寫合約總金額，請先「編輯」專案填入金額，才能計算 GP。</div>' : ''}
-    <div class="row" style="margin-bottom:10px"><button class="btn primary" id="costAdd">＋ 新增成本項目</button></div>
-    ${costs.length ? `<div class="tablewrap cards"><table class="list"><thead><tr><th>合作廠商</th><th>產品／服務</th><th>數量</th><th>成本單價</th><th>小計</th><th>廠商成本</th><th></th></tr></thead><tbody>
-    ${costs.map(c => `<tr data-cid="${esc(c.id)}"><td class="name" data-label="合作廠商">${esc(c.vendor) || '<span class="muted">未指定</span>'}</td><td data-label="產品／服務">${esc(c.item)}${c.note ? `<div class="small muted">${esc(c.note)}</div>` : ''}</td>
-      <td data-label="數量">${esc(c.qty)}</td><td data-label="成本單價">${nt(c.unitCost)}</td><td data-label="小計"><b>${nt((Number(c.qty) || 0) * (Number(c.unitCost) || 0))}</b></td>
+  const ca = p.costAnalysis || {};
+  body.innerHTML = `<div class="ca-box${ca.done ? ' done' : ''}">
+      <div class="ca-h"><b>業務成本分析</b>${ca.done ? `<span class="badge active">✓ 已完成</span>` : '<span class="badge prospect">尚未完成</span>'}<span class="spacer"></span>
+        <button class="btn sm${ca.done ? '' : ' primary'}" id="caEdit">${ca.done ? '編輯' : '✓ 標示已完成成本分析'}</button></div>
+      ${ca.done ? `<div class="meta small">${ca.by ? `<span>完成人：${esc(ca.by)}</span>` : ''}${ca.date ? `<span>完成日期：${esc(ca.date)}</span>` : ''}</div>${ca.note ? `<div class="small" style="white-space:pre-wrap;margin-top:6px">${esc(ca.note)}</div>` : ''}`
+        : `<div class="small muted">業務確認所有廠商成本與報價後，在此標示完成；尚有 ${pending} 項廠商成本待提供。</div>`}</div>
+    <div class="stat-row"><div class="stat"><b>${vendors.length}</b>合作廠商</div><div class="stat"><b>${costs.length}</b>往來產品／服務</div>
+    ${pending ? `<div class="stat dup"><b>${pending}</b>項尚未取得廠商成本</div>` : `<div class="stat ok"><b>✓</b>${costs.length ? '廠商成本皆已提供' : '尚無項目'}</div>`}
+    ${mv ? `<div class="stat"><b>${nt(g.cost) || 'NT$ 0'}</b>成本合計（含稅）</div><div class="stat ${g.gp < 0 ? 'bad' : 'ok'}"><b>${p.amount !== '' ? nt(g.gp) : '—'}</b>GP${g.pct != null ? `（${g.pct.toFixed(1)}%）` : ''}</div>` : ''}</div>
+    ${mv && p.amount === '' ? '<div class="notice warn">尚未填寫合約總金額，請先「編輯」專案填入金額，才能計算 GP。</div>' : ''}
+    ${!mv ? '<div class="notice info small">價格目前為隱藏狀態，按上方「👁 顯示金額」可查看成本單價、小計與 GP。</div>' : ''}
+    <div class="row" style="margin-bottom:10px"><button class="btn primary" id="costAdd">＋ 新增合作廠商／產品</button><a href="#" class="small" id="goVendors">查看供應商往來分析 →</a></div>
+    ${costs.length ? `<div class="tablewrap cards"><table class="list"><thead><tr><th>合作廠商</th><th>往來產品／服務</th><th>數量</th>${mv ? '<th>成本單價</th><th>小計</th>' : ''}<th>廠商成本</th><th></th></tr></thead><tbody>
+    ${costs.map(c => { const v = c.vendorId && vendorById(c.vendorId); return `<tr data-cid="${esc(c.id)}"><td class="name" data-label="合作廠商">${esc(vendorName(c)) || '<span class="muted">未指定</span>'}${v && v.category ? `<div class="small muted">${esc(v.category)}</div>` : ''}</td><td data-label="往來產品／服務">${esc(c.item)}${c.note ? `<div class="small muted">${esc(c.note)}</div>` : ''}</td>
+      <td data-label="數量">${esc(c.qty)}</td>${mv ? `<td data-label="成本單價">${nt(c.unitCost)}</td><td data-label="小計"><b>${nt((Number(c.qty) || 0) * (Number(c.unitCost) || 0))}</b></td>` : ''}
       <td data-label="廠商成本">${c.quoted ? `<span class="badge active">已提供</span>${c.quoteDate ? ` <span class="small muted">${esc(c.quoteDate)}</span>` : ''}` : '<span class="badge prospect">待提供</span>'}</td>
-      <td data-label="操作"><button class="btn sm" data-edit>編輯</button> <button class="btn sm danger" data-del>刪除</button></td></tr>`).join('')}
-    </tbody></table></div>` : '<div class="card empty">尚無成本項目</div>'}`;
+      <td data-label="操作"><button class="btn sm" data-edit>編輯</button> <button class="btn sm danger" data-del>刪除</button></td></tr>`; }).join('')}
+    </tbody></table></div>` : '<div class="card empty">尚無合作廠商與成本項目</div>'}`;
   $('#costAdd', body).addEventListener('click', () => costForm(p));
+  $('#caEdit', body).addEventListener('click', () => costAnalysisForm(p));
+  $('#goVendors', body).addEventListener('click', e => { e.preventDefault(); state.projectId = null; state.si.tab = 'vendors'; render(); });
   $$('tr[data-cid]', body).forEach(tr => {
     const c = costs.find(x => x.id === tr.dataset.cid);
     $('[data-edit]', tr).addEventListener('click', () => costForm(p, c));
     $('[data-del]', tr).addEventListener('click', async () => {
-      if (!await confirmDialog(`確定刪除成本項目「${esc(c.item || c.vendor)}」？`, { okText: '刪除', danger: true })) return;
-      const ok = await guard(() => PJ.patch(p.id, x => { x.costs = (x.costs || []).filter(y => y.id !== c.id); }).then(() => true), '成本項目已刪除'); if (ok) render();
+      if (!await confirmDialog(`確定刪除「${esc(vendorName(c))}－${esc(c.item)}」？`, { okText: '刪除', danger: true })) return;
+      const ok = await guard(() => PJ.patch(p.id, x => { x.costs = (x.costs || []).filter(y => y.id !== c.id); }).then(() => true), '已刪除'); if (ok) render();
     });
   });
 }
+function costAnalysisForm(p) {
+  const ca = Object.assign({ done: false, by: p.sales || '', date: todayStr(), note: '' }, p.costAnalysis || {});
+  if (!ca.date) ca.date = todayStr();
+  const pending = (p.costs || []).filter(c => !c.quoted).length;
+  const m = openModal({ title: '業務成本分析', size: 'narrow', body: `
+    ${pending ? `<div class="notice warn small">仍有 ${pending} 項廠商成本標示為「待提供」，請確認是否已完成分析。</div>` : ''}
+    <div class="field"><label>狀態</label><div class="seg"><label><input type="radio" name="ca_done" value="1"${ca.done || !p.costAnalysis ? ' checked' : ''}><span>已完成</span></label><label><input type="radio" name="ca_done" value="0"${p.costAnalysis && !ca.done ? ' checked' : ''}><span>未完成</span></label></div></div>
+    <div class="field" style="margin-top:10px"><label>完成人（業務）</label>${staffSelectHtml('ca_by', ca.by)}</div>
+    <div class="field" style="margin-top:10px"><label>完成日期</label><input type="date" class="input" id="ca_date" value="${esc(ca.date)}"></div>
+    <div class="field" style="margin-top:10px"><label>分析說明</label><textarea class="input" id="ca_note" rows="4" placeholder="例如：已比較 3 家報價，選定 A 廠商；預估毛利符合目標">${esc(ca.note)}</textarea></div>`,
+    footer: `<button class="btn" data-close>取消</button><button class="btn primary" data-save>儲存</button>` });
+  bindStaffSelects(m.el);
+  $('[data-save]', m.el).addEventListener('click', async () => {
+    const done = $('input[name=ca_done]:checked', m.el).value === '1';
+    const by = $('#ca_by', m.el).value === '__add' ? '' : $('#ca_by', m.el).value;
+    if (done && !by) return toast('請選擇完成成本分析的業務', 'warn');
+    const d = { done, by, date: done ? ($('#ca_date', m.el).value || todayStr()) : '', note: $('#ca_note', m.el).value.trim(), at: nowISO() };
+    const ok = await guard(() => PJ.patch(p.id, x => { x.costAnalysis = d; }).then(() => true), done ? '已標示完成成本分析' : '已更新為未完成');
+    if (ok) { m.close(); render(); }
+  });
+}
+function vendorOptions(selected) {
+  const list = vendorList.slice().sort((a, b) => a.name.localeCompare(b.name, 'zh-Hant'));
+  return `<option value="">請選擇廠商</option>${list.map(v => `<option value="${esc(v.id)}"${v.id === selected ? ' selected' : ''}>${esc(v.name)}${v.category ? `（${esc(v.category)}）` : ''}</option>`).join('')}<option value="__add">＋ 新增廠商…</option>`;
+}
 function costForm(p, c) {
-  c = c || { id: '', vendor: '', item: '', qty: 1, unitCost: '', quoted: false, quoteDate: '', note: '' };
-  const vendors = [...new Set(PJ.projects.flatMap(x => (x.costs || []).map(y => y.vendor)).filter(Boolean))];
-  const m = openModal({ title: c.id ? '編輯成本項目' : '新增成本項目', body: `<div class="form-grid">
-    <div class="field"><label>合作廠商</label><input class="input" id="c_vendor" list="vendorList" value="${esc(c.vendor)}"><datalist id="vendorList">${vendors.map(v => `<option value="${esc(v)}">`).join('')}</datalist></div>
-    <div class="field"><label>產品／服務 <span class="req">*</span></label><input class="input" id="c_item" value="${esc(c.item)}"></div>
+  c = c || { id: '', vendorId: '', vendor: '', item: '', qty: 1, unitCost: '', quoted: false, quoteDate: '', note: '' };
+  const mv = moneyVisible();
+  const m = openModal({ title: c.id ? '編輯合作廠商／產品' : '新增合作廠商／產品', body: `<div class="form-grid">
+    <div class="field"><label>合作廠商 <span class="req">*</span></label><select class="input" id="c_vendor">${vendorOptions(c.vendorId)}</select><div class="hint">廠商統一由「供應商」主檔選擇，方便統計往來次數。</div></div>
+    <div class="field"><label>往來產品／服務 <span class="req">*</span></label><input class="input" id="c_item" list="itemList" value="${esc(c.item)}"><datalist id="itemList"></datalist></div>
     <div class="field"><label>數量</label><input class="input" id="c_qty" value="${esc(c.qty)}" inputmode="decimal"></div>
-    <div class="field"><label>成本單價（含稅）</label><input class="input" id="c_unit" value="${c.unitCost === '' ? '' : Number(c.unitCost).toLocaleString('zh-TW')}" inputmode="numeric"></div>
+    <div class="field"><label>成本單價（含稅）</label><div class="row" style="gap:6px;flex-wrap:nowrap"><input class="input" id="c_unit" type="${mv ? 'text' : 'password'}" autocomplete="off" value="${c.unitCost === '' ? '' : Number(c.unitCost).toLocaleString('zh-TW')}" inputmode="numeric" style="flex:1;min-width:0"><button type="button" class="btn sm" id="c_eye" title="顯示／隱藏價格">${mv ? '🙈' : '👁'}</button></div></div>
     <div class="field"><label>廠商是否已提供成本</label><div class="seg"><label><input type="radio" name="c_quoted" value="1"${c.quoted ? ' checked' : ''}><span>已提供</span></label><label><input type="radio" name="c_quoted" value="0"${!c.quoted ? ' checked' : ''}><span>待提供</span></label></div></div>
     <div class="field"><label>報價日期</label><input type="date" class="input" id="c_qdate" value="${esc(c.quoteDate)}"></div>
     <div class="field full"><label>備註</label><input class="input" id="c_note" value="${esc(c.note)}"></div>
     <div class="full small muted" id="c_sub"></div></div>`,
     footer: `<button class="btn" data-close>取消</button><button class="btn primary" data-save>儲存</button>` });
-  const sub = () => { const q = Number($('#c_qty', m.el).value) || 0, u = parseMoney($('#c_unit', m.el).value) || 0; $('#c_sub', m.el).textContent = `小計：${nt(q * u)}`; };
-  $('#c_qty', m.el).addEventListener('input', sub); $('#c_unit', m.el).addEventListener('input', sub); sub();
+  const sel = $('#c_vendor', m.el), unit = $('#c_unit', m.el);
+  let shown = mv;
+  const sub = () => { const q = Number($('#c_qty', m.el).value) || 0, u = parseMoney(unit.value) || 0; $('#c_sub', m.el).textContent = shown ? `小計：${nt(q * u)}` : ''; };
+  $('#c_eye', m.el).addEventListener('click', e => { shown = !shown; unit.type = shown ? 'text' : 'password'; e.target.textContent = shown ? '🙈' : '👁'; sub(); });
+  const items = () => { // 依廠商帶出曾往來的產品
+    const list = [...new Set(PJ.projects.flatMap(x => (x.costs || []).filter(y => !sel.value || y.vendorId === sel.value).map(y => y.item)).filter(Boolean))];
+    $('#itemList', m.el).innerHTML = list.map(v => `<option value="${esc(v)}">`).join('');
+  };
+  let prev = sel.value;
+  sel.addEventListener('change', () => {
+    if (sel.value !== '__add') { prev = sel.value; items(); return; }
+    sel.value = prev;
+    vendorForm(null, v => { sel.innerHTML = vendorOptions(v.id); prev = v.id; items(); });
+  });
+  $('#c_qty', m.el).addEventListener('input', sub); unit.addEventListener('input', sub); sub(); items();
   $('[data-save]', m.el).addEventListener('click', async () => {
-    const d = { id: c.id || uid(), vendor: $('#c_vendor', m.el).value.trim(), item: $('#c_item', m.el).value.trim(), qty: Number($('#c_qty', m.el).value), unitCost: parseMoney($('#c_unit', m.el).value),
+    const v = vendorById(sel.value);
+    const d = { id: c.id || uid(), vendorId: v ? v.id : '', vendor: v ? v.name : '', item: $('#c_item', m.el).value.trim(), qty: Number($('#c_qty', m.el).value), unitCost: parseMoney(unit.value),
       quoted: $('input[name=c_quoted]:checked', m.el).value === '1', quoteDate: $('#c_qdate', m.el).value, note: $('#c_note', m.el).value.trim() };
-    if (!d.item) return toast('請輸入產品／服務', 'warn');
+    if (!v) return toast('請選擇合作廠商（可選「＋ 新增廠商…」）', 'warn');
+    if (!d.item) return toast('請輸入往來產品／服務', 'warn');
     if (isNaN(d.qty) || d.qty < 0) return toast('數量請輸入數字', 'warn');
-    if ($('#c_unit', m.el).value.trim() === '') d.unitCost = 0; else if (isNaN(d.unitCost)) return toast('成本單價請輸入數字', 'warn');
-    const ok = await guard(() => PJ.patch(p.id, x => { x.costs = x.costs || []; const i = x.costs.findIndex(y => y.id === d.id); if (i >= 0) x.costs[i] = d; else x.costs.push(d); }).then(() => true), c.id ? '成本項目已更新' : '成本項目已新增');
+    if (unit.value.trim() === '') d.unitCost = 0; else if (isNaN(d.unitCost)) return toast('成本單價請輸入數字', 'warn');
+    const ok = await guard(() => PJ.patch(p.id, x => { x.costs = x.costs || []; const i = x.costs.findIndex(y => y.id === d.id); if (i >= 0) x.costs[i] = d; else x.costs.push(d); }).then(() => true), c.id ? '已更新' : '已新增');
     if (ok) { m.close(); render(); }
+  });
+}
+function vendorForm(v, after) {
+  v = v || { id: '', name: '', category: '', taxId: '', contact: '', phone: '', email: '', note: '' };
+  const cats = [...new Set(vendorList.map(x => x.category).filter(Boolean))];
+  const m = openModal({ title: v.id ? '編輯供應商' : '新增供應商', body: `<div class="form-grid">
+    <div class="field"><label>廠商名稱 <span class="req">*</span></label><input class="input" id="v_name" value="${esc(v.name)}"></div>
+    <div class="field"><label>類別</label><input class="input" id="v_cat" list="vcatList" value="${esc(v.category)}" placeholder="例如 雲端、資安、硬體、軟體授權"><datalist id="vcatList">${cats.map(x => `<option value="${esc(x)}">`).join('')}</datalist></div>
+    <div class="field"><label>統一編號</label><input class="input" id="v_tax" value="${esc(v.taxId)}" inputmode="numeric" maxlength="8"></div>
+    <div class="field"><label>聯絡窗口</label><input class="input" id="v_contact" value="${esc(v.contact)}"></div>
+    <div class="field"><label>電話</label><input class="input" type="tel" id="v_phone" value="${esc(v.phone)}" inputmode="tel"></div>
+    <div class="field"><label>電子郵件</label><input class="input" type="email" id="v_email" value="${esc(v.email)}" inputmode="email"></div>
+    <div class="field full"><label>備註</label><textarea class="input" id="v_note" rows="2">${esc(v.note)}</textarea></div></div>`,
+    footer: `<button class="btn" data-close>取消</button><button class="btn primary" data-save>儲存</button>` });
+  $('[data-save]', m.el).addEventListener('click', async () => {
+    const d = Object.assign({}, v, { name: $('#v_name', m.el).value, category: $('#v_cat', m.el).value, taxId: $('#v_tax', m.el).value, contact: $('#v_contact', m.el).value, phone: $('#v_phone', m.el).value, email: $('#v_email', m.el).value, note: $('#v_note', m.el).value });
+    const r = await guard(() => saveVendor(d), v.id ? '供應商已更新' : '供應商已新增');
+    if (r) { m.close(); after ? after(r) : render(); }
   });
 }
 
@@ -3220,12 +3375,12 @@ function pjPaymentTab(body, p) {
   body.innerHTML = `<div class="card"><h2>驗收</h2>${dlRows([['驗收日期', p.acceptanceDate ? esc(p.acceptanceDate) + (p.acceptanceDate >= t ? ` <span class="small muted">（${daysBetween(t, p.acceptanceDate)} 天後）</span>` : '') : ''], ['驗收條件', esc(p.acceptanceTerms)]])}
       <div class="row" style="margin-top:10px"><button class="btn sm" id="accEdit">編輯驗收資訊</button></div></div>
     <div class="card"><h2>收款 <span class="count">${pays.length} 期</span></h2>
-      <div class="stat-row"><div class="stat"><b>${nt(p.amount) || '—'}</b>合約總金額</div><div class="stat ok"><b>${nt(pi.paid)}</b>已收款${pi.pct != null ? `（${pi.pct.toFixed(0)}%）` : ''}</div><div class="stat"><b>${nt(Number(p.amount || 0) - pi.paid)}</b>尚未收款</div>${pi.overdue.length ? `<div class="stat bad"><b>${pi.overdue.length}</b>期逾期未收</div>` : ''}</div>
-      ${pays.length && p.amount !== '' && Math.round(diff) !== 0 ? `<div class="notice warn small">各期金額合計 ${nt(pi.total)}，與合約總金額相差 ${nt(Math.abs(diff))}，請確認。</div>` : ''}
+      <div class="stat-row"><div class="stat"><b>${ntm(p.amount) || '—'}</b>合約總金額</div><div class="stat ok"><b>${ntm(pi.paid) || MASK}</b>已收款${pi.pct != null ? `（${pi.pct.toFixed(0)}%）` : ''}</div><div class="stat"><b>${ntm(Number(p.amount || 0) - pi.paid)}</b>尚未收款</div>${pi.overdue.length ? `<div class="stat bad"><b>${pi.overdue.length}</b>期逾期未收</div>` : ''}</div>
+      ${pays.length && p.amount !== '' && Math.round(diff) !== 0 ? `<div class="notice warn small">各期金額合計與合約總金額${moneyVisible() ? `相差 ${nt(Math.abs(diff))}` : '不一致'}，請確認。</div>` : ''}
       ${pi.pct != null ? `<div class="progress"><span style="width:${Math.min(100, pi.pct)}%"></span></div>` : ''}
       <div class="row" style="margin:10px 0"><button class="btn primary" id="payAdd">＋ 新增收款期別</button></div>
       ${pays.length ? `<div class="tablewrap cards"><table class="list"><thead><tr><th>期別</th><th>金額（含稅）</th><th>預計收款日</th><th>實收日</th><th>發票號碼</th><th>狀態</th><th></th></tr></thead><tbody>
-      ${pays.map(x => `<tr data-pid="${esc(x.id)}"><td class="name" data-label="期別">${esc(x.term)}</td><td data-label="金額">${nt(x.amount)}</td><td data-label="預計收款日">${esc(x.dueDate) || '—'}</td><td data-label="實收日">${esc(x.paidDate) || '—'}</td>
+      ${pays.map(x => `<tr data-pid="${esc(x.id)}"><td class="name" data-label="期別">${esc(x.term)}</td><td data-label="金額">${ntm(x.amount)}</td><td data-label="預計收款日">${esc(x.dueDate) || '—'}</td><td data-label="實收日">${esc(x.paidDate) || '—'}</td>
         <td data-label="發票號碼">${esc(x.invoiceNo) || '—'}</td><td data-label="狀態">${x.paidDate ? '<span class="badge active">已收款</span>' : x.dueDate && x.dueDate < t ? '<span class="badge overdue">逾期未收</span>' : '<span class="badge prospect">未收款</span>'}</td>
         <td data-label="操作">${x.paidDate ? '' : '<button class="btn sm primary" data-paid>標示已收</button> '}<button class="btn sm" data-edit>編輯</button> <button class="btn sm danger" data-del>刪除</button></td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">尚未建立收款期別</div>'}</div>`;
   $('#accEdit', body).addEventListener('click', () => {
@@ -3297,7 +3452,7 @@ function renderGantt(body) {
     const out = [];
     PJ.meetingsOf(p.id).forEach(m => out.push({ d: m.datetime.slice(0, 10), cls: 'mk-meet', sym: '◆', tip: `會議 ${fmtActDT(m.datetime)} ${m.title || ''}` }));
     if (p.acceptanceDate) out.push({ d: p.acceptanceDate, cls: 'mk-acc', sym: '▲', tip: `驗收 ${p.acceptanceDate}` });
-    (p.payments || []).forEach(x => { const d = x.paidDate || x.dueDate; if (d) out.push({ d, cls: x.paidDate ? 'mk-paid' : 'mk-pay', sym: '●', tip: `${x.term} ${nt(x.amount)} ${x.paidDate ? '已收 ' + x.paidDate : '預計 ' + x.dueDate}` }); });
+    (p.payments || []).forEach(x => { const d = x.paidDate || x.dueDate; if (d) out.push({ d, cls: x.paidDate ? 'mk-paid' : 'mk-pay', sym: '●', tip: `${x.term}${moneyVisible() ? ' ' + nt(x.amount) : ''} ${x.paidDate ? '已收 ' + x.paidDate : '預計 ' + x.dueDate}` }); });
     if (p.contractEndDate) out.push({ d: p.contractEndDate, cls: 'mk-end', sym: '⚑', tip: `合約到期 ${p.contractEndDate}` });
     return out;
   };
@@ -3378,7 +3533,7 @@ function renderExpiry(body) {
     <p class="small muted">合約即將到期的專案，是洽談續約或新商機的好時機。可設定「下次跟進日期」提醒自己聯繫客戶。</p>
     ${list.length ? `<div class="tablewrap cards"><table class="list"><thead><tr><th>專案</th><th>客戶</th><th>合約到期</th><th>合約金額</th><th>簽約形式</th><th>業務</th><th>下次跟進</th><th></th></tr></thead><tbody>
     ${list.map(p => `<tr data-id="${esc(p.id)}"><td class="name" data-label="專案"><a href="#" data-open>${esc(p.name)}</a></td><td data-label="客戶">${esc(customerName(p.customerId))}</td><td data-label="合約到期">${expiryBadge(p.contractEndDate)}</td>
-      <td data-label="合約金額">${nt(p.amount) || '—'}</td><td data-label="簽約形式">${esc(p.contractType) || '—'}</td><td data-label="業務">${esc(p.sales) || '—'}</td><td data-label="下次跟進">${followBadge(p.nextFollowUpDate)}</td>
+      <td data-label="合約金額">${ntm(p.amount) || '—'}</td><td data-label="簽約形式">${esc(p.contractType) || '—'}</td><td data-label="業務">${esc(p.sales) || '—'}</td><td data-label="下次跟進">${followBadge(p.nextFollowUpDate)}</td>
       <td data-label="操作"><button class="btn sm" data-fu>設定跟進</button></td></tr>`).join('')}</tbody></table></div>` : '<div class="card empty">此區間沒有到期的合約</div>'}`;
   $$('[data-exp]', body).forEach(b => b.addEventListener('click', () => { f.expiry = b.dataset.exp; renderExpiry(body); }));
   $$('tr[data-id]', body).forEach(tr => {
@@ -3404,17 +3559,18 @@ async function siDashboardHtml() {
   const odTodos = PJ.todos.filter(x => !x.done && x.dueDate && x.dueDate < t && PJ.get(x.projectId));
   const exp3 = PJ.projects.filter(p => p.contractEndDate && p.contractEndDate >= t && p.contractEndDate <= addMonths(t, 3));
   const fu = PJ.projects.filter(p => p.status !== 'closed' && p.nextFollowUpDate && p.nextFollowUpDate <= t);
-  return `<div class="card"><h2>SI 專案概況 <span class="spacer"></span><a class="btn sm" href="#/si">前往 SI 專案管理 →</a></h2>
+  return `<div class="card"><h2>SI 專案概況 <span class="spacer"></span>${moneyToggleHtml()}<a class="btn sm" href="#/si">前往 SI 專案管理 →</a></h2>
     <div class="mini-kpis">
       <div class="clickable-k" data-si-go="list"><span>執行中專案</span><b>${open.length}</b></div>
-      <div><span>執行中合約總額</span><b>${nt(amt) || 'NT$ 0'}</b></div>
-      <div><span>執行中 GP</span><b>${nt(gp) || 'NT$ 0'}${amt ? `（${(gp / amt * 100).toFixed(1)}%）` : ''}</b></div>
+      <div><span>執行中合約總額</span><b>${moneyVisible() ? (nt(amt) || 'NT$ 0') : MASK}</b></div>
+      <div><span>執行中 GP</span><b>${moneyVisible() ? (nt(gp) || 'NT$ 0') + (amt ? `（${(gp / amt * 100).toFixed(1)}%）` : '') : MASK}</b></div>
       <div class="clickable-k" data-si-go="todos"><span>逾期待辦</span><b style="color:${odTodos.length ? 'var(--danger)' : 'inherit'}">${odTodos.length}</b></div>
       <div class="clickable-k" data-si-go="expiry"><span>3 個月內合約到期</span><b style="color:${exp3.length ? 'var(--orange-d)' : 'inherit'}">${exp3.length}</b></div>
       <div><span>專案待跟進（今天含逾期）</span><b>${fu.length}</b></div></div>
     ${fu.length ? `<div class="small" style="margin-top:10px"><b>待跟進專案：</b>${fu.slice(0, 8).map(p => `<a href="#" data-open-pj="${esc(p.id)}" style="margin-right:10px">${esc(p.name)}（${esc(p.nextFollowUpDate)}）</a>`).join('')}</div>` : ''}</div>`;
 }
 function bindSiDashboard(el) {
+  bindMoneyToggle(el);
   $$('[data-si-go]', el).forEach(b => b.addEventListener('click', () => { state.si.tab = b.dataset.siGo; state.projectId = null; go('si'); }));
   $$('[data-open-pj]', el).forEach(a => a.addEventListener('click', e => { e.preventDefault(); openProject(a.dataset.openPj); }));
 }
@@ -3424,7 +3580,7 @@ async function customerProjectsCard(customerId) {
   await PJ.load();
   const list = PJ.projects.filter(p => p.customerId === customerId).sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
   return `<div class="card"><h2>SI 專案 <span class="count">${list.length}</span><span class="spacer"></span><button class="btn sm" id="custNewPj">＋ 新增專案</button></h2>
-    ${list.length ? list.map(p => `<div class="fu-row"><span class="nm" data-open-pj="${esc(p.id)}">${esc(p.name)}</span>${pjBadge(p.status)}<span class="spacer"></span><span class="small muted">${nt(p.amount)}</span><span class="small">${p.contractEndDate ? '到期 ' + esc(p.contractEndDate) : ''}</span></div>`).join('') : '<div class="empty" style="padding:12px">尚無專案</div>'}</div>`;
+    ${list.length ? list.map(p => `<div class="fu-row"><span class="nm" data-open-pj="${esc(p.id)}">${esc(p.name)}</span>${pjBadge(p.status)}<span class="spacer"></span><span class="small muted">${ntm(p.amount)}</span><span class="small">${p.contractEndDate ? '到期 ' + esc(p.contractEndDate) : ''}</span></div>`).join('') : '<div class="empty" style="padding:12px">尚無專案</div>'}</div>`;
 }
 
 /* ============================================================
@@ -3433,6 +3589,8 @@ async function customerProjectsCard(customerId) {
 function mondayOf(d) { const n = dayNum(d); const wd = (new Date(n * 86400000).getUTCDay() + 6) % 7; return numDay(n - wd); }
 const WD = ['日', '一', '二', '三', '四', '五', '六'];
 function mdw(d) { const dt = new Date(dayNum(d) * 86400000); return `${Number(d.slice(5, 7))}/${Number(d.slice(8, 10))}（${WD[dt.getUTCDay()]}）`; }
+let WK_MONEY = false;
+function amtTxt(n) { return WK_MONEY ? ' ' + nt(n) : ''; }
 function buildWeekly(weekStart) {
   const ws = weekStart, we = addDays(ws, 6), ns = addDays(ws, 7), ne = addDays(ws, 13), t = todayStr();
   const inWeek = d => d && d >= ws && d <= we;
@@ -3445,19 +3603,20 @@ function buildWeekly(weekStart) {
       progress.push(`${mdw(m.datetime.slice(0, 10))} ${m.title || '會議'}${lines.length ? '：' + lines.slice(0, 2).join('；') : ''}`);
     });
     ts.filter(x => x.done && inWeek(x.doneAt ? todayStr(new Date(x.doneAt)) : '')).forEach(x => progress.push(`✓ 完成：${x.text}`));
-    (p.payments || []).filter(x => inWeek(x.paidDate)).forEach(x => progress.push(`收款：${x.term} ${nt(x.amount)}`));
+    (p.payments || []).filter(x => inWeek(x.paidDate)).forEach(x => progress.push(`收款：${x.term}${amtTxt(x.amount)}`));
     const discuss = [];
     String(p.important || '').split(/\r?\n/).map(l => l.trim()).filter(Boolean).forEach(l => discuss.push(l.replace(/^[-*•・]\s*/, '')));
     ts.filter(x => !x.done && x.dueDate && x.dueDate < t).forEach(x => discuss.push(`逾期待辦：${x.text}${x.owner ? `（${x.owner}）` : ''}，原訂 ${x.dueDate}`));
-    (p.costs || []).filter(c => !c.quoted).forEach(c => discuss.push(`待廠商提供成本：${[c.vendor, c.item].filter(Boolean).join(' ')}`));
-    (p.payments || []).filter(x => !x.paidDate && x.dueDate && x.dueDate < t).forEach(x => discuss.push(`逾期未收款：${x.term} ${nt(x.amount)}（預計 ${x.dueDate}）`));
+    (p.costs || []).filter(c => !c.quoted).forEach(c => discuss.push(`待廠商提供成本：${[vendorName(c), c.item].filter(Boolean).join(' ')}`));
+    if (['planning', 'active'].includes(p.status) && !(p.costAnalysis && p.costAnalysis.done)) discuss.push('業務成本分析尚未完成');
+    (p.payments || []).filter(x => !x.paidDate && x.dueDate && x.dueDate < t).forEach(x => discuss.push(`逾期未收款：${x.term}${amtTxt(x.amount)}（預計 ${x.dueDate}）`));
     const follow = [];
     ts.filter(x => !x.done && x.dueDate && x.dueDate >= t && x.dueDate <= ne).sort((a, b) => a.dueDate.localeCompare(b.dueDate))
       .forEach(x => follow.push(`${x.text}${x.owner ? `（${x.owner}）` : ''}　${mdw(x.dueDate)}`));
     ts.filter(x => !x.done && !x.dueDate).forEach(x => follow.push(`${x.text}${x.owner ? `（${x.owner}）` : ''}　未定期限`));
     if (p.nextFollowUpDate && p.nextFollowUpDate <= ne) follow.push(`專案跟進：${mdw(p.nextFollowUpDate)}${p.nextFollowUpDate < t ? '（已逾期）' : ''}`);
     if (p.acceptanceDate && p.acceptanceDate >= t && p.acceptanceDate <= addDays(ne, 7)) follow.push(`驗收：${mdw(p.acceptanceDate)}`);
-    (p.payments || []).filter(x => !x.paidDate && x.dueDate && x.dueDate >= t && x.dueDate <= ne).forEach(x => follow.push(`預計收款：${x.term} ${nt(x.amount)}　${mdw(x.dueDate)}`));
+    (p.payments || []).filter(x => !x.paidDate && x.dueDate && x.dueDate >= t && x.dueDate <= ne).forEach(x => follow.push(`預計收款：${x.term}${amtTxt(x.amount)}　${mdw(x.dueDate)}`));
     if (p.contractEndDate && p.contractEndDate >= t && p.contractEndDate <= addMonths(t, 3)) follow.push(`合約將於 ${p.contractEndDate} 到期，評估續約`);
     const nextMeet = ms.filter(m => { const d = m.datetime.slice(0, 10); return d >= ns && d <= ne; }).reverse()
       .map(m => `${mdw(m.datetime.slice(0, 10))} ${m.datetime.slice(11, 16)} ${m.title || '會議'}${m.location ? `（${m.location}）` : ''}`);
@@ -3470,7 +3629,9 @@ function buildWeekly(weekStart) {
 function weeklyReportDialog() {
   if (!PJ.projects.length) return toast('尚無專案，無法產生週報', 'warn');
   let ws = mondayOf(todayStr()), data;
-  const m = openModal({ title: '📊 產生專案週報', size: 'wide', body: `<div class="toolbar"><button class="btn sm" id="wkPrev">← 上一週</button><b id="wkLabel"></b><button class="btn sm" id="wkNext">下一週 →</button><button class="btn sm link" id="wkThis">本週</button></div>
+  WK_MONEY = moneyVisible();
+  const m = openModal({ title: '📊 產生專案週報', size: 'wide', body: `<div class="toolbar"><button class="btn sm" id="wkPrev">← 上一週</button><b id="wkLabel"></b><button class="btn sm" id="wkNext">下一週 →</button><button class="btn sm link" id="wkThis">本週</button><span class="spacer"></span>
+    <label class="row small" style="gap:6px;cursor:pointer"><input type="checkbox" id="wkMoney"${WK_MONEY ? ' checked' : ''} style="width:18px;height:18px">週報包含金額（合約、GP、收款）</label></div>
     <div class="notice info small">內容已依系統資料自動彙整，可直接修改（每行一個重點，留空則不列出）。勾選要放入簡報的專案後，按「下載 PowerPoint」。</div><div id="wkBody"></div>`,
     footer: `<button class="btn" id="wkCopy">📋 複製文字</button><span class="spacer"></span><button class="btn" data-close>關閉</button><button class="btn primary" id="wkPptx">⬇ 下載 PowerPoint</button>` });
   const draw = () => {
@@ -3486,6 +3647,10 @@ function weeklyReportDialog() {
   $('#wkPrev', m.el).addEventListener('click', () => { ws = addDays(ws, -7); draw(); });
   $('#wkNext', m.el).addEventListener('click', () => { ws = addDays(ws, 7); draw(); });
   $('#wkThis', m.el).addEventListener('click', () => { ws = mondayOf(todayStr()); draw(); });
+  $('#wkMoney', m.el).addEventListener('change', async e => {
+    if (!await confirmDialog('切換後會重新產生週報內容，已修改的文字將還原，是否繼續？', { okText: '繼續' })) { e.target.checked = !e.target.checked; return; }
+    WK_MONEY = e.target.checked; draw();
+  });
   $('#wkCopy', m.el).addEventListener('click', async () => {
     const txt = weeklyText(data, collect());
     try { await navigator.clipboard.writeText(txt); toast('週報文字已複製'); }
@@ -3503,7 +3668,7 @@ function weeklyText(data, rows) {
   const L = [`SI 專案週報　${data.ws} ～ ${data.we}`, ''];
   rows.forEach(r => {
     const g = pjGP(r.p);
-    L.push(`■ ${r.p.name}（${customerName(r.p.customerId)}）｜${pjStatus(r.p.status).t}｜PM：${r.p.pm || '—'}｜業務：${r.p.sales || '—'}${r.p.amount !== '' ? `｜合約 ${nt(r.p.amount)}，GP ${g.pct == null ? '—' : g.pct.toFixed(1) + '%'}` : ''}`);
+    L.push(`■ ${r.p.name}（${customerName(r.p.customerId)}）｜${pjStatus(r.p.status).t}｜PM：${r.p.pm || '—'}｜業務：${r.p.sales || '—'}${WK_MONEY && r.p.amount !== '' ? `｜合約 ${nt(r.p.amount)}，GP ${g.pct == null ? '—' : g.pct.toFixed(1) + '%'}` : ''}`);
     [['本週進度', r.progress], ['應討論事項', r.discuss], ['應跟進事項', r.follow], ['下週會議', r.nextMeet]].forEach(([l, a]) => { if (a.length) { L.push(`  【${l}】`); a.forEach(x => L.push(`  ・${x}`)); } });
     L.push('');
   });
@@ -3569,12 +3734,19 @@ async function buildWeeklyPptx(data, rows) {
   const nm = rows.reduce((s, r) => s + r.nextMeet.length, 0);
   const kpi = (id, x, l, v, c) => shapeXml(id, x, 1.25, 2.95, 1.05, { fill: 'F5F7FB', line: 'DDE3EC', pad: 0.18, anchor: 'ctr', paras: [{ text: l, size: 11, color: '64708A' }, { text: v, size: 16, bold: true, color: c }] });
   chunk(rows, 10).forEach((part, pi, all) => {
-    const head = [['專案', '客戶', '狀態', '合約金額', 'GP%', 'PM', '下次跟進', '本週重點']];
-    const body = part.map(r => { const g = pjGP(r.p); return [clip(r.p.name, 22), clip(customerName(r.p.customerId), 14), pjStatus(r.p.status).t, nt(r.p.amount) || '—', g.pct == null ? '—' : g.pct.toFixed(1) + '%', r.p.pm || '—', r.p.nextFollowUpDate || '—', clip(r.progress[0] || '—', 30)]; });
+    const M = WK_MONEY;
+    const head = [['專案', '客戶', '狀態'].concat(M ? ['合約金額', 'GP%'] : ['成本分析']).concat(['PM', '下次跟進', '本週重點'])];
+    const body = part.map(r => { const g = pjGP(r.p); return [clip(r.p.name, 22), clip(customerName(r.p.customerId), 14), pjStatus(r.p.status).t]
+      .concat(M ? [nt(r.p.amount) || '—', g.pct == null ? '—' : g.pct.toFixed(1) + '%'] : [r.p.costAnalysis && r.p.costAnalysis.done ? '已完成' : '未完成'])
+      .concat([r.p.pm || '—', r.p.nextFollowUpDate || '—', clip(r.progress[0] || '—', 30)]); });
+    const cols = M ? [2.6, 1.8, 0.9, 1.5, 0.8, 1, 1.2, 3.2] : [2.8, 2, 0.9, 1.1, 1, 1.2, 3.8];
     const sh = slideHeader(2, '專案總覽', all.length > 1 ? `${pi + 1}/${all.length}` : `${data.ws} ～ ${data.we}`);
-    if (pi === 0) sh.push(kpi(10, 0.45, '報告專案數', String(rows.length), '1D4F9C'), kpi(11, 3.6, '合約總金額（含稅）', nt(amt) || 'NT$ 0', '1D4F9C'),
-      kpi(12, 6.75, 'GP 合計', (nt(gp) || 'NT$ 0') + (amt ? `（${(gp / amt * 100).toFixed(1)}%）` : ''), '1D8A4E'), kpi(13, 9.9, '逾期待辦／下週會議', `${od} 項／${nm} 場`, od ? 'CF3E3E' : '1C2433'));
-    sh.push(tableXml(20, 0.45, pi === 0 ? 2.55 : 1.3, 12.43, [2.6, 1.8, 0.9, 1.5, 0.8, 1, 1.2, 3.2], head.concat(body), { size: 10, rowH: 0.38 }));
+    const caDone = rows.filter(r => r.p.costAnalysis && r.p.costAnalysis.done).length;
+    if (pi === 0) sh.push(kpi(10, 0.45, '報告專案數', String(rows.length), '1D4F9C'),
+      M ? kpi(11, 3.6, '合約總金額（含稅）', nt(amt) || 'NT$ 0', '1D4F9C') : kpi(11, 3.6, '成本分析完成', `${caDone}／${rows.length}`, '1D4F9C'),
+      M ? kpi(12, 6.75, 'GP 合計', (nt(gp) || 'NT$ 0') + (amt ? `（${(gp / amt * 100).toFixed(1)}%）` : ''), '1D8A4E') : kpi(12, 6.75, '逾期待辦', `${od} 項`, od ? 'CF3E3E' : '1C2433'),
+      M ? kpi(13, 9.9, '逾期待辦／下週會議', `${od} 項／${nm} 場`, od ? 'CF3E3E' : '1C2433') : kpi(13, 9.9, '下週會議', `${nm} 場`, '1D8A4E'));
+    sh.push(tableXml(20, 0.45, pi === 0 ? 2.55 : 1.3, 12.43, cols, head.concat(body), { size: 10, rowH: 0.38 }));
     sh.push(footerXml(30, ++n + 1, data));
     slides.push(slideXml(sh));
   });
@@ -3583,8 +3755,9 @@ async function buildWeeklyPptx(data, rows) {
     const p = r.p, g = pjGP(p), pi = payInfo(p), st = pjStatus(p.status);
     const sh = slideHeader(2, clip(p.name, 34), customerName(p.customerId));
     sh.push(shapeXml(10, 0.45, 1.2, 1.3, 0.42, { fill: st.c.replace('#', ''), anchor: 'ctr', paras: [{ text: st.t, size: 13, bold: true, color: 'FFFFFF', align: 'ctr' }] }));
-    const info = [`PM：${p.pm || '—'}`, `業務：${p.sales || '—'}`, `簽約：${[p.contractType, p.signStatus].filter(Boolean).join('・') || '—'}`, `合約：${nt(p.amount) || '—'}`,
-      `GP：${p.amount !== '' ? nt(g.gp) + (g.pct != null ? `（${g.pct.toFixed(1)}%）` : '') : '—'}`, `已收：${pi.total ? nt(pi.paid) : '—'}`];
+    const info = [`PM：${p.pm || '—'}`, `業務：${p.sales || '—'}`, `簽約：${[p.contractType, p.signStatus].filter(Boolean).join('・') || '—'}`,
+      `成本分析：${p.costAnalysis && p.costAnalysis.done ? '已完成' : '未完成'}`].concat(WK_MONEY ? [`合約：${nt(p.amount) || '—'}`,
+      `GP：${p.amount !== '' ? nt(g.gp) + (g.pct != null ? `（${g.pct.toFixed(1)}%）` : '') : '—'}`, `已收：${pi.total ? nt(pi.paid) : '—'}`] : []);
     sh.push(shapeXml(11, 1.9, 1.2, 11, 0.42, { anchor: 'ctr', paras: [{ text: info.join('　｜　'), size: 12, color: '475268' }] }));
     sh.push(bulletBox(12, 0.45, 1.8, 6.1, 4.9, '本週進度', r.progress.slice(0, 10), '1D4F9C'));
     sh.push(bulletBox(13, 6.75, 1.8, 6.13, 1.6, '應討論事項', r.discuss.slice(0, 4), 'CF3E3E'));
@@ -3603,7 +3776,7 @@ async function buildWeeklyPptx(data, rows) {
   // 5. 合約到期提醒（6 個月內）
   const exp = PJ.projects.filter(p => p.contractEndDate && p.contractEndDate >= t && p.contractEndDate <= addMonths(t, 6)).sort((a, b) => a.contractEndDate.localeCompare(b.contractEndDate));
   if (exp.length) chunk(exp, 12).forEach((part, i, all) => slides.push(slideXml(slideHeader(2, '合約到期提醒（6 個月內）', all.length > 1 ? `${i + 1}/${all.length}` : '').concat([
-    tableXml(20, 0.45, 1.3, 12.43, [3, 2.2, 1.4, 1.2, 1.7, 1.2], [['專案', '客戶', '到期日', '剩餘天數', '合約金額', '業務']].concat(part.map(p => [clip(p.name, 26), clip(customerName(p.customerId), 16), p.contractEndDate, `${daysBetween(t, p.contractEndDate)} 天`, nt(p.amount) || '—', p.sales || '—'])), { size: 12, rowH: 0.4 }),
+    tableXml(20, 0.45, 1.3, 12.43, WK_MONEY ? [3, 2.2, 1.4, 1.2, 1.7, 1.2] : [3.4, 2.6, 1.6, 1.4, 1.4], [['專案', '客戶', '到期日', '剩餘天數'].concat(WK_MONEY ? ['合約金額'] : []).concat(['業務'])].concat(part.map(p => [clip(p.name, 26), clip(customerName(p.customerId), 16), p.contractEndDate, `${daysBetween(t, p.contractEndDate)} 天`].concat(WK_MONEY ? [nt(p.amount) || '—'] : []).concat([p.sales || '—']))), { size: 12, rowH: 0.4 }),
     footerXml(30, ++n + 1, data)]))));
   return pptxPackage(slides);
 }
@@ -3639,6 +3812,60 @@ ${slides.map((s, i) => `<Override PartName="/ppt/slides/slide${i + 1}.xml" Conte
     files.push({ name: `ppt/slides/_rels/slide${i + 1}.xml.rels`, data: `${H}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${REL}/slideLayout" Target="../slideLayouts/slideLayout1.xml"/></Relationships>` });
   });
   return zipFiles(files).then(b => new Blob([b], { type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation' }));
+}
+
+/* ---------- 供應商往來分析 ---------- */
+function renderVendors(body) {
+  const f = state.si; f.vq = f.vq || ''; f.vsort = f.vsort || 'projects';
+  const mv = moneyVisible();
+  const draw = () => {
+    const q = f.vq.trim().toLowerCase();
+    const all = vendorStats();
+    const list = all.filter(s => !q || [s.v.name, s.v.category, ...s.products].join(' ').toLowerCase().includes(q));
+    const key = { projects: s => s.projects.size, items: s => s.items.length, last: s => s.last, pending: s => s.pending, total: s => s.total, name: s => s.v.name }[f.vsort];
+    list.sort((a, b) => f.vsort === 'name' ? a.v.name.localeCompare(b.v.name, 'zh-Hant') : (key(b) > key(a) ? 1 : key(b) < key(a) ? -1 : a.v.name.localeCompare(b.v.name, 'zh-Hant')));
+    const active = all.filter(s => s.items.length).length;
+    $('#vlist', body).innerHTML = `<div class="stat-row"><div class="stat"><b>${all.length}</b>供應商</div><div class="stat"><b>${active}</b>有往來紀錄</div><div class="stat dup"><b>${all.reduce((n, s) => n + s.pending, 0)}</b>項成本待提供</div></div>
+      ${list.length ? `<div class="tablewrap cards"><table class="list"><thead><tr><th>廠商</th><th>類別</th><th>往來專案數</th><th>往來次數</th><th>往來產品／服務</th><th>往來客戶</th><th>最近往來</th><th>待提供成本</th>${mv ? '<th>成本總額</th>' : ''}<th></th></tr></thead><tbody>
+      ${list.map(s => `<tr data-vid="${esc(s.v.id)}"><td class="name" data-label="廠商"><a href="#" data-vdetail>${esc(s.v.name)}</a>${s.v.contact || s.v.phone ? `<div class="small muted">${esc([s.v.contact, s.v.phone].filter(Boolean).join('　'))}</div>` : ''}</td>
+        <td data-label="類別" class="${s.v.category ? '' : 'empty-cell'}">${esc(s.v.category)}</td><td data-label="往來專案數"><b>${s.projects.size}</b></td><td data-label="往來次數">${s.items.length}</td>
+        <td data-label="往來產品／服務" class="${s.products.size ? '' : 'empty-cell'}"><span class="small">${esc([...s.products].slice(0, 5).join('、'))}${s.products.size > 5 ? ` 等 ${s.products.size} 項` : ''}</span></td>
+        <td data-label="往來客戶">${s.customers.size}</td><td data-label="最近往來">${esc(s.last) || '—'}</td>
+        <td data-label="待提供成本">${s.pending ? `<span class="badge prospect">${s.pending}</span>` : '—'}</td>${mv ? `<td data-label="成本總額">${nt(s.total) || '—'}</td>` : ''}
+        <td data-label="操作"><button class="btn sm" data-vedit>編輯</button> <button class="btn sm danger" data-vdel>刪除</button></td></tr>`).join('')}</tbody></table></div>` : `<div class="card empty">${all.length ? '沒有符合的供應商' : '尚無供應商，可按「＋ 新增供應商」，或在專案的「合作廠商與成本」中新增。'}</div>`}`;
+    $$('tr[data-vid]', body).forEach(tr => {
+      const st = all.find(x => x.v.id === tr.dataset.vid);
+      $('[data-vdetail]', tr).addEventListener('click', e => { e.preventDefault(); vendorDetail(st); });
+      $('[data-vedit]', tr).addEventListener('click', () => vendorForm(st.v));
+      $('[data-vdel]', tr).addEventListener('click', async () => {
+        if (st.items.length) return toast(`「${st.v.name}」已用於 ${st.projects.size} 個專案，無法刪除；可改名或保留。`, 'warn', 6000);
+        if (!await confirmDialog(`確定刪除供應商「${esc(st.v.name)}」？`, { okText: '刪除', danger: true })) return;
+        const ok = await guard(() => removeVendor(st.v.id).then(() => true), '供應商已刪除'); if (ok) render();
+      });
+    });
+  };
+  body.innerHTML = `<div class="toolbar"><input class="input search" type="search" id="vq" placeholder="搜尋廠商名稱、類別或產品" value="${esc(f.vq)}">
+    <select class="input" id="vsort">${[['projects', '依往來專案數'], ['items', '依往來次數'], ['last', '依最近往來'], ['pending', '依待提供成本']].concat(mv ? [['total', '依成本總額']] : []).concat([['name', '依名稱']]).map(([k, l]) => `<option value="${k}"${f.vsort === k ? ' selected' : ''}>${l}</option>`).join('')}</select>
+    <button class="btn primary" id="vNew">＋ 新增供應商</button></div>
+    <p class="small muted" style="margin-top:0">往來專案數＝有使用此廠商的專案數；往來次數＝成本項目筆數。可作為供應商管理與議價的參考。</p><div id="vlist"></div>`;
+  $('#vq', body).addEventListener('input', e => { f.vq = e.target.value; draw(); });
+  $('#vsort', body).addEventListener('change', e => { f.vsort = e.target.value; draw(); });
+  $('#vNew', body).addEventListener('click', () => vendorForm());
+  draw();
+}
+function vendorDetail(st) {
+  const mv = moneyVisible(), v = st.v;
+  const rows = st.items.slice().sort((a, b) => (b.c.quoteDate || b.p.updatedAt || '').localeCompare(a.c.quoteDate || a.p.updatedAt || ''));
+  const m = openModal({ title: v.name, size: 'wide', body: `
+    <div class="meta small muted" style="display:flex;flex-wrap:wrap;gap:4px 14px;margin-bottom:10px">${v.category ? `<span>類別：${esc(v.category)}</span>` : ''}${v.taxId ? `<span>統編：${esc(v.taxId)}</span>` : ''}${v.contact ? `<span>窗口：${esc(v.contact)}</span>` : ''}${v.phone ? `<span>☎ ${telLink(v.phone)}</span>` : ''}${v.email ? `<span>✉ <a href="mailto:${esc(v.email)}">${esc(v.email)}</a></span>` : ''}</div>
+    ${v.note ? `<p class="small" style="white-space:pre-wrap">${esc(v.note)}</p>` : ''}
+    <div class="stat-row"><div class="stat"><b>${st.projects.size}</b>往來專案</div><div class="stat"><b>${st.items.length}</b>往來次數</div><div class="stat"><b>${st.customers.size}</b>往來客戶</div>${mv ? `<div class="stat"><b>${nt(st.total) || 'NT$ 0'}</b>成本總額</div>` : ''}</div>
+    ${rows.length ? `<div class="tablewrap cards"><table class="list"><thead><tr><th>專案</th><th>客戶</th><th>產品／服務</th><th>數量</th>${mv ? '<th>成本單價</th><th>小計</th>' : ''}<th>廠商成本</th></tr></thead><tbody>
+    ${rows.map(({ p, c }) => `<tr><td class="name" data-label="專案"><a href="#" data-open-pj="${esc(p.id)}">${esc(p.name)}</a> ${pjBadge(p.status)}</td><td data-label="客戶">${esc(customerName(p.customerId))}</td><td data-label="產品／服務">${esc(c.item)}</td><td data-label="數量">${esc(c.qty)}</td>
+      ${mv ? `<td data-label="成本單價">${nt(c.unitCost)}</td><td data-label="小計">${nt((Number(c.qty) || 0) * (Number(c.unitCost) || 0))}</td>` : ''}<td data-label="廠商成本">${c.quoted ? `已提供 ${esc(c.quoteDate)}` : '<span class="badge prospect">待提供</span>'}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">尚無往來紀錄</div>'}`,
+    footer: `<button class="btn" id="vdEdit">編輯供應商</button><button class="btn primary" data-close>關閉</button>` });
+  $('#vdEdit', m.el).addEventListener('click', () => { m.close(); vendorForm(v); });
+  $$('[data-open-pj]', m.el).forEach(a => a.addEventListener('click', e => { e.preventDefault(); m.close(); openProject(a.dataset.openPj, 'cost'); }));
 }
 
 /* ============================================================
@@ -3740,6 +3967,9 @@ async function init() {
     state.lastBackupAt = (await DB.getMeta('lastBackupAt')) || null;
     customIndustries = (await DB.getMeta('customIndustries')) || [];
     staffList = (await DB.getMeta('staff')) || [];
+    vendorList = (await DB.getMeta('vendors')) || [];
+    state.showMoney = loadMoneyPref();
+    try { await migrateVendors(); } catch (e) { console.error(e); }
     await Store.loadCustomers();
   } catch (e) {
     console.error(e);
