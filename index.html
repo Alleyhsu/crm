@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-GostvfhU1E6grqnV0/ep3YDhI+3TebVDXzaLUL77vMM='; style-src 'unsafe-inline'; img-src blob: data:; connect-src 'none'; font-src 'none'; media-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; form-action 'none'; base-uri 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-6vBTX1fj0+MwAVeeLNhWKh1Do/7iztBA1HJ2byCp3Tw='; style-src 'unsafe-inline'; img-src blob: data:; connect-src 'none'; font-src 'none'; media-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; form-action 'none'; base-uri 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#0f2747">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Systex CRM">
-<title>Alley's Systex CRM</title>
+<meta name="apple-mobile-web-app-title" content="客戶管理系統">
+<title>客戶管理系統</title>
 <style>
 :root{
   --blue:#1d4f9c;--blue-d:#163d7a;--blue-l:#e8f0fb;--navy:#0f2747;--navy-2:#16345e;
@@ -332,12 +332,12 @@ textarea.input{min-height:90px;resize:vertical}
 </head>
 <body>
 <!--
-  Alley's Systex CRM 客戶管理系統 V1
+  客戶管理系統
   單一 HTML 檔案，HTML + CSS + 原生 JavaScript。
   資料儲存於本機瀏覽器 IndexedDB；不載入任何外部資源，並以 Content-Security-Policy 禁止所有網路連線。
 -->
 <aside class="sidebar" id="sidebar" aria-label="主選單">
-  <div class="brand"><b><i></i>Alley's Systex CRM</b><span>客戶管理系統 V1</span></div>
+  <div class="brand"><b><i></i>客戶管理系統</b><span>CRM・本機版</span></div>
   <ul class="nav" id="nav"></ul>
   <div class="side-foot">🔒 資料僅存於本機瀏覽器<br>請定期匯出備份</div>
 </aside>
@@ -355,10 +355,10 @@ textarea.input{min-height:90px;resize:vertical}
 <script>
 'use strict';
 /* ============================================================
- * Alley's Systex CRM V1 — 核心：常數、工具、資料庫、服務
+ * 客戶管理系統 — 核心：常數、工具、資料庫、服務
  * 所有資料僅存於本機瀏覽器 IndexedDB，程式不發出任何網路請求。
  * ============================================================ */
-const APP = { name: "Alley's Systex CRM", version: '1.4.0', schemaVersion: 4, dbName: 'alley_systex_crm', dbVersion: 4 };
+const APP = { name: '客戶管理系統', version: '1.4.2', schemaVersion: 4, dbName: 'alley_systex_crm', dbVersion: 4 };
 
 const INDUSTRIES = ['公部門', '工具機', '半導體', '設備機械', '手工具', '自行車', '塑膠射出', '五金加工', '建築', '醫療單位', '化妝品', '家居行業', '零售業'];
 const REGIONS = ['基隆市', '臺北市', '新北市', '桃園市', '新竹市', '新竹縣', '苗栗縣', '臺中市', '彰化縣', '南投縣', '雲林縣', '嘉義市', '嘉義縣', '臺南市', '高雄市', '屏東縣', '宜蘭縣', '花蓮縣', '臺東縣', '澎湖縣', '金門縣', '連江縣'];
@@ -1645,21 +1645,28 @@ async function zipFiles(files) { // files: [{name, data: string|Uint8Array}]
   end.setUint32(12, cdSize, true); end.setUint32(16, offset, true);
   return new Blob([...parts, ...central, new Uint8Array(end.buffer)], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
 }
+const MAX_IMPORT_BYTES = 30 * 1024 * 1024, MAX_UNZIPPED_BYTES = 200 * 1024 * 1024, MAX_ZIP_ENTRIES = 2000;
 async function unzip(buf) {
+  if (buf.byteLength > MAX_IMPORT_BYTES) throw new Error('檔案超過 30 MB，請確認是否選錯檔案');
   const u8 = new Uint8Array(buf), dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength);
   let eocd = -1;
   for (let i = u8.length - 22; i >= Math.max(0, u8.length - 65557); i--) if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
   if (eocd < 0) throw new Error('不是有效的 Excel（.xlsx）檔案');
   const count = dv.getUint16(eocd + 10, true); let p = dv.getUint32(eocd + 16, true);
-  const out = {}, dec = new TextDecoder();
+  if (count > MAX_ZIP_ENTRIES) throw new Error('Excel 檔案結構異常（內容項目過多），已停止讀取');
+  const out = {}, dec = new TextDecoder(); let total = 0;
   for (let i = 0; i < count; i++) {
     if (dv.getUint32(p, true) !== 0x02014b50) throw new Error('Excel 檔案結構損毀');
-    const method = dv.getUint16(p + 10, true), csize = dv.getUint32(p + 20, true);
+    if (p + 46 > u8.length) throw new Error('Excel 檔案結構損毀');
+    const method = dv.getUint16(p + 10, true), csize = dv.getUint32(p + 20, true), usize = dv.getUint32(p + 24, true);
+    total += usize; if (total > MAX_UNZIPPED_BYTES) throw new Error('Excel 檔案解壓縮後過大（可能是異常或惡意檔案），已停止讀取');
     const nlen = dv.getUint16(p + 28, true), elen = dv.getUint16(p + 30, true), clen = dv.getUint16(p + 32, true), lho = dv.getUint32(p + 42, true);
     const name = dec.decode(u8.subarray(p + 46, p + 46 + nlen));
     p += 46 + nlen + elen + clen;
+    if (lho + 30 > u8.length) throw new Error('Excel 檔案結構損毀');
     const lnl = dv.getUint16(lho + 26, true), lel = dv.getUint16(lho + 28, true);
     const start = lho + 30 + lnl + lel;
+    if (start + csize > u8.length) throw new Error('Excel 檔案結構損毀');
     const comp = u8.subarray(start, start + csize);
     out[name] = { method, comp };
   }
@@ -1672,6 +1679,7 @@ async function unzip(buf) {
       else if (e.method === 8) {
         if (typeof DecompressionStream !== 'function') throw new Error('此瀏覽器版本過舊，無法讀取 Excel 檔，請更新瀏覽器');
         raw = await streamBytes(e.comp, new DecompressionStream('deflate-raw'));
+        if (raw.length > MAX_UNZIPPED_BYTES) throw new Error('Excel 檔案解壓縮後過大，已停止讀取');
       } else throw new Error('不支援的 Excel 壓縮格式');
       return new TextDecoder('utf-8').decode(raw);
     }
@@ -1761,6 +1769,7 @@ function parseCSV(text) {
   return rows.filter(r => r.some(c => String(c).trim() !== '')).map(r => r.map(c => c.replace(/^'(?=[=+\-@])/, '')));
 }
 function decodeText(buf) {
+  if (buf.byteLength > MAX_IMPORT_BYTES) throw new Error('檔案超過 30 MB，請確認是否選錯檔案');
   try { return { text: new TextDecoder('utf-8', { fatal: true }).decode(buf), enc: 'UTF-8' }; }
   catch (e) {
     try { return { text: new TextDecoder('big5').decode(buf), enc: 'Big5' }; }
@@ -2378,8 +2387,9 @@ function parseSIBackup(book, custMap, errors) {
     p.announced = parseBool(o.announced) === true;
     p.amount = p.amount === '' ? '' : parseMoney(p.amount); if (p.amount !== '' && isNaN(p.amount)) errs.push('合約總金額不是數字');
     for (const k of ['announceDate', 'startDate', 'endDate', 'nextFollowUpDate', 'acceptanceDate', 'contractEndDate']) { const d = parseDate(o[k]); if (d === null) errs.push(`日期格式錯誤：${s(o, k)}`); p[k] = d || ''; }
-    try { p.costAnalysis = s(o, 'costAnalysis') ? JSON.parse(s(o, 'costAnalysis')) : null; } catch (e) { p.costAnalysis = null; }
-    try { p.statusHistory = s(o, 'statusHistory') ? JSON.parse(s(o, 'statusHistory')) : []; if (!Array.isArray(p.statusHistory)) p.statusHistory = []; } catch (e) { p.statusHistory = []; }
+    try { const ca = s(o, 'costAnalysis') ? JSON.parse(s(o, 'costAnalysis')) : null;
+      p.costAnalysis = ca && typeof ca === 'object' && !Array.isArray(ca) ? { done: ca.done === true, by: String(ca.by || ''), date: parseDate(ca.date) || '', note: String(ca.note || ''), at: String(ca.at || '') } : null; } catch (e) { p.costAnalysis = null; }
+    try { p.statusHistory = cleanHistory(s(o, 'statusHistory') ? JSON.parse(s(o, 'statusHistory')) : [], PJ_STATUS.map(x => x.k)); } catch (e) { p.statusHistory = []; }
     if (errs.length) { errors.push(`SI專案 第 ${o._row} 列（${p.name || '未命名'}）：${errs.join('；')}`); continue; }
     const src = p.id; p.id = UUID_RE.test(src) ? src : uid(); p.customerId = custMap.get(p.customerId); p.costs = []; p.payments = [];
     pMap.set(src || p.id, p); out.projects.push(p);
@@ -2424,7 +2434,7 @@ function parseDealsBackup(book, custMap, errors) {
     out.push(Object.assign(DL.blank(), { id: UUID_RE.test(s('id')) ? s('id') : uid(), customerId: custMap.get(s('customerId')), product: s('product'), category: s('category'), month,
       amount: s('amount') === '' ? '' : (isNaN(parseMoney(s('amount'))) ? '' : parseMoney(s('amount'))), quoted: parseBool(o.quoted) === true, quoteDate: parseDate(o.quoteDate) || '',
       ordered: parseBool(o.ordered) === true, orderDate: parseDate(o.orderDate) || '', lost: parseBool(o.lost) === true, lostReason: s('lostReason'), lostNote: s('lostNote'), lostDate: parseDate(o.lostDate) || '',
-      sales: s('sales'), nextFollowUpDate: parseDate(o.nextFollowUpDate) || '', note: s('note'), projectId: s('projectId'), history: Array.isArray(history) ? history : [], createdAt: s('createdAt'), updatedAt: s('updatedAt') }));
+      sales: s('sales'), nextFollowUpDate: parseDate(o.nextFollowUpDate) || '', note: s('note'), projectId: s('projectId'), history: cleanHistory(history, DEAL_STAGES.map(x => x.k)), createdAt: s('createdAt'), updatedAt: s('updatedAt') }));
   }
   return out;
 }
@@ -4127,6 +4137,8 @@ const DEAL_STAGES = [{ k: 'open', t: '未報價', c: '#8a94a6' }, { k: 'quoted',
 let dealCats = DEAL_CATS_DEFAULT.slice();
 state.deal = { tab: 'list', q: '', ctype: '', sales: '', cat: '', stage: '', range: 'all', showLost: false, sort: 'month', dir: 'asc', fYear: '' };
 
+function stageName(k) { const s = DEAL_STAGES.find(x => x.k === k); return s ? s.t : '—'; }
+function cleanHistory(h, valid) { return Array.isArray(h) ? h.filter(x => x && typeof x === 'object' && valid.includes(x.to) && (!x.from || valid.includes(x.from)) && !isNaN(new Date(x.at))).map(x => ({ from: x.from || '', to: x.to, at: String(x.at) })) : []; }
 function dealStage(d) { return d.lost ? 'lost' : d.ordered ? 'ordered' : d.quoted ? 'quoted' : 'open'; }
 function dealStageBadge(d) { const s = DEAL_STAGES.find(x => x.k === dealStage(d)); return `<span class="badge" style="background:${s.c}1a;color:${s.c};border-color:${s.c}55">${s.t}</span>`; }
 function ym(d = todayStr()) { return d.slice(0, 7); }
@@ -4399,7 +4411,7 @@ async function dealForm(existing, presetCustomerId) {
     <div class="field"><label>業務</label>${staffSelectHtml('d_sales', d.sales)}</div>
     <div class="field"><label>下次跟進日期</label><input type="date" class="input" id="d_next" value="${esc(d.nextFollowUpDate)}"></div>
     <div class="field full"><label>備註</label><textarea class="input" id="d_note" rows="3" placeholder="客戶需求、競爭對手、決策者…">${esc(d.note)}</textarea></div></div>
-    ${hist.length > 1 ? `<div class="section-t" style="margin-top:12px">推進歷程</div><div class="small">${hist.map(h => `<div>${esc(fmtDT(h.at))}　${h.from ? `${DEAL_STAGES.find(s => s.k === h.from).t} → ` : '建立：'}${DEAL_STAGES.find(s => s.k === h.to).t}</div>`).join('')}</div>` : ''}`,
+    ${hist.length > 1 ? `<div class="section-t" style="margin-top:12px">推進歷程</div><div class="small">${hist.map(h => `<div>${esc(fmtDT(h.at))}　${h.from ? `${esc(stageName(h.from))} → ` : '建立：'}${esc(stageName(h.to))}</div>`).join('')}</div>` : ''}`,
     footer: `${existing ? `<button class="btn danger" id="dfDel">刪除</button>${d.lost ? '<button class="btn" id="dfReopen">重新開啟</button>' : '<button class="btn" id="dfLost">標示未成交</button>'}${d.ordered && !pj ? '<button class="btn" id="dfConvert">轉 SI 專案</button>' : ''}` : ''}<span class="spacer"></span><button class="btn" data-close>取消</button><button class="btn primary" data-save>儲存</button>` });
   bindStaffSelects(m.el);
   const cs = $('#d_cust', m.el); let prevC = cs.value;
@@ -4676,7 +4688,13 @@ async function renderSettings(el) {
   });
 }
 
+/** 防止被其他網站以 iframe 嵌入（點擊劫持）：被嵌入時不開啟資料庫 */
+function isFramed() { try { return window.top !== window.self; } catch (e) { return true; } }
 async function init() {
+  if (isFramed()) {
+    document.body.innerHTML = '<div class="fatal"><div class="notice danger"><b>安全保護</b><p>本系統不允許被嵌入其他網頁中使用。請直接在瀏覽器網址列開啟本系統。</p></div></div>';
+    return;
+  }
   buildNav();
   try {
     await DB.open();
