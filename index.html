@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-6vBTX1fj0+MwAVeeLNhWKh1Do/7iztBA1HJ2byCp3Tw='; style-src 'unsafe-inline'; img-src blob: data:; connect-src 'none'; font-src 'none'; media-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; form-action 'none'; base-uri 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-uan8eJftj52mvLwLIhmqcgmyZ4SqCu0w5kYu96ZZtYo='; style-src 'unsafe-inline'; img-src blob: data:; connect-src 'none'; font-src 'none'; media-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; form-action 'none'; base-uri 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#0f2747">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -327,6 +327,17 @@ textarea.input{min-height:90px;resize:vertical}
 .kb-card .meta{display:flex;flex-wrap:wrap;gap:2px 10px;color:var(--muted);margin-top:4px}
 .kb-card .acts{margin-top:6px}
 @media (max-width:640px){.fc-chart{height:150px;gap:2px}.fc-bar{width:85%}}
+/* ===== 業務統計報表 ===== */
+.rpt-bar .seg span{padding:8px 12px}
+.rpt-kpis{grid-template-columns:repeat(5,minmax(0,1fr))}
+.rpt-kpis .kpi .v{font-size:26px}
+.rpt-delta{font-weight:700}.rpt-delta.up{color:var(--ok)}.rpt-delta.down{color:var(--danger)}
+.rpt-chart{display:grid;gap:4px;align-items:end;height:190px;overflow-x:auto}
+.rpt-col{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;min-width:0}
+.rpt-col .fc-bar{width:70%;max-width:40px}
+.rpt-col b{font-size:12.5px;min-height:16px}.rpt-col span{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+@media (max-width:1100px){.rpt-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:640px){.rpt-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.rpt-chart{height:150px}.rpt-col span{font-size:9.5px}}
 
 </style>
 </head>
@@ -358,7 +369,7 @@ textarea.input{min-height:90px;resize:vertical}
  * 客戶管理系統 — 核心：常數、工具、資料庫、服務
  * 所有資料僅存於本機瀏覽器 IndexedDB，程式不發出任何網路請求。
  * ============================================================ */
-const APP = { name: '客戶管理系統', version: '1.4.2', schemaVersion: 4, dbName: 'alley_systex_crm', dbVersion: 4 };
+const APP = { name: '客戶管理系統', version: '1.5.0', schemaVersion: 4, dbName: 'alley_systex_crm', dbVersion: 4 };
 
 const INDUSTRIES = ['公部門', '工具機', '半導體', '設備機械', '手工具', '自行車', '塑膠射出', '五金加工', '建築', '醫療單位', '化妝品', '家居行業', '零售業'];
 const REGIONS = ['基隆市', '臺北市', '新北市', '桃園市', '新竹市', '新竹縣', '苗栗縣', '臺中市', '彰化縣', '南投縣', '雲林縣', '嘉義市', '嘉義縣', '臺南市', '高雄市', '屏東縣', '宜蘭縣', '花蓮縣', '臺東縣', '澎湖縣', '金門縣', '連江縣'];
@@ -860,7 +871,7 @@ const PAGES = {
   deals: { k: 'D', t: '商機管理' },
   gp: { k: 'E', t: 'GP 營收管理', soon: true },
   si: { k: 'F', t: 'SI 專案管理' },
-  reports: { k: 'G', t: '業務統計報表', soon: true },
+  reports: { k: 'G', t: '業務統計報表' },
   data: { k: 'H', t: '資料匯入、匯出與備份' },
   settings: { k: 'I', t: '系統設定' }
 };
@@ -939,7 +950,7 @@ async function render() {
   const el = $('#content');
   try {
     if (state.page === 'customers' && state.detailId) await renderDetail(el);
-    else await ({ dashboard: renderDashboard, customers: renderCustomers, activities: renderActivities, deals: renderDeals, si: renderSI, data: renderData, settings: renderSettings }[state.page] || renderSoon)(el);
+    else await ({ dashboard: renderDashboard, customers: renderCustomers, activities: renderActivities, deals: renderDeals, reports: renderReports, si: renderSI, data: renderData, settings: renderSettings }[state.page] || renderSoon)(el);
   } catch (e) {
     console.error(e);
     el.innerHTML = `<div class="notice danger">頁面載入失敗：${esc(errMsg(e))}</div>`;
@@ -1006,6 +1017,7 @@ async function renderDashboard(el) {
       <div class="card"><h2>已逾期跟進 <span class="count">${overdue.length}</span></h2>${fuList(overdue, '目前沒有逾期的跟進項目 👍')}</div>
       <div class="card"><h2>今日待跟進 <span class="count">${today.length}</span></h2>${fuList(today, '今天沒有待跟進項目')}</div>
     </div>
+    ${await rptDashboardHtml()}
     ${await dealDashboardHtml()}
     ${await siDashboardHtml()}
     <div class="card"><h2>其他模組指標</h2>
@@ -1013,7 +1025,6 @@ async function renderDashboard(el) {
       <div class="pending-grid">
         <div><b>未結案 GP</b>待「GP 營收管理」完成</div>
         <div><b>已結案 GP</b>待「GP 營收管理」完成</div>
-        <div><b>本週活動統計</b>待「業務統計報表」完成</div>
       </div></div>
     <div class="row"><button class="btn primary" data-act="new">＋ 新增客戶</button><button class="btn accent" data-act="card">📇 名片新增</button></div>`;
   bindFuList(el); bindSiDashboard(el); bindDealDashboard(el);
@@ -4161,8 +4172,8 @@ const DL = {
     if (!d.product) throw new Error('請輸入往來機會（產品）');
     if (!/^\d{4}-\d{2}$/.test(d.month || '')) throw new Error('請選擇預估月份');
     if (d.amount !== '' && d.amount != null) { d.amount = parseMoney(d.amount); if (isNaN(d.amount)) throw new Error('預估金額請輸入數字'); } else d.amount = '';
+    if (d.ordered) { d.quoted = true; if (!d.orderDate) d.orderDate = todayStr(); if (!d.quoteDate) d.quoteDate = d.orderDate; } // 已下單視為已報價
     if (!d.quoted) d.quoteDate = ''; if (!d.ordered) d.orderDate = '';
-    if (d.ordered && !d.quoted) { d.quoted = true; } // 已下單視為已報價
     await DB.tx(['deals', 'customers'], 'readwrite', async s => {
       if (!await req(s.customers.get(d.customerId))) throw new Error('所選客戶不存在');
       if (data.id) {
@@ -4541,7 +4552,7 @@ async function importDealTemplateFlow(book, file) {
     if (s(o, 'sales') && !staffList.includes(s(o, 'sales'))) newStaff.add(s(o, 'sales'));
     if (s(o, 'category') && !dealCats.includes(s(o, 'category'))) newCats.add(s(o, 'category'));
     const ordered = yes(o.ordered), quoted = yes(o.quoted) || ordered;
-    const d = Object.assign(DL.blank(), { customerId: custRef.id, product, category: s(o, 'category'), month, amount, quoted, quoteDate: quoted ? (qd || '') : '', ordered, orderDate: ordered ? (od || '') : '',
+    const d = Object.assign(DL.blank(), { customerId: custRef.id, product, category: s(o, 'category'), month, amount, quoted, quoteDate: quoted ? (qd || (ordered ? (od || '') : '')) : '', ordered, orderDate: ordered ? (od || '') : '',
       sales: s(o, 'sales'), nextFollowUpDate: nf || '', note: s(o, 'note') });
     const filled = DLT_COLS.map(c => c[1]).filter(k => s(o, k) !== '');
     const ex = custRef.existing ? DL.deals.find(x => x.customerId === custRef.id && normName(x.product) === normName(product) && x.month === month) : null;
@@ -4588,6 +4599,156 @@ async function importDealTemplateFlow(book, file) {
     m.close(); resultDialog('商機匯入完成', [`新增 ${add.length} 筆、更新 ${upd.length} 筆`, custs ? `新增客戶 ${custs} 家` : '', errors.length ? `未匯入（錯誤）${errors.length} 列` : ''], errors);
     state.page = 'deals'; state.deal.tab = 'list'; if (location.hash !== '#/deals') location.hash = '#/deals'; else render();
   });
+}
+
+/* ============================================================
+ * G. 業務統計報表
+ * 資料來源：業務活動（電話／拜訪／視訊會議／Email）、商機（建立日、報價日、下單日）、SI 專案（點子）
+ * 進單金額：商機金額為含稅，報表以未稅（÷1.05）呈現
+ * ============================================================ */
+state.rpt = { preset: 'thisWeek', from: '', to: '' };
+const RPT_PRESETS = [['thisWeek', '本週'], ['lastWeek', '上週'], ['thisMonth', '本月'], ['lastMonth', '上月'], ['custom', '自訂期間']];
+function rptRange(preset, from, to) {
+  const t = todayStr(), mon = mondayOf(t), m1 = t.slice(0, 8) + '01';
+  if (preset === 'thisWeek') return [mon, addDays(mon, 6)];
+  if (preset === 'lastWeek') return [addDays(mon, -7), addDays(mon, -1)];
+  if (preset === 'thisMonth') return [m1, addDays(addMonths(m1, 1), -1)];
+  if (preset === 'lastMonth') { const s = addMonths(m1, -1); return [s, addDays(m1, -1)]; }
+  return [from || mon, to || from || addDays(mon, 6)];
+}
+/** 前一個等長期間（用於比較） */
+function rptPrevRange([a, b], preset) {
+  if (preset === 'thisMonth' || preset === 'lastMonth') { const s = addMonths(a, -1); return [s, addDays(a, -1)]; }
+  const n = daysBetween(a, b) + 1; return [addDays(a, -n), addDays(a, -1)];
+}
+function rptCompute(a, b, acts) {
+  const inR = d => d && d >= a && d <= b;
+  const A = acts.filter(x => inR((x.datetime || '').slice(0, 10)));
+  const by = t => A.filter(x => x.type === t);
+  const visits = A.filter(x => x.type === '拜訪' || x.type === '視訊會議');
+  const deals = DL.deals;
+  const created = deals.filter(d => inR(todayStr(new Date(d.createdAt))));
+  const quoted = deals.filter(d => d.quoted && inR(d.quoteDate));
+  const ordered = deals.filter(d => d.ordered && inR(d.orderDate));
+  const ideas = PJ.projects.filter(p => inR(todayStr(new Date(p.createdAt))) && (p.statusHistory || [])[0] && p.statusHistory[0].to === 'idea');
+  const orderedEx = ordered.reduce((s, d) => s + (d.amount === '' || d.amount == null ? 0 : exTax(d.amount)), 0);
+  return { a, b, A, phone: by('電話'), visit: by('拜訪'), online: by('視訊會議'), email: by('Email'), visits,
+    visitCustomers: new Set(visits.map(x => x.customerId)), allCustomers: new Set(A.map(x => x.customerId)),
+    created, quoted, ordered, orderedEx, orderedNoAmt: ordered.filter(d => d.amount === '' || d.amount == null).length, ideas };
+}
+function rptDelta(cur, prev) {
+  const d = cur - prev; if (!prev && !cur) return '';
+  return `<span class="rpt-delta ${d > 0 ? 'up' : d < 0 ? 'down' : ''}">${d > 0 ? '▲' : d < 0 ? '▼' : '－'} ${Math.abs(d)}</span>`;
+}
+function fmtRange(a, b) { return `${a.replace(/-/g, '/')} ～ ${b.replace(/-/g, '/')}`; }
+
+async function renderReports(el) {
+  await Promise.all([Store.loadCustomers(), DL.load(), PJ.load()]);
+  const acts = await Store.allActivities();
+  const f = state.rpt;
+  const [a, b] = rptRange(f.preset, f.from, f.to);
+  if (b < a) { f.to = a; return renderReports(el); }
+  const [pa, pb] = rptPrevRange([a, b], f.preset);
+  const R = rptCompute(a, b, acts), P = rptCompute(pa, pb, acts), mv = moneyVisible();
+  const kpi = (label, n, prev, cls = '', sub = '') => `<div class="kpi ${cls}" style="cursor:default"><div class="l">${label}</div><div class="v">${n}</div><div class="small muted">${rptDelta(n, prev)} <span>前期 ${prev}</span>${sub ? `<br>${sub}` : ''}</div></div>`;
+  const days = daysBetween(a, b) + 1;
+  // 趨勢：31 天內依日，超過依週
+  const buckets = [];
+  if (days <= 31) for (let i = 0; i < days; i++) { const d = addDays(a, i); buckets.push([d, d, mdw(d)]); }
+  else for (let s = mondayOf(a); s <= b; s = addDays(s, 7)) { const e = addDays(s, 6); buckets.push([s < a ? a : s, e > b ? b : e, `${Number(s.slice(5, 7))}/${Number(s.slice(8))} 週`]); }
+  const series = buckets.map(([s, e, l]) => { const r = rptCompute(s, e, acts); return { l, phone: r.phone.length, visit: r.visit.length, online: r.online.length, email: r.email.length, deals: r.created.length }; });
+  const max = Math.max(1, ...series.map(x => x.phone + x.visit + x.online + x.email));
+  const custName = id => esc(customerName(id));
+  el.innerHTML = `
+    <div class="card rpt-bar"><div class="row" style="gap:8px">
+      <div class="seg">${RPT_PRESETS.map(([k, l]) => `<label><input type="radio" name="rp" value="${k}"${f.preset === k ? ' checked' : ''}><span>${l}</span></label>`).join('')}</div>
+      <div class="row" style="gap:6px"><input type="date" class="input" id="rFrom" value="${a}" style="width:auto"><span>～</span><input type="date" class="input" id="rTo" value="${b}" style="width:auto"></div>
+      <span class="spacer"></span>${moneyToggleHtml()}</div>
+      <div class="row small muted" style="margin-top:8px;gap:14px"><span>統計期間：<b style="color:var(--text)">${fmtRange(a, b)}</b>（${days} 天）</span><span>比較期間：${fmtRange(pa, pb)}</span></div></div>
+    <div class="row" style="margin-bottom:14px"><button class="btn primary" id="rCopy">📋 複製週報文字</button><button class="btn" id="rXlsx">⬇ 匯出 Excel 明細</button><span class="small muted">複製後可直接貼到週報、Email 或 Teams</span></div>
+    <div class="section-t" style="margin-bottom:10px">拜訪統計</div>
+    <div class="kpis rpt-kpis">
+      ${kpi('客戶拜訪數', R.visits.length, P.visits.length, '', `上門 ${R.visit.length}／線上 ${R.online.length}・${R.visitCustomers.size} 家客戶`)}
+      ${kpi('電話量', R.phone.length, P.phone.length, 'o')}
+      ${kpi('上門拜訪量', R.visit.length, P.visit.length)}
+      ${kpi('線上會議量', R.online.length, P.online.length)}
+      ${kpi('Email', R.email.length, P.email.length, '', `接觸客戶共 ${R.allCustomers.size} 家`)}
+    </div>
+    <div class="section-t" style="margin-bottom:10px">商機統計</div>
+    <div class="kpis rpt-kpis">
+      ${kpi('新增商機', R.created.length, P.created.length, 'o', R.ideas.length ? `另有 SI 新點子 ${R.ideas.length} 個` : '')}
+      ${kpi('報價數', R.quoted.length, P.quoted.length)}
+      ${kpi('進單數', R.ordered.length, P.ordered.length, 'r')}
+      <div class="kpi" style="cursor:default;border-top-color:var(--ok)"><div class="l">進單金額（未稅）</div><div class="v" style="font-size:22px">${mv ? (nt(R.orderedEx) || 'NT$ 0') : MASK}</div>
+        <div class="small muted">${mv ? `前期 ${nt(P.orderedEx) || 'NT$ 0'}` : '按「👁 顯示金額」查看'}${R.orderedNoAmt ? `<br>${R.orderedNoAmt} 筆未填金額` : ''}</div></div>
+      ${kpi('SI 新點子', R.ideas.length, P.ideas.length, '', '以「點子」狀態建立的 SI 專案')}
+    </div>
+    <div class="card"><h2>${days <= 31 ? '每日' : '每週'}活動趨勢</h2>
+      <div class="rpt-chart" style="grid-template-columns:repeat(${series.length},minmax(0,1fr))">${series.map(x => { const tot = x.phone + x.visit + x.online + x.email; const h = n => (n / max * 100).toFixed(1);
+        return `<div class="rpt-col" title="${esc(x.l)}：電話 ${x.phone}、上門 ${x.visit}、線上 ${x.online}、Email ${x.email}、新商機 ${x.deals}"><div class="fc-bar"><i style="height:${h(x.phone)}%;background:#f08a24"></i><i style="height:${h(x.visit)}%;background:#1d4f9c"></i><i style="height:${h(x.online)}%;background:#7a5af5"></i><i style="height:${h(x.email)}%;background:#b8c1d1"></i></div><b>${tot || ''}</b><span>${esc(x.l)}</span></div>`; }).join('')}</div>
+      <div class="gantt-legend small" style="margin-top:8px"><span><i style="background:#f08a24"></i>電話</span><span><i style="background:#1d4f9c"></i>上門拜訪</span><span><i style="background:#7a5af5"></i>線上會議</span><span><i style="background:#b8c1d1"></i>Email</span></div></div>
+    <div class="two">
+      <div class="card"><h2>新增商機 <span class="count">${R.created.length}</span></h2>${R.created.length ? R.created.sort((x, y) => (x.createdAt || '').localeCompare(y.createdAt || '')).map(d => `<div class="fu-row"><span class="nm" data-open-deal="${esc(d.id)}">${esc(d.product)}</span>${dealStageBadge(d)}<span class="spacer"></span><span class="small">${custName(d.customerId)}</span><span class="small muted">預估 ${esc(d.month)}</span></div>`).join('') : '<div class="empty">此期間沒有新增商機</div>'}
+        ${R.ideas.length ? `<div class="small muted" style="margin-top:8px">SI 新點子：${R.ideas.map(p => esc(p.name)).join('、')}</div>` : ''}</div>
+      <div class="card"><h2>報價與進單</h2>
+        ${[['報價', R.quoted, 'quoteDate'], ['進單', R.ordered, 'orderDate']].map(([l, list, k]) => `<div class="small" style="font-weight:700;margin:4px 0">${l}（${list.length}）</div>${list.length ? list.sort((x, y) => x[k].localeCompare(y[k])).map(d => `<div class="fu-row"><span class="nm" data-open-deal="${esc(d.id)}">${esc(d.product)}</span><span class="small">${custName(d.customerId)}</span><span class="spacer"></span><span class="small muted">${esc(d[k])}</span>${l === '進單' ? `<span class="small"><b>${d.amount === '' ? '未填金額' : mv ? nt(exTax(d.amount)) : MASK}</b></span>` : ''}</div>`).join('') : '<div class="empty small" style="padding:8px">無</div>'}`).join('')}</div></div>
+    <div class="card"><h2>拜訪明細 <span class="count">${R.A.length}</span></h2>
+      ${R.A.length ? `<div class="tablewrap cards"><table class="list"><thead><tr><th>日期時間</th><th>類型</th><th>客戶</th><th>聯繫人</th><th>拜訪紀錄</th></tr></thead><tbody>
+      ${sortActs(R.A).reverse().map(x => `<tr class="clickable" data-cust="${esc(x.customerId)}"><td data-label="日期時間">${esc(fmtActDT(x.datetime))}</td><td data-label="類型"><span class="badge type">${esc(x.type)}</span></td><td class="name" data-label="客戶">${custName(x.customerId)}</td>
+        <td data-label="聯繫人" class="${x.contactName ? '' : 'empty-cell'}">${esc(x.contactName)}</td><td data-label="拜訪紀錄" class="${x.content ? '' : 'empty-cell'}"><span class="small">${esc((x.content || '').slice(0, 60))}${(x.content || '').length > 60 ? '…' : ''}</span></td></tr>`).join('')}</tbody></table></div>`
+        : '<div class="empty">此期間沒有業務活動紀錄。拜訪、電話請在「客戶詳細資料 → 業務活動歷程」或「業務活動與跟進」新增。</div>'}</div>
+    <p class="small muted">計算方式：客戶拜訪數＝上門拜訪＋線上會議（依「業務活動」的拜訪日期）；新增商機依商機建立日期；報價數依報價日期；進單依下單日期，金額為商機預估金額（含稅）÷ 1.05。</p>`;
+  bindMoneyToggle(el);
+  $$('input[name=rp]', el).forEach(r => r.addEventListener('change', () => { f.preset = r.value; if (r.value === 'custom') { f.from = a; f.to = b; } render(); }));
+  const setCustom = () => { f.preset = 'custom'; f.from = $('#rFrom', el).value; f.to = $('#rTo', el).value; if (f.from && f.to) render(); };
+  $('#rFrom', el).addEventListener('change', setCustom); $('#rTo', el).addEventListener('change', setCustom);
+  $$('[data-open-deal]', el).forEach(x => x.addEventListener('click', () => dealForm(DL.get(x.dataset.openDeal))));
+  $$('tr[data-cust]', el).forEach(tr => tr.addEventListener('click', () => openCustomer(tr.dataset.cust, 'acts')));
+  $('#rCopy', el).addEventListener('click', async () => {
+    const txt = rptText(R, P);
+    try { await navigator.clipboard.writeText(txt); toast('週報文字已複製'); }
+    catch (e) { const ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); toast('週報文字已複製'); } catch (x) { toast('無法複製，請改用匯出 Excel', 'err'); } ta.remove(); }
+  });
+  $('#rXlsx', el).addEventListener('click', () => guard(() => rptExcel(R, P)));
+}
+function rptText(R, P) {
+  const mv = moneyVisible(), cn = id => customerName(id);
+  const L = [`【業務統計】${fmtRange(R.a, R.b)}`, '',
+    `■ 客戶拜訪：${R.visits.length} 次（上門 ${R.visit.length}、線上會議 ${R.online.length}），共 ${R.visitCustomers.size} 家客戶　｜前期 ${P.visits.length}`,
+    `■ 電話拜訪：${R.phone.length} 通　｜前期 ${P.phone.length}`,
+    `■ Email：${R.email.length} 封`,
+    `■ 新增商機：${R.created.length} 筆　｜前期 ${P.created.length}`];
+  R.created.forEach(d => L.push(`　・${cn(d.customerId)}－${d.product}（預估 ${d.month}）`));
+  if (R.ideas.length) L.push(`■ SI 新點子：${R.ideas.length} 個（${R.ideas.map(p => p.name).join('、')}）`);
+  L.push(`■ 報價：${R.quoted.length} 筆　｜前期 ${P.quoted.length}`);
+  R.quoted.forEach(d => L.push(`　・${cn(d.customerId)}－${d.product}（${d.quoteDate}）`));
+  L.push(`■ 進單：${R.ordered.length} 筆${mv ? `，未稅合計 ${nt(R.orderedEx) || 'NT$ 0'}` : ''}　｜前期 ${P.ordered.length}`);
+  R.ordered.forEach(d => L.push(`　・${cn(d.customerId)}－${d.product}（${d.orderDate}）${mv ? (d.amount === '' ? '　未填金額' : `　未稅 ${nt(exTax(d.amount))}`) : ''}`));
+  if (R.visits.length) { L.push('', '■ 拜訪明細'); sortActs(R.visits).reverse().forEach(x => L.push(`　・${fmtActDT(x.datetime)}　${x.type === '視訊會議' ? '線上' : '上門'}　${cn(x.customerId)}${x.contactName ? `（${x.contactName}）` : ''}${x.content ? `：${x.content.replace(/\s+/g, ' ').slice(0, 50)}` : ''}`)); }
+  return L.join('\n');
+}
+async function rptExcel(R, P) {
+  const mv = moneyVisible(), cn = id => customerName(id);
+  const sum = [['項目', '本期', '前期'], ['統計期間', fmtRange(R.a, R.b), fmtRange(P.a, P.b)], ['客戶拜訪數（上門＋線上）', R.visits.length, P.visits.length], ['　上門拜訪', R.visit.length, P.visit.length],
+    ['　線上會議', R.online.length, P.online.length], ['拜訪客戶家數', R.visitCustomers.size, P.visitCustomers.size], ['電話量', R.phone.length, P.phone.length], ['Email', R.email.length, P.email.length],
+    ['新增商機', R.created.length, P.created.length], ['SI 新點子', R.ideas.length, P.ideas.length], ['報價數', R.quoted.length, P.quoted.length], ['進單數', R.ordered.length, P.ordered.length]]
+    .concat(mv ? [['進單金額（未稅）', Math.round(R.orderedEx), Math.round(P.orderedEx)]] : []).map(r => r.map(String));
+  const sheets = [{ name: '統計摘要', rows: sum },
+    { name: '拜訪明細', rows: [['日期時間', '類型', '客戶', '聯繫人', '拜訪紀錄']].concat(sortActs(R.A).reverse().map(x => [fmtActDT(x.datetime), x.type, cn(x.customerId), x.contactName || '', x.content || ''])) },
+    { name: '新增商機', rows: [['建立日期', '客戶', '往來機會', '產品類別', '預估月份', '進度', '業務']].concat(R.created.map(d => [todayStr(new Date(d.createdAt)), cn(d.customerId), d.product, d.category, d.month, stageName(dealStage(d)), d.sales])) },
+    { name: '報價', rows: [['報價日期', '客戶', '往來機會', '預估月份', '業務']].concat(R.quoted.map(d => [d.quoteDate, cn(d.customerId), d.product, d.month, d.sales])) },
+    { name: '進單', rows: [['下單日期', '客戶', '往來機會', '業務'].concat(mv ? ['金額（未稅）', '金額（含稅）'] : [])].concat(R.ordered.map(d => [d.orderDate, cn(d.customerId), d.product, d.sales].concat(mv ? [d.amount === '' ? '' : String(exTax(d.amount)), d.amount === '' ? '' : String(d.amount)] : []))) }];
+  const blob = await buildXlsx(sheets);
+  const ok = await saveFile(blob, `業務統計_${R.a.replace(/-/g, '')}-${R.b.replace(/-/g, '')}.xlsx`, 'Excel 活頁簿', XLSX_MIME, '.xlsx');
+  if (ok) toast('統計明細已匯出');
+}
+/* 首頁：本週活動統計 */
+async function rptDashboardHtml() {
+  const acts = await Store.allActivities(); await Promise.all([DL.load(), PJ.load()]);
+  const [a, b] = rptRange('thisWeek'); const R = rptCompute(a, b, acts);
+  return `<div class="card"><h2>本週業務統計 <span class="small muted" style="font-weight:400">${fmtRange(a, b)}</span><span class="spacer"></span><a class="btn sm" href="#/reports">查看業務統計報表 →</a></h2><div class="mini-kpis">
+    <div><span>客戶拜訪（上門／線上）</span><b>${R.visits.length}（${R.visit.length}／${R.online.length}）</b></div><div><span>電話量</span><b>${R.phone.length}</b></div>
+    <div><span>新增商機</span><b>${R.created.length}</b></div><div><span>報價數</span><b>${R.quoted.length}</b></div><div><span>進單數</span><b>${R.ordered.length}</b></div></div></div>`;
 }
 
 /* ============================================================
